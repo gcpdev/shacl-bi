@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  shacl-bi-backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - VIRTUOSO_ENDPOINT=http://virtuoso:8890/sparql
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - virtuoso
+
+  shacl-bi-frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - shacl-bi-backend
+
+  virtuoso:
+    image: openlink/virtuoso-opensource-7
+    ports:
+      - "8890:8890"
+      - "1111:1111"
+    volumes:
+      - virtuoso_data:/data
+    environment:
+      - DBA_PASSWORD=mysecret
+
+volumes:
+  virtuoso_data:

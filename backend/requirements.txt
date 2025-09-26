@@ -1,0 +1,6 @@
+Flask
+pyshacl
+sparqlwrapper
+PyJWT
+openai
+gunicorn

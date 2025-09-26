@@ -1,0 +1,29 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix vio: <http://ex.org/Violation#> .
+
+vio:Violation a rdfs:Class ;
+    rdfs:label "Violation" ;
+    rdfs:comment "A SHACL violation." .
+
+vio:hasValidationResult a rdf:Property ;
+    rdfs:label "has validation result" ;
+    rdfs:domain vio:Violation ;
+    rdfs:range sh:ValidationResult .
+
+vio:hasExplanation a rdf:Property ;
+    rdfs:label "has explanation" ;
+    rdfs:domain vio:Violation ;
+    rdfs:range rdfs:Literal .
+
+vio:hasRepairSuggestion a rdf:Property ;
+    rdfs:label "has repair suggestion" ;
+    rdfs:domain vio:Violation ;
+    rdfs:range rdfs:Literal .
+
+vio:hasSeverity a rdf:Property ;
+    rdfs:label "has severity" ;
+    rdfs:domain vio:Violation ;
+    rdfs:range rdfs:Literal .
