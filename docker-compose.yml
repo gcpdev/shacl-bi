@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  virtuoso:
+    image: openlink/virtuoso-opensource-7:latest
+    container_name: virtuoso
+    environment:
+      DBA_PASSWORD: dba            # change this in production
+      VIRT_Parameters_NumberOfBuffers: 170000
+      VIRT_Parameters_MaxDirtyBuffers: 130000
+      VIRT_Parameters_ServerThreads: 50
+    ports:
+      - "8890:8890"   # HTTP/SPARQL endpoint
+      - "1111:1111"   # isql port
+    volumes:
+      - virtuoso-data:/database
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3>/dev/tcp/127.0.0.1/8890 >/dev/null 2>&1 || exit 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  virtuoso-init:
+    image: openlink/virtuoso-opensource-7:latest
+    depends_on:
+      - virtuoso
+    entrypoint: ["/bin/sh","-c"]
+    command: >
+      "set -e;
+       echo 'Waiting for Virtuoso to accept connections...';
+       for i in $(seq 1 60); do
+         /opt/virtuoso-opensource/bin/isql virtuoso:1111 dba dba -Q 'select 1;' >/dev/null 2>&1 && break || sleep 1;
+       done;
+       echo 'Running init SQL...';
+       /opt/virtuoso-opensource/bin/isql virtuoso:1111 dba dba < /docker-entrypoint-initdb.d/init.sql;
+       echo 'Init complete.'"
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+
+  shacl-bi-backend:
+    build: ./backend
+    ports:
+      - "80:80"
+    environment:
+      - DOCKER_ENV=true
+      - VIRTUOSO_ENDPOINT=http://virtuoso:8890/sparql-auth
+      - VIRTUOSO_USER=dba
+      - VIRTUOSO_PASSWORD=dba
+    env_file:
+      - ./backend/.env
+    depends_on:
+      virtuoso:
+        condition: service_healthy
+
+  shacl-bi-frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - shacl-bi-backend
+
+volumes:
+  virtuoso-data:

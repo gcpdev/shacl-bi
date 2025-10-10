@@ -1,0 +1,91 @@
+# config.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Core Configuration
+VIRTUOSO_ENDPOINT = os.environ.get('VIRTUOSO_ENDPOINT', 'http://localhost:8890/sparql')
+SHAPES_GRAPH = os.environ.get('SHAPES_GRAPH', 'http://ex.org/ShapesGraph')
+VALIDATION_GRAPH = os.environ.get('VALIDATION_GRAPH', 'http://ex.org/ValidationReport')
+VIOLATION_KG_GRAPH = os.environ.get('VIOLATION_KG_GRAPH', 'http://ex.org/ViolationKnowledgeGraph')
+
+# SPARQL endpoint configuration
+ENDPOINT_URL = VIRTUOSO_ENDPOINT
+
+# Authentication settings (if needed)
+USERNAME = os.environ.get('VIRTUOSO_USER')
+PASSWORD = os.environ.get('VIRTUOSO_PASSWORD')
+AUTH_REQUIRED = USERNAME is not None and PASSWORD is not None
+
+# Triple store type - used to handle store-specific operations
+TRIPLE_STORE_TYPE = "virtuoso"  # Options: "virtuoso", "fuseki", "stardog", etc.
+
+# Graph URIs
+SHAPES_GRAPH_URI = SHAPES_GRAPH
+VALIDATION_REPORT_URI = VALIDATION_GRAPH
+
+# Application Settings
+DEFAULT_AI_MODEL = os.environ.get('DEFAULT_AI_MODEL', 'openai/gpt-4')
+FLASK_ENV = os.environ.get('FLASK_ENV', 'production')
+ENABLE_XPSHACL_FEATURES = os.environ.get('ENABLE_XPSHACL_FEATURES', 'true').lower() == 'true'
+ENABLE_DASHBOARD_FEATURES = os.environ.get('ENABLE_DASHBOARD_FEATURES', 'true').lower() == 'true'
+
+# LLM Configuration
+SRG_MODEL = os.environ.get("SRG_MODEL", DEFAULT_AI_MODEL)
+
+# Providers Key - should be configured in a .env file only
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+
+# File paths for the Violation Knowledge Graph
+VIOLATION_KG_ONTOLOGY_PATH = "data/xpshacl_ontology.ttl"
+VIOLATION_KG_PATH = "data/phoenix_violation_kg.ttl"
+
+
+# SHACL Constraints and Features
+SHACL_FEATURES = [
+    "http://www.w3.org/ns/shacl#class",
+    "http://www.w3.org/ns/shacl#datatype",
+    "http://www.w3.org/ns/shacl#NodeKind",
+    "http://www.w3.org/ns/shacl#minCount",
+    "http://www.w3.org/ns/shacl#maxCount",
+    "http://www.w3.org/ns/shacl#minExclusive",
+    "http://www.w3.org/ns/shacl#minInclusive",
+    "http://www.w3.org/ns/shacl#maxExclusive",
+    "http://www.w3.org/ns/shacl#maxInclusive",
+    "http://www.w3.org/ns/shacl#minLength",
+    "http://www.w3.org/ns/shacl#maxLength",
+    "http://www.w3.org/ns/shacl#pattern",
+    "http://www.w3.org/ns/shacl#languageIn",
+    "http://www.w3.org/ns/shacl#uniqueLang",
+    "http://www.w3.org/ns/shacl#equals",
+    "http://www.w3.org/ns/shacl#disjoint",
+    "http://www.w3.org/ns/shacl#lessThan",
+    "http://www.w3.org/ns/shacl#lessThanOrEquals",
+    "http://www.w3.org/ns/shacl#not",
+    "http://www.w3.org/ns/shacl#and",
+    "http://www.w3.org/ns/shacl#or",
+    "http://www.w3.org/ns/shacl#xone",
+    "http://www.w3.org/ns/shacl#node",
+    "http://www.w3.org/ns/shacl#qualifiedMinCount",
+    "http://www.w3.org/ns/shacl#qualifiedMaxCount",
+    "http://www.w3.org/ns/shacl#closed",
+    "http://www.w3.org/ns/shacl#hasValue",
+    "http://www.w3.org/ns/shacl#in"
+]
+
+# Docker-related settings (for Virtuoso)
+DATA_DIR_IN_DOCKER = "/data"  # Directory in Docker container
+DOCKER_CONTAINER_NAME = "virtuoso"  # Name of the Docker container
+
+# Store-specific configuration
+
+def update_graphs(shapes_graph_name, validation_report_name):
+    global SHAPES_GRAPH_URI, VALIDATION_REPORT_URI
+    if shapes_graph_name:
+        SHAPES_GRAPH_URI = shapes_graph_name
+    if validation_report_name:
+        VALIDATION_REPORT_URI = validation_report_name
+

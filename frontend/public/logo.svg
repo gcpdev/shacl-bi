@@ -1,0 +1,16 @@
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .text { font: bold 16px sans-serif; }
+  </style>
+  <!-- Icon: Shield representing validation -->
+  <path d="M6 4 H 34 L 20 18 L 6 4 Z" fill="#0D47A1"/>
+  <path d="M6 4 H 34 V 36 L 20 28 L 6 36 V 4 Z" fill="#1565C0"/>
+  
+  <!-- Icon: Bar chart representing BI -->
+  <rect x="11" y="22" width="4" height="8" fill="#BBDEFB"/>
+  <rect x="18" y="18" width="4" height="12" fill="#BBDEFB"/>
+  <rect x="25" y="14" width="4" height="16" fill="#BBDEFB"/>
+
+  <!-- Text -->
+  <text x="44" y="26" fill="#1E293B" class="text">SHACL-BI</text>
+</svg>

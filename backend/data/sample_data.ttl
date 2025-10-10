@@ -1,0 +1,26 @@
+@prefix ex: <http://example.org/ns#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+# This person is missing a foaf:name, which violates the shape
+ex:person123
+    a ex:Person ;
+    foaf:age 25 .@prefix ex: <http://example.org/ns#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# VIOLATION 1: This person is missing a foaf:name (minCount)
+ex:person123
+    a ex:Person ;
+    foaf:age 25 .
+
+# VIOLATION 2: This person has two names, but the maxCount is 1
+ex:person456
+    a ex:Person ;
+    foaf:name "Jane Doe" ;
+    foaf:name "Janet Doe" .
+
+# VIOLATION 3: The age for this person is a string, but it should be an integer (datatype)
+ex:person789
+    a ex:Person ;
+    foaf:name "Peter Jones" ;
+    foaf:age "thirty" .

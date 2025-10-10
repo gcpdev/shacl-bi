@@ -1,0 +1,2897 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix phoenix: <http://www.w3.org/ns/phoenix#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsh: <http://xpshacl.org/#> .
+
+xsh:appliesToConstraint a rdf:Property ;
+    rdfs:label "appliesToConstraint" ;
+    rdfs:comment "Indicates which SHACL constraint a DomainRule is applicable to." ;
+    rdfs:domain xsh:DomainRule ;
+    rdfs:range rdfs:Resource .
+
+xsh:appliesToProperty a rdf:Property ;
+    rdfs:label "appliesToProperty" ;
+    rdfs:comment "Indicates which RDF property a DomainRule is applicable to." ;
+    rdfs:domain xsh:DomainRule ;
+    rdfs:range rdf:Property .
+
+xsh:constraintComponent a rdf:Property ;
+    rdfs:label "constraintComponent" ;
+    rdfs:comment "Identifies the specific SHACL constraint component (e.g., sh:MinCountConstraintComponent)." ;
+    rdfs:domain xsh:ViolationSignature ;
+    rdfs:range rdfs:Literal .
+
+xsh:constraintParams a rdf:Property ;
+    rdfs:label "constraintParams" ;
+    rdfs:comment "Parameters that specify the nature of the violation." ;
+    rdfs:domain xsh:ViolationSignature ;
+    rdfs:range rdfs:Literal .
+
+xsh:correctionSuggestions a rdf:Property ;
+    rdfs:label "correctionSuggestions" ;
+    rdfs:comment "Suggestions to correct the violation. Can have language tags (e.g., en, de)." ;
+    rdfs:domain xsh:Explanation ;
+    rdfs:range rdfs:Literal .
+
+xsh:hasExplanation a rdf:Property ;
+    rdfs:label "hasExplanation" ;
+    rdfs:comment "Links a ViolationSignature to its Explanation." ;
+    rdfs:domain xsh:ViolationSignature ;
+    rdfs:range xsh:Explanation .
+
+xsh:naturalLanguageText a rdf:Property ;
+    rdfs:label "naturalLanguageText" ;
+    rdfs:comment "The human-readable explanation for the violation. Can have language tags (e.g., en, de)." ;
+    rdfs:domain xsh:Explanation ;
+    rdfs:range rdfs:Literal .
+
+xsh:propertyPath a rdf:Property ;
+    rdfs:label "propertyPath" ;
+    rdfs:comment "The SHACL property path that the violation relates to." ;
+    rdfs:domain xsh:ViolationSignature ;
+    rdfs:range rdfs:Literal .
+
+xsh:providedByModel a rdf:Property ;
+    rdfs:label "providedByModel" ;
+    rdfs:comment "The model that provided the explanation or suggestion." ;
+    rdfs:domain xsh:Explanation ;
+    rdfs:range rdfs:Literal .
+
+xsh:ruleDescription a rdf:Property ;
+    rdfs:label "ruleDescription" ;
+    rdfs:comment "A human-readable description of a DomainRule." ;
+    rdfs:domain xsh:DomainRule ;
+    rdfs:range rdfs:Literal .
+
+xsh:sig_236efb5cb0db7d3a0faf4fc4192b9941 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#MaxInclusiveConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_236efb5cb0db7d3a0faf4fc4192b9941_explanation ;
+    xsh:propertyPath "http://example.org/ns#priority" ;
+    xsh:violationType "other" .
+
+xsh:sig_25db92486df4de0f81551fd9ff26f45c a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#PatternConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_25db92486df4de0f81551fd9ff26f45c_explanation ;
+    xsh:propertyPath "http://example.org/ns#employeeId" ;
+    xsh:violationType "other" .
+
+xsh:sig_2d6f13d19be53bf308c135a2b711ce0b a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#MaxCountConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_2d6f13d19be53bf308c135a2b711ce0b_explanation ;
+    xsh:propertyPath "http://xmlns.com/foaf/0.1/name" ;
+    xsh:violationType "ViolationType.CARDINALITY" .
+
+xsh:sig_333d07e469d65ba2f1f97c4b8cad31df a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#DatatypeConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_333d07e469d65ba2f1f97c4b8cad31df_explanation ;
+    xsh:propertyPath "http://xmlns.com/foaf/0.1/age" ;
+    xsh:violationType "ViolationType.OTHER" .
+
+xsh:sig_39a8f4dd967e5d817676135876d9f8f2 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#SPARQLConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_39a8f4dd967e5d817676135876d9f8f2_explanation ;
+    xsh:violationType "ViolationType.OTHER" .
+
+xsh:sig_4d1ddb4d284c9d67d935314021bc0007 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#MinCountConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_4d1ddb4d284c9d67d935314021bc0007_explanation ;
+    xsh:propertyPath "http://example.org/foundedOn" ;
+    xsh:violationType "ViolationType.CARDINALITY" .
+
+xsh:sig_5f9ab7ffb83b9e00cd9213e2ad4e3a6a a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#MinInclusiveConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_5f9ab7ffb83b9e00cd9213e2ad4e3a6a_explanation ;
+    xsh:propertyPath "http://example.org/ns#priority" ;
+    xsh:violationType "other" .
+
+xsh:sig_67ab1a6c936b48fe45b7a0ff299fa7c2 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#MinInclusiveConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_67ab1a6c936b48fe45b7a0ff299fa7c2_explanation ;
+    xsh:propertyPath "http://example.org/ns#priority" ;
+    xsh:violationType "ViolationType.OTHER" .
+
+xsh:sig_6973ee726e2d2577c7f120c0c2ab9810 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#NotConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_6973ee726e2d2577c7f120c0c2ab9810_explanation ;
+    xsh:violationType "ViolationType.OTHER" .
+
+xsh:sig_736e14a654ee967c9482dbd419735131 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#MinInclusiveConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_736e14a654ee967c9482dbd419735131_explanation ;
+    xsh:propertyPath "http://example.org/hasAge" ;
+    xsh:violationType "ViolationType.OTHER" .
+
+xsh:sig_83df18315bcb5b0c6fd4a7d1731225cc a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#InConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_83df18315bcb5b0c6fd4a7d1731225cc_explanation ;
+    xsh:propertyPath "http://example.org/ns#status" ;
+    xsh:violationType "ViolationType.OTHER" .
+
+xsh:sig_89e959f11626f1caad7dcaf7b7a07767 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#PatternConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_89e959f11626f1caad7dcaf7b7a07767_explanation ;
+    xsh:propertyPath "http://example.org/ns#employeeId" ;
+    xsh:violationType "ViolationType.OTHER" .
+
+xsh:sig_9147d15e82728e4f09e27dcc44ad0150 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#NotConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_9147d15e82728e4f09e27dcc44ad0150_explanation ;
+    xsh:violationType "other" .
+
+xsh:sig_9ed903ca9391c7154716ef35e942e5a3 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#SPARQLConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_9ed903ca9391c7154716ef35e942e5a3_explanation ;
+    xsh:violationType "other" .
+
+xsh:sig_bc92aeb91b20c6979e712d086e98c3bc a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#InConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_bc92aeb91b20c6979e712d086e98c3bc_explanation ;
+    xsh:propertyPath "http://example.org/ns#status" ;
+    xsh:violationType "other" .
+
+xsh:sig_be12adaa2a1f801d0a3f5e2af95a5a4f a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#MinCountConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_be12adaa2a1f801d0a3f5e2af95a5a4f_explanation ;
+    xsh:propertyPath "http://xmlns.com/foaf/0.1/name" ;
+    xsh:violationType "ViolationType.CARDINALITY" .
+
+xsh:sig_bee7497d0a15044ad4ac485608f28cc0 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#MaxInclusiveConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_bee7497d0a15044ad4ac485608f28cc0_explanation ;
+    xsh:propertyPath "http://example.org/ns#priority" ;
+    xsh:violationType "ViolationType.OTHER" .
+
+xsh:sig_cbeabd9318420f2b076e60bf9966fa66 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#OrConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_cbeabd9318420f2b076e60bf9966fa66_explanation ;
+    xsh:violationType "ViolationType.OTHER" .
+
+xsh:sig_d54f421e5d7120f63537a3230c2a6a68 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#MinCountConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_d54f421e5d7120f63537a3230c2a6a68_explanation ;
+    xsh:propertyPath "http://example.org/hasName" ;
+    xsh:violationType "ViolationType.CARDINALITY" .
+
+xsh:sig_da751235ef51437b846e0a5b1d7ddc4e a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#LessThanOrEqualsConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_da751235ef51437b846e0a5b1d7ddc4e_explanation ;
+    xsh:propertyPath "http://example.org/ns#endDate" ;
+    xsh:violationType "ViolationType.OTHER" .
+
+xsh:sig_e45ddaa69e900ac62c31f773737c6b25 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#LessThanOrEqualsConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_e45ddaa69e900ac62c31f773737c6b25_explanation ;
+    xsh:propertyPath "http://example.org/ns#endDate" ;
+    xsh:violationType "other" .
+
+xsh:sig_f31f707a435865f73e8446714381b5a2 a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#MinCountConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_f31f707a435865f73e8446714381b5a2_explanation ;
+    xsh:propertyPath "http://xmlns.com/foaf/0.1/name" ;
+    xsh:violationType "cardinality" .
+
+xsh:sig_fb134035dbcb9f53d8306478edf582ea a xsh:ViolationSignature ;
+    xsh:constraintComponent "http://www.w3.org/ns/shacl#OrConstraintComponent" ;
+    xsh:hasExplanation xsh:sig_fb134035dbcb9f53d8306478edf582ea_explanation ;
+    xsh:violationType "other" .
+
+xsh:violationType a rdf:Property ;
+    rdfs:label "violationType" ;
+    rdfs:comment "The type of SHACL violation (e.g., Cardinality, ValueType)." ;
+    rdfs:domain xsh:ViolationSignature ;
+    rdfs:range rdfs:Literal .
+
+xsh:sig_236efb5cb0db7d3a0faf4fc4192b9941_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery "DELETE { <http://example.org/ns#task_03> <http://example.org/ns#priority> \"6\"^^<http://www.w3.org/2001/XMLSchema#integer> . } WHERE { <http://example.org/ns#task_03> <http://example.org/ns#priority> \"6\"^^<http://www.w3.org/2001/XMLSchema#integer> . }" ;
+    xsh:correctionSuggestions """L
+
+o
+
+w
+
+e
+
+r
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+p
+
+r
+
+i
+
+o
+
+r
+
+i
+
+t
+
+y
+
+ 
+
+t
+
+o
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+a
+
+l
+
+l
+
+o
+
+w
+
+e
+
+d
+
+ 
+
+m
+
+a
+
+x
+
+i
+
+m
+
+u
+
+m
+
+ 
+
+v
+
+a
+
+l
+
+u
+
+e
+
+ 
+
+(
+
+o
+
+r
+
+ 
+
+u
+
+p
+
+d
+
+a
+
+t
+
+e
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+r
+
+u
+
+l
+
+e
+
+ 
+
+i
+
+f
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+m
+
+a
+
+x
+
+i
+
+m
+
+u
+
+m
+
+ 
+
+s
+
+h
+
+o
+
+u
+
+l
+
+d
+
+ 
+
+b
+
+e
+
+ 
+
+h
+
+i
+
+g
+
+h
+
+e
+
+r
+
+)
+
+."""@en ;
+    xsh:naturalLanguageText "This data record's priority value is too high according to the rule that priority must not exceed the allowed maximum. The record shows a priority of 6, which is above the permitted limit."@en .
+
+xsh:sig_25db92486df4de0f81551fd9ff26f45c_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery "DELETE DATA { <http://example.org/ns#emp_manager> <http://example.org/ns#employeeId> \"MGR-01\" . }" ;
+    xsh:correctionSuggestions """R
+
+e
+
+m
+
+o
+
+v
+
+e
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+i
+
+n
+
+c
+
+o
+
+r
+
+r
+
+e
+
+c
+
+t
+
+ 
+
+e
+
+m
+
+p
+
+l
+
+o
+
+y
+
+e
+
+e
+
+I
+
+d
+
+ 
+
+v
+
+a
+
+l
+
+u
+
+e
+
+ 
+
+'
+
+M
+
+G
+
+R
+
+-
+
+0
+
+1
+
+'
+
+ 
+
+s
+
+o
+
+ 
+
+t
+
+h
+
+a
+
+t
+
+ 
+
+o
+
+n
+
+l
+
+y
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+v
+
+a
+
+l
+
+i
+
+d
+
+ 
+
+I
+
+D
+
+ 
+
+r
+
+e
+
+m
+
+a
+
+i
+
+n
+
+s
+
+ 
+
+(
+
+f
+
+o
+
+r
+
+ 
+
+e
+
+x
+
+a
+
+m
+
+p
+
+l
+
+e
+
+ 
+
+'
+
+E
+
+M
+
+P
+
+-
+
+M
+
+G
+
+R
+
+-
+
+0
+
+1
+
+'
+
+)
+
+."""@en ;
+    xsh:naturalLanguageText "This data record's employee ID does not match the required format. The business rule requires all employee IDs to start with 'EMP-', but this record uses 'MGR-01'."@en .
+
+xsh:sig_2d6f13d19be53bf308c135a2b711ce0b_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery "DELETE DATA { <http://example.org/ns#person456> <http://xmlns.com/foaf/0.1/name> \"Janet Doe\" . }" ;
+    xsh:correctionSuggestions "Please review the names for this person and remove the incorrect or duplicate one, ensuring only a single name remains."@en ;
+    xsh:naturalLanguageText "This data record for a person has too many names. Our business rules require that each person should have only one name, but this record currently lists two names."@en .
+
+xsh:sig_333d07e469d65ba2f1f97c4b8cad31df_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX ex: <http://example.org/ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  ex:person789 foaf:age "twenty-five" .
+}
+INSERT {
+  ex:person789 foaf:age "$new_age_value"^^xsd:integer .
+}
+WHERE {
+  ex:person789 foaf:age "twenty-five" .
+}""" ;
+    xsh:correctionSuggestions "Please correct Alice Smith's age by entering it as a number (e.g., '25') instead of text."@en ;
+    xsh:naturalLanguageText "The record for 'Alice Smith' has an issue with her age. Our system expects the 'age' field to be a whole number, but it currently contains text: 'twenty-five'. This prevents accurate data analysis and reporting."@en .
+
+xsh:sig_39a8f4dd967e5d817676135876d9f8f2_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery "INSERT DATA { }" ;
+    xsh:correctionSuggestions "To resolve this, you need to investigate the detailed definition of the 'ProjectShape' data quality standards, specifically the custom query constraint that was violated. Once you understand the specific business rule, you can identify the problematic data point in 'Project Phoenix' and correct it manually."@en ;
+    xsh:naturalLanguageText "The data record for 'Project Phoenix' has violated a custom business rule. This rule is defined by a specific query within the project data quality standards, but the exact details of which aspect of 'Project Phoenix' is non-compliant are not provided in this report. This means that while 'Project Phoenix' doesn't meet an important organizational requirement, we don't currently know the specific requirement or the nature of the issue."@en .
+
+xsh:sig_4d1ddb4d284c9d67d935314021bc0007_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery "INSERT DATA { <http://example.org/resource3> <http://example.org/foundedOn> $user_provided_value . }" ;
+    xsh:correctionSuggestions "Please provide the founding date for the 'Example Org' record."@en ;
+    xsh:naturalLanguageText "The data record for 'Example Org' is incomplete. Business rules require that every organization must have information about when it was founded, but this record is missing that essential detail."@en .
+
+xsh:sig_5f9ab7ffb83b9e00cd9213e2ad4e3a6a_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery "PREFIX ex: <http://example.org/ns#>\\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\\nDELETE { <http://example.org/ns#task_02> ex:priority ?oldValue . }\\nINSERT { <http://example.org/ns#task_02> ex:priority \"1\"^^xsd:integer . }\\nWHERE  { <http://example.org/ns#task_02> ex:priority ?oldValue . }" ;
+    xsh:correctionSuggestions """U
+
+p
+
+d
+
+a
+
+t
+
+e
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+p
+
+r
+
+i
+
+o
+
+r
+
+i
+
+t
+
+y
+
+ 
+
+f
+
+o
+
+r
+
+ 
+
+t
+
+a
+
+s
+
+k
+
+_
+
+0
+
+2
+
+ 
+
+t
+
+o
+
+ 
+
+1
+
+ 
+
+(
+
+o
+
+r
+
+ 
+
+a
+
+n
+
+y
+
+ 
+
+v
+
+a
+
+l
+
+u
+
+e
+
+ 
+
+g
+
+r
+
+e
+
+a
+
+t
+
+e
+
+r
+
+ 
+
+t
+
+h
+
+a
+
+n
+
+ 
+
+o
+
+r
+
+ 
+
+e
+
+q
+
+u
+
+a
+
+l
+
+ 
+
+t
+
+o
+
+ 
+
+1
+
+)
+
+ 
+
+s
+
+o
+
+ 
+
+i
+
+t
+
+ 
+
+m
+
+e
+
+e
+
+t
+
+s
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+r
+
+u
+
+l
+
+e
+
+."""@en ;
+    xsh:naturalLanguageText "This data record's priority is too low. Business rules require that priority must be at least 1, but this record for task_02 has a priority of 0."@en .
+
+xsh:sig_67ab1a6c936b48fe45b7a0ff299fa7c2_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX ex: <http://example.org/ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+DELETE DATA {
+  ex:task_02 ex:priority "0"^^xsd:integer .
+}
+INSERT DATA {
+  ex:task_02 ex:priority "$user_provided_value"^^xsd:integer .
+}""" ;
+    xsh:correctionSuggestions "Please update the priority for this task to a value that meets the minimum requirement, such as 1 or higher."@en ;
+    xsh:naturalLanguageText "This task record has an invalid priority level. Business rules require that the priority for a task must be a value that is equal to or greater than a specified minimum. The current priority of '0' does not meet this requirement, indicating it is too low for a valid task priority."@en .
+
+xsh:sig_6973ee726e2d2577c7f120c0c2ab9810_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX ex: <http://example.org/ns#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+DELETE WHERE {
+  ex:task_manager_conflict rdf:type ex:Task .
+}""" ;
+    xsh:correctionSuggestions "To resolve this, remove the 'Task' classification from the 'task_manager_conflict' record. This will ensure it adheres to the rule that an employee record should not also be classified as a task."@en ;
+    xsh:naturalLanguageText "The data record for 'task_manager_conflict' has a classification conflict. Our business rules specify that an item categorized as an 'Employee' cannot also be categorized as a 'Task' at the same time. This record is currently listed as both an 'Employee' and a 'Task', which violates this rule."@en .
+
+xsh:sig_736e14a654ee967c9482dbd419735131_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX ex: <http://example.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  ex:resource1 ex:hasAge "-20"^^xsd:integer .
+}
+INSERT {
+  ex:resource1 ex:hasAge "$user_provided_value"^^xsd:integer .
+}
+WHERE {
+  ex:resource1 ex:hasAge "-20"^^xsd:integer .
+}""" ;
+    xsh:correctionSuggestions "Please update the age for this record to a valid non-negative number, such as 0 or greater."@en ;
+    xsh:naturalLanguageText "The age for this data record is invalid. According to our business rules, a person's age cannot be a negative number."@en .
+
+xsh:sig_83df18315bcb5b0c6fd4a7d1731225cc_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX ex: <http://example.org/ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  ex:proj_gemini ex:status "Archived" .
+}
+INSERT {
+  ex:proj_gemini ex:status $user_provided_value .
+}
+WHERE {
+  ex:proj_gemini ex:status "Archived" .
+}""" ;
+    xsh:correctionSuggestions "Please update the status for \"Project Gemini\" to one of the approved options from the predefined list."@en ;
+    xsh:naturalLanguageText "The project record for \"Project Gemini\" (ID: PROJ-003) has an invalid status. The current status \"Archived\" is not recognized as an approved option for a project. Business rules require that the project status must be selected from a predefined list of valid statuses."@en .
+
+xsh:sig_89e959f11626f1caad7dcaf7b7a07767_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX ex: <http://example.org/ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  ex:emp_manager ex:employeeId "001" .
+}
+INSERT {
+  ex:emp_manager ex:employeeId "$user_provided_value"^^xsd:string .
+}
+WHERE {
+  ex:emp_manager ex:employeeId "001" .
+}""" ;
+    xsh:correctionSuggestions "Please update the employee ID for this manager record to a value that begins with 'EMP-', for example, 'EMP-MGR-01'."@en ;
+    xsh:naturalLanguageText "The employee ID for the manager record is not formatted correctly. Our business rules require that all employee IDs must start with 'EMP-'. The current value '001' does not follow this required pattern."@en .
+
+xsh:sig_9147d15e82728e4f09e27dcc44ad0150_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery "DELETE DATA { <http://example.org/ns#task_manager_conflict> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/ns#Employee> . }" ;
+    xsh:correctionSuggestions """R
+
+e
+
+m
+
+o
+
+v
+
+e
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+E
+
+m
+
+p
+
+l
+
+o
+
+y
+
+e
+
+e
+
+ 
+
+c
+
+l
+
+a
+
+s
+
+s
+
+i
+
+f
+
+i
+
+c
+
+a
+
+t
+
+i
+
+o
+
+n
+
+ 
+
+f
+
+r
+
+o
+
+m
+
+ 
+
+t
+
+h
+
+i
+
+s
+
+ 
+
+d
+
+a
+
+t
+
+a
+
+ 
+
+r
+
+e
+
+c
+
+o
+
+r
+
+d
+
+ 
+
+s
+
+o
+
+ 
+
+i
+
+t
+
+ 
+
+i
+
+s
+
+ 
+
+n
+
+o
+
+t
+
+ 
+
+t
+
+r
+
+e
+
+a
+
+t
+
+e
+
+d
+
+ 
+
+a
+
+s
+
+ 
+
+a
+
+n
+
+ 
+
+E
+
+m
+
+p
+
+l
+
+o
+
+y
+
+e
+
+e
+
+ 
+
+a
+
+n
+
+y
+
+m
+
+o
+
+r
+
+e
+
+."""@en ;
+    xsh:naturalLanguageText "This data record is incorrectly classified. The business rule for the EmployeeShape states that a record should not be labeled as an Employee if it is also identified as a Task. This record shows that the item is both an Employee and a Task, which violates that rule."@en .
+
+xsh:sig_9ed903ca9391c7154716ef35e942e5a3_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery "PREFIX ex: <http://example.org/ns#> DELETE { <http://example.org/ns#proj_laureaus> ?p ?o . } WHERE { <http://example.org/ns#proj_laureaus> ?p ?o . }" ;
+    xsh:correctionSuggestions """R
+
+e
+
+v
+
+i
+
+e
+
+w
+
+ 
+
+a
+
+n
+
+d
+
+ 
+
+c
+
+o
+
+r
+
+r
+
+e
+
+c
+
+t
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+p
+
+r
+
+o
+
+j
+
+e
+
+c
+
+t
+
+ 
+
+L
+
+a
+
+u
+
+r
+
+e
+
+a
+
+u
+
+s
+
+ 
+
+r
+
+e
+
+c
+
+o
+
+r
+
+d
+
+ 
+
+s
+
+o
+
+ 
+
+i
+
+t
+
+ 
+
+f
+
+u
+
+l
+
+l
+
+y
+
+ 
+
+c
+
+o
+
+n
+
+f
+
+o
+
+r
+
+m
+
+s
+
+ 
+
+t
+
+o
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+P
+
+r
+
+o
+
+j
+
+e
+
+c
+
+t
+
+S
+
+h
+
+a
+
+p
+
+e
+
+.
+
+ 
+
+I
+
+n
+
+ 
+
+p
+
+r
+
+a
+
+c
+
+t
+
+i
+
+c
+
+e
+
+,
+
+ 
+
+r
+
+e
+
+-
+
+e
+
+n
+
+t
+
+e
+
+r
+
+ 
+
+o
+
+r
+
+ 
+
+a
+
+d
+
+j
+
+u
+
+s
+
+t
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+d
+
+a
+
+t
+
+a
+
+ 
+
+f
+
+o
+
+r
+
+ 
+
+t
+
+h
+
+i
+
+s
+
+ 
+
+p
+
+r
+
+o
+
+j
+
+e
+
+c
+
+t
+
+ 
+
+s
+
+o
+
+ 
+
+i
+
+t
+
+ 
+
+s
+
+a
+
+t
+
+i
+
+s
+
+f
+
+i
+
+e
+
+s
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+v
+
+a
+
+l
+
+i
+
+d
+
+a
+
+t
+
+i
+
+o
+
+n
+
+ 
+
+r
+
+u
+
+l
+
+e
+
+ 
+
+(
+
+e
+
+.
+
+g
+
+.
+
+,
+
+ 
+
+e
+
+n
+
+s
+
+u
+
+r
+
+e
+
+ 
+
+t
+
+h
+
+e
+
+r
+
+e
+
+ 
+
+a
+
+r
+
+e
+
+ 
+
+n
+
+o
+
+ 
+
+s
+
+e
+
+l
+
+f
+
+-
+
+r
+
+e
+
+f
+
+e
+
+r
+
+e
+
+n
+
+t
+
+i
+
+a
+
+l
+
+ 
+
+v
+
+a
+
+l
+
+u
+
+e
+
+s
+
+ 
+
+o
+
+r
+
+ 
+
+o
+
+t
+
+h
+
+e
+
+r
+
+ 
+
+u
+
+n
+
+u
+
+s
+
+u
+
+a
+
+l
+
+ 
+
+p
+
+a
+
+t
+
+t
+
+e
+
+r
+
+n
+
+s
+
+ 
+
+t
+
+h
+
+a
+
+t
+
+ 
+
+t
+
+r
+
+i
+
+g
+
+g
+
+e
+
+r
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+S
+
+P
+
+A
+
+R
+
+Q
+
+L
+
+ 
+
+c
+
+h
+
+e
+
+c
+
+k
+
+)
+
+."""@en ;
+    xsh:naturalLanguageText "This data record for the project “Project Laureaus” does not pass the defined project rules. The rule set uses a SPARQL check to validate projects and flagged this record as non-compliant, even though its key fields (ID, dates, status, and name) look present. The exact reason from the check isn’t stated, but action is required to bring this record into conformity with the ProjectShape."@en .
+
+xsh:sig_bc92aeb91b20c6979e712d086e98c3bc_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX ex: <http://example.org/ns#> 
+DELETE { <http://example.org/ns#proj_laureaus> ex:status "Archived" . }
+INSERT { <http://example.org/ns#proj_laureaus> ex:status "Active" . }
+WHERE { <http://example.org/ns#proj_laureaus> ex:status "Archived" . }""" ;
+    xsh:correctionSuggestions """C
+
+h
+
+a
+
+n
+
+g
+
+e
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+s
+
+t
+
+a
+
+t
+
+u
+
+s
+
+ 
+
+t
+
+o
+
+ 
+
+a
+
+ 
+
+v
+
+a
+
+l
+
+i
+
+d
+
+ 
+
+v
+
+a
+
+l
+
+u
+
+e
+
+,
+
+ 
+
+s
+
+u
+
+c
+
+h
+
+ 
+
+a
+
+s
+
+ 
+
+A
+
+c
+
+t
+
+i
+
+v
+
+e
+
+,
+
+ 
+
+O
+
+n
+
+-
+
+H
+
+o
+
+l
+
+d
+
+,
+
+ 
+
+o
+
+r
+
+ 
+
+C
+
+o
+
+m
+
+p
+
+l
+
+e
+
+t
+
+e
+
+d
+
+."""@en ;
+    xsh:naturalLanguageText "This data record's status is 'Archived', but the business rule requires status to be one of Active, On-Hold, or Completed. The current value is not allowed and may prevent the project from moving forward in workflows."@en .
+
+xsh:sig_be12adaa2a1f801d0a3f5e2af95a5a4f_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX ex: <http://example.org/ns#>
+
+INSERT DATA {
+  ex:person123 foaf:name $user_provided_value .
+}""" ;
+    xsh:correctionSuggestions "Please provide the missing name for this person's record."@en ;
+    xsh:naturalLanguageText "This data record for a person is incomplete. Our business rules require that every person must have at least one name, but this record is currently missing that essential information."@en .
+
+xsh:sig_bee7497d0a15044ad4ac485608f28cc0_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX ex: <http://example.org/ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  <http://example.org/ns#task_03> ex:priority "6"^^xsd:integer .
+}
+INSERT {
+  <http://example.org/ns#task_03> ex:priority "$user_provided_value"^^xsd:integer .
+}
+WHERE {
+  <http://example.org/ns#task_03> ex:priority "6"^^xsd:integer .
+}""" ;
+    xsh:correctionSuggestions "Please update the priority level for the 'Write Documentation' task (ID: task_03) to a value that falls within the acceptable maximum limit."@en ;
+    xsh:naturalLanguageText "The 'Write Documentation' task (ID: task_03) has a priority level of 6, which is higher than the maximum allowed value. Our business rules require task priorities to be set within a defined, lower range to ensure proper task management."@en .
+
+xsh:sig_cbeabd9318420f2b076e60bf9966fa66_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX ex: <http://example.org/ns#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+INSERT {
+  ex:task_04 ex:status $user_provided_value .
+}
+WHERE {
+  FILTER NOT EXISTS { ex:task_04 ex:status ?currentStatus . }
+}""" ;
+    xsh:correctionSuggestions "To resolve this, please review the business criteria for valid tasks and update this record to ensure it satisfies at least one of those conditions. For example, you might need to add a status, assign it to a specific category, or define its priority."@en ;
+    xsh:naturalLanguageText "The task record 'task_04' is incomplete because it does not meet any of the required business conditions. Our rules for tasks stipulate that each task must satisfy at least one of several predefined criteria (for example, having a specific status, being assigned to a particular team, or being linked to a certain project). This record currently fails to meet any of these required conditions, indicating an incomplete task definition."@en .
+
+xsh:sig_d54f421e5d7120f63537a3230c2a6a68_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX ex: <http://example.org/>
+
+INSERT {
+  ex:resource2 ex:hasName $user_provided_value .
+}
+WHERE {
+  BIND(ex:resource2 AS ?focusNode)
+}""" ;
+    xsh:correctionSuggestions "Please provide the missing name for this person's record."@en ;
+    xsh:naturalLanguageText "This data record for a person is incomplete. Our business rules require that every person must have a name, but this specific record is missing that essential information."@en .
+
+xsh:sig_da751235ef51437b846e0a5b1d7ddc4e_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX ex: <http://example.org/ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  <http://example.org/ns#proj_phoenix> ex:endDate "2025-01-15"^^xsd:date .
+}
+INSERT {
+  <http://example.org/ns#proj_phoenix> ex:endDate $user_provided_value^^xsd:date .
+}
+WHERE {
+  <http://example.org/ns#proj_phoenix> ex:endDate "2025-01-15"^^xsd:date .
+}""" ;
+    xsh:correctionSuggestions "Please revise the project's end date to ensure it complies with the internal business rules for project duration or maximum completion time."@en ;
+    xsh:naturalLanguageText "The end date for this project is not in line with our business rules. Our records show the project is set to end on '2025-01-15', but this date exceeds the allowed limit or relationship with another key project date, such as the start date or a defined maximum duration. This means the project's timeline might be longer than permitted."@en .
+
+xsh:sig_e45ddaa69e900ac62c31f773737c6b25_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery "DELETE { <http://example.org/ns#proj_phoenix> <http://example.org/ns#endDate> \"2025-01-15\"^^<http://www.w3.org/2001/XMLSchema#date> . } INSERT { <http://example.org/ns#proj_phoenix> <http://example.org/ns#endDate> \"2024-12-31\"^^<http://www.w3.org/2001/XMLSchema#date> . } WHERE { <http://example.org/ns#proj_phoenix> <http://example.org/ns#endDate> \"2025-01-15\"^^<http://www.w3.org/2001/XMLSchema#date> . }" ;
+    xsh:correctionSuggestions """U
+
+p
+
+d
+
+a
+
+t
+
+e
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+e
+
+n
+
+d
+
+ 
+
+d
+
+a
+
+t
+
+e
+
+ 
+
+t
+
+o
+
+ 
+
+a
+
+ 
+
+c
+
+o
+
+m
+
+p
+
+l
+
+i
+
+a
+
+n
+
+t
+
+ 
+
+d
+
+a
+
+t
+
+e
+
+ 
+
+t
+
+h
+
+a
+
+t
+
+ 
+
+f
+
+i
+
+t
+
+s
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+p
+
+o
+
+l
+
+i
+
+c
+
+y
+
+ 
+
+(
+
+f
+
+o
+
+r
+
+ 
+
+e
+
+x
+
+a
+
+m
+
+p
+
+l
+
+e
+
+,
+
+ 
+
+s
+
+e
+
+t
+
+ 
+
+e
+
+n
+
+d
+
+D
+
+a
+
+t
+
+e
+
+ 
+
+t
+
+o
+
+ 
+
+2
+
+0
+
+2
+
+4
+
+-
+
+1
+
+2
+
+-
+
+3
+
+1
+
+ 
+
+o
+
+r
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+c
+
+o
+
+r
+
+r
+
+e
+
+c
+
+t
+
+ 
+
+m
+
+a
+
+x
+
+i
+
+m
+
+u
+
+m
+
+ 
+
+d
+
+a
+
+t
+
+e
+
+ 
+
+d
+
+e
+
+f
+
+i
+
+n
+
+e
+
+d
+
+ 
+
+b
+
+y
+
+ 
+
+p
+
+o
+
+l
+
+i
+
+c
+
+y
+
+)
+
+."""@en ;
+    xsh:naturalLanguageText "This data record's end date violates the policy. The business rule requires that the project end date must not exceed the maximum allowed date. The current endDate is 2025-01-15, which is after the permitted limit."@en .
+
+xsh:sig_f31f707a435865f73e8446714381b5a2_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery """PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+INSERT DATA {
+  <http://example.org/person123> foaf:name $user_provided_value .
+}""" ;
+    xsh:correctionSuggestions """A
+
+d
+
+d
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+p
+
+e
+
+r
+
+s
+
+o
+
+n
+
+'
+
+s
+
+ 
+
+n
+
+a
+
+m
+
+e
+
+ 
+
+t
+
+o
+
+ 
+
+t
+
+h
+
+i
+
+s
+
+ 
+
+r
+
+e
+
+c
+
+o
+
+r
+
+d
+
+ 
+
+(
+
+f
+
+o
+
+r
+
+ 
+
+e
+
+x
+
+a
+
+m
+
+p
+
+l
+
+e
+
+,
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+f
+
+u
+
+l
+
+l
+
+ 
+
+l
+
+e
+
+g
+
+a
+
+l
+
+ 
+
+n
+
+a
+
+m
+
+e
+
+)
+
+."""@en ;
+    xsh:naturalLanguageText "This data record is incomplete. Our business rules require that every person must have a name, but this person's record does not have one."@en .
+
+xsh:sig_fb134035dbcb9f53d8306478edf582ea_explanation a xsh:Explanation ;
+    phoenix:hasRepairQuery "INSERT DATA { <http://example.org/ns#task_04> <http://example.org/ns#status> \"NotStarted\" . }" ;
+    xsh:correctionSuggestions """R
+
+e
+
+v
+
+i
+
+e
+
+w
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+T
+
+a
+
+s
+
+k
+
+S
+
+h
+
+a
+
+p
+
+e
+
+ 
+
+r
+
+u
+
+l
+
+e
+
+s
+
+ 
+
+t
+
+o
+
+ 
+
+d
+
+e
+
+t
+
+e
+
+r
+
+m
+
+i
+
+n
+
+e
+
+ 
+
+w
+
+h
+
+i
+
+c
+
+h
+
+ 
+
+c
+
+o
+
+m
+
+b
+
+i
+
+n
+
+a
+
+t
+
+i
+
+o
+
+n
+
+ 
+
+o
+
+f
+
+ 
+
+a
+
+t
+
+t
+
+r
+
+i
+
+b
+
+u
+
+t
+
+e
+
+s
+
+ 
+
+s
+
+h
+
+o
+
+u
+
+l
+
+d
+
+ 
+
+b
+
+e
+
+ 
+
+p
+
+r
+
+e
+
+s
+
+e
+
+n
+
+t
+
+ 
+
+f
+
+o
+
+r
+
+ 
+
+a
+
+ 
+
+v
+
+a
+
+l
+
+i
+
+d
+
+ 
+
+t
+
+a
+
+s
+
+k
+
+.
+
+ 
+
+T
+
+h
+
+e
+
+n
+
+ 
+
+u
+
+p
+
+d
+
+a
+
+t
+
+e
+
+ 
+
+t
+
+a
+
+s
+
+k
+
+_
+
+0
+
+4
+
+ 
+
+t
+
+o
+
+ 
+
+i
+
+n
+
+c
+
+l
+
+u
+
+d
+
+e
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+m
+
+i
+
+s
+
+s
+
+i
+
+n
+
+g
+
+ 
+
+f
+
+i
+
+e
+
+l
+
+d
+
+(
+
+s
+
+)
+
+ 
+
+s
+
+o
+
+ 
+
+i
+
+t
+
+ 
+
+f
+
+i
+
+t
+
+s
+
+ 
+
+o
+
+n
+
+e
+
+ 
+
+o
+
+f
+
+ 
+
+t
+
+h
+
+e
+
+ 
+
+p
+
+e
+
+r
+
+m
+
+i
+
+t
+
+t
+
+e
+
+d
+
+ 
+
+p
+
+a
+
+t
+
+t
+
+e
+
+r
+
+n
+
+s
+
+ 
+
+(
+
+f
+
+o
+
+r
+
+ 
+
+e
+
+x
+
+a
+
+m
+
+p
+
+l
+
+e
+
+,
+
+ 
+
+a
+
+d
+
+d
+
+i
+
+n
+
+g
+
+ 
+
+a
+
+ 
+
+s
+
+t
+
+a
+
+t
+
+u
+
+s
+
+ 
+
+o
+
+r
+
+ 
+
+d
+
+u
+
+e
+
+ 
+
+d
+
+a
+
+t
+
+e
+
+)
+
+."""@en ;
+    xsh:naturalLanguageText "This task record (task_04) does not conform to the required structure defined for tasks. The TaskShape allows the task to follow one of several approved attribute patterns, but this record currently does not match any of those patterns."@en .
+
+xsh:DomainRule a owl:Class ;
+    rdfs:label "DomainRule" ;
+    rdfs:comment "Represents a domain-specific rule that helps to further explain the constraints." .
+
+xsh:Explanation a owl:Class ;
+    rdfs:label "Explanation" ;
+    rdfs:comment "Stores human-readable explanations and suggestions for a SHACL violation." .
+
+xsh:ViolationSignature a owl:Class ;
+    rdfs:label "ViolationSignature" ;
+    rdfs:comment "Represents a unique signature for a SHACL violation, independent of the specific instance data." .
+
