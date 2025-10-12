@@ -23,7 +23,6 @@ import { createRouter, createWebHistory } from "vue-router";
 
 // Import components
 import LandingPage from "@/components/LandingPage.vue"; // Your landing page component
-import MainLayout from "@/components/Layout/MainLayout.vue"; // Main layout with sidebar
 import MainContent from "@/components/Layout/MainContent.vue"; // Home component
 
 import ShapeOverview from "@/components/Overviews/ShapeOverview.vue";
@@ -37,29 +36,17 @@ import PropertyPathView from "@/components/Views/PropertyPathView.vue";
 import AboutUs from "@/components/Overviews/AboutUs.vue";
 
 const routes = [
-  { path: "/", name: "LandingPage", component: LandingPage }, // Landing page route
-  {
-    path: "/dashboard",
-    component: MainLayout, // Main layout with sidebar + header
-    children: [
-      { path: "", name: "Home", component: MainContent }, // Dashboard home content
-      { path: "shapes", name: "ShapeOverview", component: ShapeOverview },
-      { path: "shapes/:shapeId", name: "ShapeView", component: ShapeView },
-      { path: "constraints", name: "ConstraintOverview", component: ConstraintOverview },
-      { path: "constraints/:constraintId/:constraintName/:constraintViolations", name: "ConstraintView", component: ConstraintView, props: true },
-      { path: "focus-nodes", name: "FocusNodeOverview", component: FocusNodeOverview },
-      { path: "focus-nodes/:focusNodeId", name: "FocusNodeView", component: FocusNodeView },
-      { path: "property-paths", name: "PropertyPathOverview", component: PropertyPathOverview },
-      { path: "property-paths/:pathId", name: "PropertyPathView", component: PropertyPathView },
-      { path: "about-us", name: "AboutUs", component: AboutUs },
-    ]
-  },
-  // Redirect old routes to new dashboard structure
-  { path: "/shapes", redirect: "/dashboard/shapes" },
-  { path: "/constraints", redirect: "/dashboard/constraints" },
-  { path: "/focus-nodes", redirect: "/dashboard/focus-nodes" },
-  { path: "/property-paths", redirect: "/dashboard/property-paths" },
-  { path: "/about-us", redirect: "/dashboard/about-us" },
+  //{ path: "/", name: "LandingPage", component: LandingPage }, // Landing page route
+  { path: "/", name: "Home", component: MainContent }, // Main content after landing page
+  { path: "/shapes", name: "ShapeOverview", component: ShapeOverview },
+  { path: "/shapes/:shapeId", name: "ShapeView", component: ShapeView },
+  { path: "/constraints", name: "ConstraintOverview", component: ConstraintOverview },
+  { path: "/constraints/:constraintId/:constraintName/:constraintViolations", name: "ConstraintView", component: ConstraintView },
+  { path: "/focus-nodes", name: "FocusNodeOverview", component: FocusNodeOverview },
+  { path: "/focus-nodes/:focusNodeId", name: "FocusNodeView", component: FocusNodeView },
+  { path: "/property-paths", name: "PropertyPathOverview", component: PropertyPathOverview },
+  { path: "/property-paths/:pathId", name: "PropertyPathView", component: PropertyPathView },
+  { path: "/about-us", name: "AboutUs", component: AboutUs },
 ];
 
 // Create the router instance

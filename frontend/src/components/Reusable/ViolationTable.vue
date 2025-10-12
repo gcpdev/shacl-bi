@@ -66,8 +66,6 @@
           </th>
           <th class="text-left px-4 py-2 border-b border-gray-300 text-gray-600 font-medium w-20">
           </th>
-          <th class="text-left px-4 py-2 border-b border-gray-300 text-gray-600 font-medium w-20">
-          </th>
         </tr>
       </thead>
       <tbody>
@@ -145,13 +143,12 @@
 import { ref, computed, onMounted } from 'vue';
 import ViolationTableRow from './ViolationTableRow.vue';
 import Filter from './Filter.vue';
-import { useStore } from '../../store';
+import api from '@/utils/api';
 
-const store = useStore();
-
-const allData = computed(() => store.mainContentData?.violations || []);
-const tableData = computed(() => allData.value);
+const tableData = ref([]);
+const prefixes = ref({});
 const shapes = ref([]);
+const allData = ref([]);
 const showFullPrefixes = ref(false); // Reactive toggle state
 
 const currentPage = ref(1);
@@ -176,6 +173,90 @@ const prevPage = () => {
 const nextPage = () => {
   if (currentPage.value < totalPages.value) currentPage.value++;
 };
+
+const loadViolationData = async () => {
+  try {
+    // Get session ID from localStorage for tenant isolation
+    const sessionId = localStorage.getItem('shacl_session_id');
+    const response = await api.getViolations(sessionId);
+    const data = response.data;
+
+    prefixes.value = data.prefixes || {};
+    console.log("Loaded Prefixes:", prefixes.value);
+
+    if (Object.keys(prefixes.value).length === 0) {
+      console.warn("No prefixes found! URIs will not be transformed.");
+    }
+
+    const violations = data.violations || [];
+    console.log("Loaded violations:", violations);
+
+    // Transform backend violation data to match frontend format
+    allData.value = violations.map((violation) => {
+      const formattedData = {
+        focusNode: formatURI(violation.focus_node || ''),
+        resultPath: formatURI(violation.property_path || ''),
+        value: formatURI(violation.value || ''),
+        message: violation.message || '',
+        propertyShape: formatURI(violation.shape_id || ''),
+        severity: formatURI(violation.severity || ''),
+        targetClass: '', // Backend doesn't provide this field
+        targetNode: formatURI(violation.focus_node || ''),
+        nodeShape: formatURI(violation.shape_id || ''),
+        constraintComponent: formatURI(violation.constraint_id || ''),
+        shapes: {
+          shape: formatURI(violation.shape_id || ''),
+          type: formatURI(violation.violation_type || violation.severity || ''),
+          properties: [], // Backend doesn't provide this level of detail yet
+          targetClass: '', // Backend doesn't provide this field
+        },
+      };
+
+      console.log("Formatted violation:", formattedData);
+      return formattedData;
+    });
+
+    tableData.value = [...allData.value];
+    console.log("Final Processed Data:", tableData.value);
+
+  } catch (error) {
+    console.error('Error fetching violation data:', error);
+    // Set empty data to prevent errors
+    allData.value = [];
+    tableData.value = [];
+  }
+};
+
+
+const formatURI = (uri) => {
+  if (!uri || typeof uri !== "string") return uri; // Ensure valid input
+
+  console.log("Processing URI:", uri);
+
+  let matchedPrefix = null;
+  let matchedNamespace = null;
+
+  for (const [prefix, namespace] of Object.entries(prefixes.value)) {
+    if (uri.startsWith(namespace) && (!matchedNamespace || namespace.length > matchedNamespace.length)) {
+      matchedPrefix = prefix;
+      matchedNamespace = namespace;
+    }
+  }
+
+  if (matchedPrefix) {
+    const transformedURI = `${matchedPrefix}:${uri.slice(matchedNamespace.length)}`;
+    console.log(`Transformed "${uri}" → "${transformedURI}"`);
+    return transformedURI;
+  }
+
+  console.log(`No match for "${uri}". Returning original.`);
+  return uri; // Return as is if no prefix match
+};
+
+// Fetch data on mount
+onMounted(async () => {
+  await loadViolationData();
+});
 
 const downloadCSV = () => {
   if (!tableData.value.length) {
@@ -262,6 +343,7 @@ table {
 th,
 td {
   padding: 12px;
+  vertical-align: top;
 }
 
 tbody tr:hover {
@@ -276,15 +358,35 @@ button:focus {
   outline: none;
 }
 
-td {
+/* Word wrap for all text cells except ID column */
+td:not(:first-child):not(:last-child) {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+  max-width: 300px; /* Reasonable max width for readability */
+}
+
+/* Special handling for violated triple column */
+td:nth-child(2) {
+  max-width: 250px;
+}
+
+/* Special handling for error message column */
+td:nth-child(3) {
+  max-width: 200px;
+}
+
+/* Keep ID column narrow and without wrap */
+td:first-child {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 60px;
 }
 
-/* Allow wrapping for long text */
-td.wrap {
-  white-space: normal;
-  word-break: break-word;
+/* Keep action column narrow */
+td:last-child {
+  white-space: nowrap;
+  max-width: 80px;
 }
 </style>

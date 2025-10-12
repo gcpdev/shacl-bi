@@ -315,40 +315,22 @@ const toggleDefinition = () => {
 
 onMounted(() => {
   const shapeId = route.params.shapeId;
+  shapeName.value = shapeId; // Use the shape name directly
 
   console.log("Retrieved shapeId:", shapeId); // Debugging Log
-  const shapes = {
-    26: {
-      name: 'shs:StadiumShape',
-      definition: `@prefix sh: <sh:> . 
-                    @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-                    @prefix foaf: <http://xmlns.com/foaf/0.1/> .
-                    @prefix ex: <http://example.org/> .
 
-                    ex:AgeShape
-                        a sh:NodeShape ;
-                        sh:targetClass foaf:Person ;  
-                        sh:property [
-                            sh:path foaf:age ;        
-                            sh:datatype xsd:integer ; 
-                            sh:minInclusive 0 ;       
-                            sh:message "Age must be a non-negative integer." ;
-                        ] .`,
-      violations: 42,
-    },
-    2: {
-      name: "AddressShape",
-      definition: "PREFIX ex: <http://example.org/> ...",
-      violations: 18,
-    },
-  };
-  const shape = shapes[shapeId];
+  // Set a generic definition for now
+  shapeDefinition.value = `# Shape Definition for ${shapeId}
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-  if (shape) {
-    shapeName.value = shape.name;
-    shapeDefinition.value = shape.definition;
-    totalViolations.value = shape.violations;
-  }
+${shapeId} a sh:NodeShape ;
+    sh:targetClass ex:SomeClass ;
+    sh:property [
+        sh:path ex:someProperty ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+    ] .`;
 });
 
 const goBack = () => {

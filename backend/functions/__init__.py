@@ -6,6 +6,7 @@ It provides services for loading and querying SHACL validation reports,
 generating statistics and visualizations, and interacting with the Virtuoso database.
 
 Modules:
+    homepage_service: Services for the main dashboard page and statistics
     landing_service: Services for loading RDF data into the Virtuoso database
     shape_view_service: Services for detailed shape inspection views
     shapes_overview_service: Services for shapes graph analysis and metrics
@@ -34,6 +35,22 @@ from .landing_service import (
     load_graphs
 )
 
+from .homepage_service import (
+    get_number_of_node_shapes,
+    get_number_of_node_shapes_with_violations,
+    get_number_of_paths_in_shapes_graph,
+    get_number_of_paths_with_violations,
+    get_number_of_focus_nodes_in_validation_report,
+    get_violations_per_node_shape,
+    get_violations_per_path,
+    get_violations_per_focus_node,
+    get_number_of_violations_in_validation_report,
+    distribution_of_violations_per_shape,
+    distribution_of_violations_per_path,
+    distribution_of_violations_per_focus_node,
+    generate_validation_details_report,
+)
+
 from .shapes_overview_service import (
     get_number_of_violations_for_node_shape,
     get_number_of_violated_focus_for_node_shape,
@@ -43,8 +60,6 @@ from .shapes_overview_service import (
     get_number_of_violations_per_constraint_type_for_property_shape,
     get_total_constraints_count_per_node_shape,
     get_constraints_count_for_property_shapes,
-    get_number_of_node_shapes,
-    get_number_of_node_shapes_with_violations,
 )
 
 __all__ = [
@@ -65,12 +80,22 @@ __all__ = [
     "get_shape_from_shapes_graph",
     "get_maximum_number_of_violations_in_validation_report_for_node_shape",
     "get_average_number_of_violations_in_validation_report_for_node_shape",
+    "get_number_of_node_shapes",
+    "get_number_of_node_shapes_with_violations",
+    "get_number_of_paths_in_shapes_graph",
+    "get_number_of_paths_with_violations",
+    "get_number_of_focus_nodes_in_validation_report",
+    "get_violations_per_node_shape",
+    "get_violations_per_path",
+    "get_violations_per_focus_node",
     "get_number_of_violated_focus_for_node_shape",
     "get_property_shapes",
     "get_number_of_violations_per_constraint_type_for_property_shape",
     "get_total_constraints_count_per_node_shape",
     "get_constraints_count_for_property_shapes",
-    "get_number_of_node_shapes",
-    "get_number_of_node_shapes_with_violations",
+    "distribution_of_violations_per_shape",
+    "distribution_of_violations_per_path",
+    "distribution_of_violations_per_focus_node",
+    "generate_validation_details_report",
     
 ]

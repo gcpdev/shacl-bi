@@ -37,11 +37,15 @@ You will be given a technical description of a data quality violation. Your task
     - Example: 'Provide the missing name for this person\'s record.'
 
 The `proposed_repair` field is for the system and MUST contain a technically correct SPARQL query.
-- Based on the violation\'s 'sourceConstraintComponent', generate the correct type of SPARQL query:
-    - 'MinCountConstraintComponent' (missing a value) -> SPARQL INSERT query.
-    - 'MaxCountConstraintComponent' (has too many values) -> SPARQL DELETE query.
-    - 'DatatypeConstraintComponent' (value has wrong datatype) -> SPARQL DELETE/INSERT query. For this, the INSERT clause MUST explicitly type the new value using the correct datatype from the violation context (e.g., `"42"^^xsd:integer`).
-- For MinCount, use the placeholder `$user_provided_value` WITHOUT quotes. For MaxCount or Datatype, use the actual violating value from the input in the DELETE clause.
+- Based on the violation's 'sourceConstraintComponent', generate the correct type of SPARQL query:
+    - 'MinCountConstraintComponent' (a value is missing): Generate a SPARQL INSERT query. CRITICALLY, the value to be inserted MUST be the placeholder '$user_provided_value'. DO NOT use an empty string or any other value.
+    - 'MaxCountConstraintConstraintComponent' (has too many values) -> SPARQL DELETE query with actual violating value in DELETE clause.
+    - 'DatatypeConstraintComponent' (value has wrong datatype) -> SPARQL DELETE/INSERT query. For this, the INSERT clause MUST explicitly type the new value using the correct datatype from the violation context (e.g., "42"^^xsd:integer).
+    - 'PatternConstraintComponent' (value doesn't match pattern) -> SPARQL DELETE/INSERT query with $user_provided_value placeholder.
+    - 'InConstraintComponent' (value not in allowed list) -> SPARQL DELETE/INSERT query with actual violating value in DELETE clause and first allowed value in INSERT clause.
+- For MinCount and Pattern constraints, use the placeholder `$user_provided_value` WITHOUT quotes. This will be replaced at runtime with user input.
+- For MaxCount and Datatype constraints, use the actual violating value from the input in the DELETE clause.
+- The INSERT clause should use intelligent defaults based on the property name and datatype requirements.
 
 You MUST return ONLY the JSON object, with no other text before or after it.
 
@@ -175,4 +179,153 @@ class SuggestionRepairGenerator:
 
         except Exception as e:
             logger.error(f"LiteLLM API error during repair generation: {e}", exc_info=True)
+            # Generate a fallback repair query
+            return self._generate_fallback_repair(violation, justification_tree, context, language)
+
+    def _generate_fallback_repair(
+        self,
+        violation: ConstraintViolation,
+        justification_tree: JustificationTree,
+        context: DomainContext,
+        language: str = "en"
+    ) -> Optional[Dict]:
+        """
+        Generate a fallback repair query when LLM fails
+        """
+        try:
+            constraint_component = getattr(violation, 'constraint_id', '')
+            focus_node = getattr(violation, 'focus_node', '')
+            property_path = getattr(violation, 'property_path', '')
+            value = getattr(violation, 'value', '')
+
+            # Generate query based on constraint type
+            if 'MinCountConstraintComponent' in constraint_component:
+                # Missing value - generate INSERT with reasonable default
+                default_value = self._get_default_value_for_property(property_path, context)
+                sparql_query = f"""
+INSERT DATA {{
+  GRAPH <http://ex.org/ValidationReport/Session_UNKNOWN> {{
+    <{focus_node}> <{property_path}> {default_value} .
+  }}
+}}
+"""
+                explanation = f"This data record is incomplete. The '{property_path}' attribute is required but missing."
+                suggestion = f"Add a value for the '{property_path}' attribute to complete the record."
+
+            elif 'MaxCountConstraintComponent' in constraint_component:
+                # Too many values - generate DELETE
+                sparql_query = f"""
+DELETE WHERE {{
+  GRAPH <http://ex.org/ValidationReport/Session_UNKNOWN> {{
+    <{focus_node}> <{property_path}> {value} .
+  }}
+}}
+"""
+                explanation = f"This data record has too many values for the '{property_path}' attribute."
+                suggestion = f"Remove extra values from the '{property_path}' attribute to comply with the constraint."
+
+            elif 'DatatypeConstraintComponent' in constraint_component:
+                # Wrong datatype - generate DELETE/INSERT with correct typing
+                correct_value = self._fix_datatype_value(value, context)
+                sparql_query = f"""
+DELETE WHERE {{
+  GRAPH <http://ex.org/ValidationReport/Session_UNKNOWN> {{
+    <{focus_node}> <{property_path}> {value} .
+  }}
+}};
+INSERT DATA {{
+  GRAPH <http://ex.org/ValidationReport/Session_UNKNOWN> {{
+    <{focus_node}> <{property_path}> {correct_value} .
+  }}
+}}
+"""
+                explanation = f"This data record has an incorrect data type for the '{property_path}' attribute."
+                suggestion = f"Change the value of '{property_path}' to the correct data type."
+
+            else:
+                # Generic constraint - provide a template
+                sparql_query = f"""
+# Modify this query based on the specific constraint requirements
+DELETE WHERE {{
+  GRAPH <http://ex.org/ValidationReport/Session_UNKNOWN> {{
+    <{focus_node}> <{property_path}> {value} .
+  }}
+}};
+INSERT DATA {{
+  GRAPH <http://ex.org/ValidationReport/Session_UNKNOWN> {{
+    <{focus_node}> <{property_path}> "CORRECTED_VALUE" .
+  }}
+}}
+"""
+                explanation = f"The data record violates a constraint on the '{property_path}' attribute."
+                suggestion = f"Review and correct the '{property_path}' value according to the constraint requirements."
+
+            # Create ExplanationOutput for storage
+            self.last_explanation_output = ExplanationOutput(
+                natural_language_explanation=explanation,
+                correction_suggestions=[suggestion],
+                violation=violation,
+                justification_tree=justification_tree,
+                retrieved_context=context,
+                provided_by_model="fallback_generator",
+                proposed_repair_query=sparql_query.strip()
+            )
+
+            return {
+                "violation_signature": f"fallback_{constraint_component}_{property_path}",
+                "explanation_natural_language": explanation,
+                "suggestion_natural_language": suggestion,
+                "proposed_repair": {
+                    "type": "SPARQL_UPDATE",
+                    "query": sparql_query.strip()
+                }
+            }
+
+        except Exception as e:
+            logger.error(f"Error generating fallback repair: {e}")
             return None
+
+    def _get_default_value_for_property(self, property_path: str, context: DomainContext) -> str:
+        """
+        Generate a sensible default value for a given property
+        """
+        property_lower = property_path.lower()
+
+        if any(keyword in property_lower for keyword in ['name', 'label', 'title']):
+            return '"Unknown Name"'
+        elif any(keyword in property_lower for keyword in ['email', 'mail']):
+            return '"unknown@example.com"'
+        elif any(keyword in property_lower for keyword in ['date', 'created', 'modified']):
+            return f"\"{time.strftime('%Y-%m-%d')}\"^^xsd:date"
+        elif any(keyword in property_lower for keyword in ['age', 'count', 'number', 'quantity']):
+            return '"0"^^xsd:integer'
+        elif any(keyword in property_lower for keyword in ['description', 'comment', 'text']):
+            return '""'
+        elif any(keyword in property_lower for keyword in ['url', 'link', 'uri']):
+            return '"http://example.org"'
+        else:
+            return '""'  # Default to empty string
+
+    def _fix_datatype_value(self, value: str, context: DomainContext) -> str:
+        """
+        Fix a value to have the correct datatype
+        """
+        # Try to determine if it should be numeric
+        try:
+            int(value)
+            return f'"{value}"^^xsd:integer'
+        except ValueError:
+            pass
+
+        try:
+            float(value)
+            return f'"{value}"^^xsd:decimal'
+        except ValueError:
+            pass
+
+        # Check if it looks like a date
+        if any(char in value for char in ['-', '/']) and len(value) > 8:
+            return f'"{value}"^^xsd:date'
+
+        # Default to string
+        return f'"{value}"'

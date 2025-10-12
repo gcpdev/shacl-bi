@@ -41,7 +41,10 @@ services:
       - ./initdb:/docker-entrypoint-initdb.d:ro
 
   shacl-bi-backend:
-    build: ./backend
+    build:
+      context: ./backend
+      cache_from:
+        - shacl-bi-backend:latest
     ports:
       - "80:80"
     environment:
@@ -56,7 +59,10 @@ services:
         condition: service_healthy
 
   shacl-bi-frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      cache_from:
+        - shacl-bi-frontend:latest
     ports:
       - "8080:80"
     depends_on:

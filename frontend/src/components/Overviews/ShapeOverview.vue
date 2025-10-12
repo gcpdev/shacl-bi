@@ -133,50 +133,119 @@
  * data table listing all node shapes with their metrics and violation details at the bottom.
  */
 // Importing components
+import { ref, computed, onMounted } from 'vue';
+import api from '../../utils/api';
 import HistogramChart from './../Charts/HistogramChart.vue';
 import ScatterPlotChart from './../Charts/ScatterPlotChart.vue';
-import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useStore } from '../../store';
+import { calculateShannonEntropy } from "./../../utils/utils"; // Assume you have this utility function
 
-const store = useStore();
-
-const coveragePlotData = computed(() => store.mainContentData?.coveragePlotData || {});
-const scatterPlotData = computed(() => store.mainContentData?.scatterPlotData || {});
-
-// Router for navigation
+const dashboardData = ref(null);
 const router = useRouter();
 
-const tags = computed(() => {
-  const shapes = store.mainContentData?.shapes || [];
-  const totalShapes = shapes.length;
-  const shapesWithViolations = shapes.filter(shape => shape.violations > 0).length;
-  const percentageViolations = totalShapes > 0 ? Math.round((shapesWithViolations / totalShapes) * 100) : 0;
-  const maxViolations = Math.max(...shapes.map(shape => shape.violations));
-  const avgViolations = totalShapes > 0 ? (shapes.reduce((acc, shape) => acc + shape.violations, 0) / totalShapes).toFixed(2) : 0;
-
-  return [
-    { title: "Total Node Shapes", value: totalShapes },
-    { title: "Node Shapes with Violations (%)", value: `${percentageViolations}%` },
-    { title: "Max Violations per Node Shape", value: maxViolations },
-    { title: "Avg Violations per Node Shape", value: avgViolations },
-  ];
+onMounted(async () => {
+  try {
+    const response = await api.getDashboardData();
+    dashboardData.value = response.data;
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+  }
 });
 
-const normalizedHistogramViolationData = computed(() => store.mainContentData?.shapeConstraintHistogram || {});
+const tags = computed(() => dashboardData.value?.tags || []);
+const normalizedHistogramViolationData = computed(() => {
+  // Additional defensive checks
+  if (!dashboardData.value) return { labels: [], datasets: [] };
+  if (!dashboardData.value.shapeHistogramData) return { labels: [], datasets: [] };
 
-const columns = ref([
-  { label: "Node Shape Name", field: "name" },
-  { label: "Violations", field: "violations" },
-  { label: "Number of Property Shapes", field: "propertyShapes" },
-  { label: "Focus Nodes Affected", field: "focusNodes" },
-  { label: "Property Paths", field: "propertyPaths" },
-  { label: "Most Violated Constraint Component", field: "mostViolatedConstraint" },
-  { label: "Violation-to-Constraint Ratio", field: "violationToConstraintRatio" },
-]);
+  const histogramData = dashboardData.value.shapeHistogramData;
+  if (!Array.isArray(histogramData) || histogramData.length === 0) return { labels: [], datasets: [] };
 
-const shapes = computed(() => store.mainContentData?.shapes || []);
+  // Helper function to extract short name from URI
+  const getShortName = (uri) => {
+    if (!uri) return 'Unknown';
+    if (uri.startsWith('nodeID://')) return uri.replace('nodeID://', 'Node ');
+    if (uri.startsWith('http://')) {
+      const parts = uri.split(/[/#]/);
+      return parts[parts.length - 1] || parts[parts.length - 2] || 'Unknown';
+    }
+    return uri;
+  };
 
+  return {
+    labels: histogramData.map(item => getShortName(item[0])),
+    datasets: [{
+      label: 'Violations',
+      data: histogramData.map(item => item[1]),
+      backgroundColor: '#3498db',
+      borderColor: '#2980b9',
+      borderWidth: 1
+    }]
+  };
+});
+const coveragePlotData = computed(() => {
+  // Additional defensive checks
+  if (!dashboardData.value) return { datasets: [] };
+  if (!dashboardData.value.shapes) return { datasets: [] };
+
+  const shapes = dashboardData.value.shapes;
+  if (!Array.isArray(shapes) || shapes.length === 0) return { datasets: [] };
+
+  return {
+    datasets: [
+      {
+        label: "Shapes",
+        data: shapes.map((shape) => ({
+          x: shape.propertyShapes || 1,
+          y: shape.violations / (shape.propertyShapes || 1),
+          label: shape.name,
+          hasZeroViolations: shape.violations === 0,
+        }))
+      },
+    ],
+  };
+});
+const scatterPlotData = computed(() => {
+  // Additional defensive checks
+  if (!dashboardData.value) return { datasets: [] };
+  if (!dashboardData.value.shapes) return { datasets: [] };
+
+  const shapes = dashboardData.value.shapes;
+  if (!Array.isArray(shapes) || shapes.length === 0) return { datasets: [] };
+
+  return {
+    datasets: [
+      {
+        label: "Shapes",
+        data: shapes.map((shape) => ({
+          x: Math.log2(shape.violations + 1), // Simple entropy calculation
+          y: shape.violations / (shape.propertyShapes || 1),
+          label: shape.name,
+        }))
+      },
+    ],
+  };
+});
+const shapes = computed(() => {
+    const rawShapes = dashboardData.value?.shapes || [];
+
+    // Helper function to extract short name from URI
+    const getShortName = (uri) => {
+        if (!uri) return 'Unknown';
+        if (uri.startsWith('nodeID://')) return uri.replace('nodeID://', 'Node ');
+        if (uri.startsWith('http://')) {
+            const parts = uri.split(/[/#]/);
+            return parts[parts.length - 1] || parts[parts.length - 2] || 'Unknown';
+        }
+        return uri;
+    };
+
+    // Transform shapes data to use short names
+    return rawShapes.map(shape => ({
+        ...shape,
+        name: getShortName(shape.name)
+    }));
+});
 const currentPage = ref(1);
 const pageSize = ref(10);
 const totalPages = computed(() => Math.ceil(shapes.value.length / pageSize.value));
@@ -206,11 +275,22 @@ const nextPage = () => {
 };
 
 const goToShape = (shape) => {
-  router.push({ name: "ShapeView", params: { shapeId: shape.id } });
+  // Use the shape name as the ID since we don't have separate IDs
+  router.push({ name: "ShapeView", params: { shapeId: shape.name || shape } });
 };
 
 const sortKey = ref("");
 const sortOrder = ref("asc");
+
+const columns = [
+  { label: "Shape Name", field: "name" },
+  { label: "Violations", field: "violations" },
+  { label: "Property Shapes", field: "propertyShapes" },
+  { label: "Focus Nodes", field: "focusNodes" },
+  { label: "Property Paths", field: "propertyPaths" },
+  { label: "Most Violated Constraint", field: "mostViolatedConstraint" },
+  { label: "Violation/Constraint Ratio", field: "violationToConstraintRatio" }
+];
 
 const sortColumn = (column) => {
   if (sortKey.value === column.field) {

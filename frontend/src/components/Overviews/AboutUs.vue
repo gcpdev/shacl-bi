@@ -92,7 +92,7 @@
   const professor = {
     name: "Prof. Dr. Maribel Acosta",
     role: "Professor",
-    photo: "/img/m.png",
+    photo: "img/m.png",
     link: "https://www.cs.cit.tum.de/cde/people/maribel-acosta/",
   };
   
@@ -101,7 +101,7 @@
     {
       name: "Jin Ke",
       role: "Doctoral Student",
-      photo: "/img/ji.png",
+      photo: "img/ji.png",
       x: 15,
       y: 80,
       link: "https://www.cs.cit.tum.de/cde/people/jin-ke/",
@@ -109,7 +109,7 @@
     {
       name: "Johannes Maekelburg",
       role: "Doctoral Student",
-      photo: "/img/jo.png",
+      photo: "img/jo.png",
       x: 50,
       y: 80,
       link: "https://www.cs.cit.tum.de/cde/people/johannes-maekelburg/",
@@ -117,7 +117,7 @@
     {
       name: "Zenon Zacouris",
       role: "Doctoral Student",
-      photo: "/img/z.png",
+      photo: "img/z.png",
       x: 85,
       y: 80,
       link: "https://www.cs.cit.tum.de/cde/people/zenon-zacouris/",

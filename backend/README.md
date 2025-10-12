@@ -20,13 +20,13 @@ backend/
   │   └── ...               # Various evaluation output files
   ├── functions/            # Core functionality and services
   │   ├── __init__.py       # Function exports
-  │   ├── main_content_service.py   # Main dashboard data services
+  │   ├── homepage_service.py         # Main dashboard data services
   │   ├── landing_service.py          # Data loading services
   │   ├── shapes_overview_service.py  # Shape analysis services
   │   └── virtuoso_service.py         # Database connectivity services
   └── routes/               # API route definitions
       ├── __init__.py       # Blueprint registration
-      ├── main_content_routes.py    # Main dashboard endpoints
+      ├── homepage_routes.py          # Main dashboard endpoints
       ├── landing_routes.py           # File loading endpoints
       ├── shapes_overview_routes.py   # Shape analysis endpoints
       └── shape_view_routes.py        # Shape detail endpoints

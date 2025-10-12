@@ -1,133 +1,496 @@
 <template>
-  <div class="landing-page flex items-center justify-center min-h-screen bg-gray-100" :class="{ 'phoenix-mode': phoenixMode }">
-    <div class="card w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-md">
-      <div class="text-center">
-        <h1 class="text-3xl font-bold text-gray-800">SHACL-BI</h1>
-        <p class="mt-2 text-gray-600">Welcome! Please select your mode.</p>
+    <div class="landing-page">
+      <!-- Main Card for SHACL-BI and Input Form -->
+      <div class="card">
+        <!-- Left side of the card (gradient background) -->
+        <div class="card-left">
+          <!-- Mode Selection -->
+          <h1 class="title-white">SHACL-BI</h1>
+          <div class="mode-selection">
+            <p class="explanation-header">Select Mode:</p>
+            <v-radio-group v-model="selectedMode" row class="mode-radio-group">
+              <v-radio
+                label="Analytics Mode"
+                value="analytics"
+                color="white"
+                class="mode-radio"
+              ></v-radio>
+              <v-radio
+                label="Upload mode"
+                value="upload"
+                color="white"
+                class="mode-radio"
+              ></v-radio>
+            </v-radio-group>
+          </div>
+
+          <!-- Conditional Explanations based on selected mode -->
+          <div class="explanation-section" v-if="selectedMode === 'analytics'">
+            <p class="explanation-header">
+              1. Load the graphs into <a href="https://virtuoso.openlinksw.com/" target="_blank" class="link">Virtuoso</a>
+            </p>
+          </div>
+          <div class="explanation-section" v-if="selectedMode === 'analytics'">
+            <p class="explanation-header">2. Enter your Information on the right:</p>
+            <div class="indented-section">
+              <p class="explanation-highlight">Directory Path:</p>
+              <p class="explanation-text">Input the directory path of your Virtuoso folder</p>
+              <p class="explanation-highlight">Shapes Graph Name:</p>
+              <p class="explanation-text">Input the name of your SHACL shapes graph</p>
+              <p class="explanation-highlight">Validation Report Name:</p>
+              <p class="explanation-text">Input the name of your validation report</p>
+            </div>
+            <div class="important-limitation">
+              <p class="limitation-header">Important:</p>
+              <p class="limitation-text">Each Property Shape belongs to one Node Shape.</p>
+            </div>
+          </div>
+
+          <div class="explanation-section" v-if="selectedMode === 'upload'">
+            <p class="explanation-header">Upload Data for Validation</p>
+            <div class="indented-section">
+              <p class="explanation-highlight">Upload Process:</p>
+              <p class="explanation-text">• Upload your RDF data file for validation</p>
+              <p class="explanation-text">• Upload your SHACL shapes graph constraints</p>
+              <p class="explanation-text">• Get AI-generated explanations for violations</p>
+              <p class="explanation-text">• Receive intelligent repair suggestions</p>
+            </div>
+            <div class="important-limitation">
+              <p class="limitation-header">Note:</p>
+              <p class="limitation-text">AI configuration is handled automatically by the system</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right side of the card (contains title and input form) -->
+        <div class="card-right">
+          <h1 class="title">Hello, {{ greeting }}!</h1>
+
+          <!-- Analytics Mode Form -->
+          <div class="input-card" v-if="selectedMode === 'analytics'">
+            <form>
+              <h2 class="input-card-title">Analytics Mode Configuration</h2>
+
+              <!-- Vuetify Input fields for directory path, shapes graph name, and validation report name -->
+              <v-text-field
+                v-model="directoryPath"
+                label="Directory Path"
+                placeholder="Enter directory path"
+                class="information-field"
+                outlined
+                dense
+              />
+
+              <v-text-field
+                v-model="shapesGraphName"
+                label="Shapes Graph Name"
+                placeholder="Enter shapes graph name"
+                class="information-field"
+                outlined
+                dense
+              />
+
+              <v-text-field
+                v-model="validationReportName"
+                label="Validation Report Name"
+                placeholder="Enter validation report name"
+                class="information-field"
+                outlined
+                dense
+              />
+
+              <!-- Enter button -->
+              <v-btn
+                class="enter-btn"
+                color="primary"
+                @click="goToAnalytics"
+                rounded
+                block
+              >
+                ENTER ANALYTICS MODE
+              </v-btn>
+            </form>
+          </div>
+
+          <!-- Upload Mode Form -->
+          <div class="input-card" v-if="selectedMode === 'upload'">
+            <form>
+              <h2 class="input-card-title">Upload Mode Configuration</h2>
+
+              <v-file-input
+                v-model="dataFile"
+                label="Select Data File"
+                placeholder="Upload your RDF data file (.ttl, .rdf, .n3)"
+                accept=".ttl,.rdf,.n3,.nt"
+                class="information-field"
+                outlined
+                dense
+                prepend-icon="mdi-database"
+              />
+
+              <v-file-input
+                v-model="shapesFile"
+                label="Select Shapes Graph"
+                placeholder="Upload your SHACL shapes graph (.ttl, .rdf, .n3)"
+                accept=".ttl,.rdf,.n3,.nt"
+                class="information-field"
+                outlined
+                dense
+                prepend-icon="mdi-shape"
+              />
+
+              <!-- Enter button -->
+              <v-btn
+                class="enter-btn upload-btn"
+                color="green"
+                @click="goToUpload"
+                rounded
+                block
+                :disabled="!dataFile || !shapesFile"
+              >
+                ENTER UPLOAD MODE
+              </v-btn>
+            </form>
+          </div>
+        </div>
       </div>
-
-      <v-switch v-model="phoenixMode" label="PHOENIX Mode" color="primary"></v-switch>
-
-      <form v-if="!phoenixMode" @submit.prevent="goToHome">
-        <div class="space-y-4">
-          <v-text-field
-            v-model="directoryPath"
-            label="Directory Path"
-            placeholder="Enter directory path"
-            outlined
-            dense
-          ></v-text-field>
-          <v-text-field
-            v-model="shapesGraphName"
-            label="Shapes Graph Name"
-            placeholder="Enter shapes graph name"
-            outlined
-            dense
-          ></v-text-field>
-          <v-text-field
-            v-model="validationReportName"
-            label="Validation Report Name"
-            placeholder="Enter validation report name"
-            outlined
-            dense
-          ></v-text-field>
-        </div>
-        <v-btn type="submit" class="w-full mt-6" color="primary" large>ENTER</v-btn>
-      </form>
-
-      <form v-if="phoenixMode" @submit.prevent="validateAndGoToHome">
-        <div class="space-y-4">
-          <v-file-input v-model="dataGraphFile" label="Data Graph File" outlined dense></v-file-input>
-          <v-file-input v-model="shapesGraphFile" label="Shapes Graph File" outlined dense></v-file-input>
-        </div>
-        <v-btn type="submit" class="w-full mt-6" color="primary" large>VALIDATE</v-btn>
-      </form>
     </div>
-  </div>
-</template>
+  </template>
+  
+  <script setup>
+/**
+ * LandingPage component
+ *
+ * Displays the initial landing page with SHACL-BI information and configuration form.
+ * Provides inputs for configuring data sources and initiating the dashboard.
+ *
+ * @example
+ * // Basic usage in a parent component template:
+ * // <LandingPage :handleEnterClick="navigateToHome" />
+ *
+ * @prop {Function} handleEnterClick - Function to call when the user clicks the Enter button
+ *
+ * @dependencies
+ * - vue (Composition API)
+ * - vuetify - For UI components (v-text-field, v-btn)
+ *
+ * @state
+ * - directoryPath - Input value for Virtuoso directory path
+ * - shapesGraphName - Input value for SHACL shapes graph name
+ * - validationReportName - Input value for validation report name
+ * - greeting - Dynamic greeting based on time of day
+ *
+ * @style
+ * - Responsive split-panel layout with gradient background on left side
+ * - Card-style form with clean spacing and typography
+ * - Informative explanation sections with clear hierarchy
+ * 
+ * @returns {HTMLElement} A responsive landing page with split layout featuring 
+ * explanatory content on the left side with blue gradient background, and
+ * a configuration form on the right with input fields and an enter button.
+ */
+  import { defineProps, ref, watch } from 'vue';
+  import api from '@/utils/api';
+  
+  // Props will be passed to indicate which page is active
+  const props = defineProps({
+    handleEnterClick: Function
+  })
+  
+  
+  // Define models for Vuetify inputs
+  const directoryPath = ref('')
+  const shapesGraphName = ref('')
+  const validationReportName = ref('')
 
-<script>
-import { mapActions } from 'pinia';
-import { useStore } from '@/store';
+  // Mode selection and upload variables
+  const selectedMode = ref('analytics')
+  const dataFile = ref(null)
+  const shapesFile = ref(null)
 
-export default {
-  data() {
-    return {
-      phoenixMode: false,
-      directoryPath: '',
-      shapesGraphName: '',
-      validationReportName: '',
-      dataGraphFile: null,
-      shapesGraphFile: null,
-    };
-  },
-  methods: {
-    ...mapActions(useStore, ['setMainContentData', 'setShaclDashboardData']),
-    goToHome() {
-      // Logic to navigate to the home page for SHACL-Dashboard mode
-      this.setShaclDashboardData({
-        directoryPath: this.directoryPath,
-        shapesGraphName: this.shapesGraphName,
-        validationReportName: this.validationReportName,
+  // Reactive variable for the title
+  const greeting = ref('');
+
+  // Determine the greeting based on the current time
+  const updateGreeting = () => {
+    const currentHour = new Date().getHours();
+
+    if (currentHour >= 5 && currentHour < 12) {
+      greeting.value = 'Good Morning';
+    } else if (currentHour >= 12 && currentHour < 17) {
+      greeting.value = 'Good Day';
+    } else if (currentHour >= 17 && currentHour < 21) {
+      greeting.value = 'Good Evening';
+    } else {
+      greeting.value = 'Good Night';
+    }
+  };
+
+  // Run the updateGreeting function when the component is created
+  updateGreeting();
+
+  const goToAnalytics = async () => {
+    try {
+      await api.loadGraphs(directoryPath.value, shapesGraphName.value, validationReportName.value);
+      props.handleEnterClick(); // Change isLandingPage state to false, navigate to the main layout
+    } catch (error) {
+      console.error('Error loading graphs:', error);
+      alert('Error loading graphs: ' + error.message);
+    }
+  };
+
+  const goToUpload = async () => {
+    try {
+      // Upload files and use backend configuration
+      const response = await api.uploadFiles({
+        dataFile: dataFile.value,
+        shapesFile: shapesFile.value
       });
-      this.$router.push({ name: 'Home' });
-    },
-    validateAndGoToHome() {
-      if (!this.dataGraphFile || !this.shapesGraphFile) {
-        alert('Please select both data graph and shapes graph files.');
-        return;
+
+      // Store session ID for tenant isolation
+      if (response.data.session_id) {
+        localStorage.setItem('shacl_session_id', response.data.session_id);
+        console.log('Session ID stored:', response.data.session_id);
       }
 
-      console.log('Starting validation...');
-      console.log('Data file:', this.dataGraphFile);
-      console.log('Shapes file:', this.shapesGraphFile);
+      props.handleEnterClick(); // Navigate to upload interface
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      alert('Error uploading files: ' + error.message);
+    }
+  };
+  </script>
+  
+  <style scoped>
+  .landing-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(145deg, #f5f7fa 0%, #e4e7eb 100%);
+    font-family: 'Inter', sans-serif;
+    padding: 20px;
+  }
+  
+  .card {
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
+    min-height: 600px;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    background: white;
+    overflow: hidden;
+  }
+  
+  .card-left {
+    flex: 1.2;
+    background: linear-gradient(145deg, #4171b9 0%, #5b8dd6 100%);
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .title-white {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 60px;
+    letter-spacing: -0.5px;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3); /* Subtle shadow for better readability */
+  }
 
-      const formData = new FormData();
-      formData.append('dataGraphFile', this.dataGraphFile);
-      formData.append('shapesGraphFile', this.shapesGraphFile);
+  .link {
+    color: inherit; /* Inherits the text color for seamless integration */
+    font-weight: 700; /* Bold for emphasis */
+    text-decoration: none; /* Removes underline for a cleaner look */
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3); /* Adds a subtle underline effect */
+    padding-bottom: 2px; /* Adjusts spacing between the text and the underline */
+    transition: border-color 0.3s ease; /* Smooth transition for hover effect */
+  }
 
-      fetch('/api/validate-phoenix', {
-        method: 'POST',
-        body: formData,
-      })
-        .then(response => {
-          console.log('Response received:', response);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('Validation response:', data);
-          if (data.error) {
-            console.error('Validation failed:', data.error);
-            alert(`Validation failed: ${data.error}`);
-          } else {
-            console.log('Validation successful:', data);
-            console.log('Setting main content data and redirecting...');
-            this.setMainContentData(data);
-            this.$router.push('/dashboard');
-          }
-        })
-        .catch(error => {
-          console.error('Error during validation:', error);
-          alert(`Error during validation: ${error.message}`);
-        });
-    },
-  },
-};
-</script>
+  .link:hover {
+    border-bottom-color: rgba(255, 255, 255, 0.6); /* Changes underline color on hover */
+  }
+    
+  .card-right {
+    flex: 0.8;
+    background-color: white;
+    padding: 60px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start; /* Align content to the left */
+  }
+  
+  .title {
+    font-size: 2rem; /* Original size */
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 60px; /* Match the vertical spacing with title-white */
+    transform: translateY(-6px); /* Adjust positioning slightly for alignment */
+  }
+  
+  .explanation-header {
+    font-size: 1.5rem; /* Slightly larger than regular text for emphasis */
+    font-weight: 600; /* Semi-bold for prominence */
+    color: #ffffff; /* White text for consistency with the background */
+    line-height: 1.8;
+    margin-bottom: 16px; /* Adds spacing between the header and following content */
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3); /* Subtle shadow for better readability */
+  }
+  
+  .explanation-highlight {
+    font-size: 1.25rem;
+    font-weight: 700; /* Bold text */
+    color: #ffffff;
+    line-height: 2;
+    margin-bottom: 0px;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3); /* Subtle shadow for emphasis */
+  }
+  
+  .indented-section {
+    margin-left: 20px; /* Adjust the indentation */
+    padding-left: 10px; /* Optional: Add padding for a softer indentation */
+    border-left: 2px solid rgba(255, 255, 255, 0.5); /* Optional: Add a subtle left border for visual separation */
+  }
+  
+  .explanation-text {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 2;
+    margin-bottom: 24px;
+    font-weight: 400;
+  }
+  
+  .input-card {
+    width: 100%;
+  }
+  
+  .input-card-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #4a5568;
+    margin-bottom: 30px;
+  }
+  
+  /* Style Vuetify inputs */
+  :deep(.v-text-field) {
+    margin-bottom: 24px !important;
+  }
+  
+  :deep(.v-text-field--outlined fieldset) {
+    border-color: #e2e8f0 !important;
+    border-radius: 12px !important;
+  }
+  
+  :deep(.v-text-field--outlined:hover fieldset) {
+    border-color: #cbd5e0 !important;
+  }
+  
+  /* Enter button styling */
+  .enter-btn {
+    margin-top: 32px !important;
+    height: 48px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.5px !important;
+    background: #4171b9 !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+  }
+  
+  .enter-btn:hover {
+    background: #5b8dd6 !important;
+    box-shadow: 0 4px 12px rgba(65, 113, 185, 0.2) !important;
+  }
+  
+  @media (max-width: 768px) {
+    .card {
+      flex-direction: column;
+      margin: 20px;
+    }
+  
+    .card-left,
+    .card-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start; /* Align items at the top */
+      gap: 20px; /* Add spacing between elements */
+    }
+  
+    .title-white {
+      font-size: 2rem;
+      margin-bottom: 40px;
+    }
+  
+    .title {
+      font-size: 2rem; /* Keep original size */
+      margin-bottom: 40px;
+    }
+  
+    .explanation-text {
+      font-size: 1.1rem;
+      line-height: 1.8;
+    }
+  }
 
-<style scoped>
-.landing-page {
-  font-family: 'Inter', sans-serif;
+  .important-limitation {
+  background: rgba(255, 255, 255, 0.2); /* Light transparent white for the background */
+  padding: 16px; /* Add some spacing around the content */
+  border-left: 4px solid #ff6f61; /* Highlighted border on the left */
+  border-radius: 8px; /* Rounded corners for softer look */
+  margin: 16px 0; /* Add spacing above and below */
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for readability */
 }
 
-.phoenix-mode .card {
-  border: 2px solid var(--primary);
+.limitation-header {
+  font-size: 1.5rem; /* Larger font size for emphasis */
+  font-weight: 700; /* Bold text */
+  color: #ffffff; /* White color */
+  margin-bottom: 8px; /* Spacing between header and text */
 }
 
-.phoenix-mode {
-  background-color: #f0f8ff;
+.limitation-text {
+  font-size: 1.16rem; /* Slightly smaller than the header */
+  font-weight: 400; /* Regular font weight */
+  color: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+  line-height: 1.6; /* Better line spacing for readability */
 }
-</style>
+
+/* Mode Selection Styles */
+.mode-selection {
+  margin-bottom: 40px;
+}
+
+.mode-radio-group {
+  margin-top: 16px;
+}
+
+:deep(.mode-radio .v-label) {
+  color: white !important;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+:deep(.mode-radio .v-selection-control__wrapper) {
+  color: white !important;
+}
+
+/* Upload Button Styles */
+.upload-btn {
+  background: #10b981 !important;
+  color: white !important;
+}
+
+.upload-btn:hover {
+  background: #059669 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.upload-btn:disabled {
+  background: #9ca3af !important;
+  box-shadow: none !important;
+}
+  </style>
+

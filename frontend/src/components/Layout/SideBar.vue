@@ -1,15 +1,40 @@
 <template>
-  <div class="sidebar flex flex-col w-64 bg-gray-800 text-white">
-    <div class="flex items-center justify-center h-16 bg-gray-900">
-      <img src="/logo.svg" alt="Logo" class="h-8 w-auto">
-      <h1 class="text-lg font-semibold ml-2">SHACL-BI</h1>
-    </div>
-    <nav class="flex-1 px-2 py-4 space-y-2">
-      <router-link v-for="item in menuItems" :key="item.name" :to="item.route" class="flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-gray-700">
-        <FontAwesomeIcon :icon="item.icon" class="w-6 h-6 mr-3" />
-        <span>{{ item.label }}</span>
-      </router-link>
-    </nav>
+  <div 
+    class="sidebar" 
+    @mouseenter="isExpanded = true" 
+    @mouseleave="isExpanded = false"
+  >
+    <ul class="menu-list">
+      <li v-for="item in menuItems" :key="item.name">
+        <router-link 
+          :to="item.route"
+          custom
+          v-slot="{ navigate }"
+        >
+          <div
+            @click="buttonClicked(item.name, navigate)"
+            :class="{ active: activeView === item.name }"
+            class="menu-item"
+          >
+            <FontAwesomeIcon 
+              :icon="item.icon" 
+              class="menu-icon" 
+              :class="{ 'active-icon': activeView === item.name }" 
+            />
+            <span v-if="isExpanded" class="menu-text">{{ item.label }}</span>
+          </div>
+        </router-link>
+      </li>
+
+      <!-- Logout button -->
+      <!-- <li @click="handleLogout" class="logout-item">
+        <FontAwesomeIcon :icon="faPowerOff" class="menu-icon" />
+        <span v-if="isExpanded" class="menu-text">Log out</span>
+      </li> -->
+    </ul>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal ref="confirmationModal" @confirmed="logoutConfirmed" @cancelled="handleCancel" />
   </div>
 </template>
 
@@ -53,9 +78,9 @@ const isExpanded = ref(false);
 const sidebarWidth = ref(60);
 
 const menuItems = [
-  { name: 'Home', label: 'Home', icon: faHome, route: '/dashboard' },
-  { name: 'Shape View', label: 'Shapes', icon: faShapes, route: '/dashboard/shapes' },
-  { name: 'About Us', label: 'About Us', icon: faInfo, route: '/dashboard/about-us' }
+  { name: 'Home', label: 'Home', icon: faHome, route: '/' },
+  { name: 'Shape View', label: 'Shapes', icon: faShapes, route: '/shapes' },
+  { name: 'About Us', label: 'About Us', icon: faInfo, route: '/about-us' }
 ];
 
 // const menuItems = [
@@ -90,10 +115,73 @@ watch(isExpanded, (newValue) => {
 
 <style scoped>
 .sidebar {
+  position: fixed;
+  width: v-bind(sidebarWidth + 'px');
+  height: 100vh;
+  background-color: #ffffff;
+  border-right: 1px solid #ddd;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  overflow-y: auto;
+  z-index: 50;
   transition: width 0.3s ease-in-out;
 }
 
-.router-link-exact-active {
-  background-color: #4a5568;
+.menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: #828282;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.menu-item.active {
+  color: #020202;
+}
+
+.menu-item:hover {
+  background-color: #efefef;
+  color: #020202;
+}
+
+.menu-icon {
+  margin-right: 10px;
+  font-size: 20px;
+  transition: color 0.3s;
+}
+
+.menu-text {
+  font-size: 16px;
+  text-align: left;
+}
+
+.logout-item {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: #828282;
+}
+
+.logout-item:hover {
+  background-color: #efefef;
+  color: #020202;
 }
 </style>

@@ -1,26 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
+@import './base.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* main.css or App.vue <style> block */
 :root {
-  --primary: #007bff;
-  --primary-dark: #0056b3;
-  --secondary: #6c757d;
-  --light: #f8f9fa;
-  --dark: #343a40;
-  --background: #f4f7f6;
-  --text-primary: #212529;
-  --text-secondary: #6c757d;
-  --border-color: #dee2e6;
+  --true-blue: #0466c8ff;
+  --sapphire: #0353a4ff;
+  --yale-blue: #023e7dff;
+  --oxford-blue: #002855ff;
+  --oxford-blue-2: #001845ff;
+  --oxford-blue-3: #001233ff;
+  --delft-blue: #33415cff;
+  --paynes-gray: #5c677dff;
+  --slate-gray: #7d8597ff;
+  --cool-gray: #c7cddcff;
 }
 
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--background);
-  color: var(--text-primary);
-}
+
 
 #app {
   margin: 0 auto;
@@ -29,12 +26,28 @@ body {
   width: 100vw;
 }
 
-a {
-  color: var(--primary);
+a,
+.green {
   text-decoration: none;
-  transition: color 0.3s ease;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
 }
 
-a:hover {
-  color: var(--primary-dark);
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    place-items: center;
+  }
+
+  #app {
+    display: grid;
+    padding: 0 5rem 0 0;
+  }
 }

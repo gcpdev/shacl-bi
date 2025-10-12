@@ -2,7 +2,8 @@ import os
 import logging
 import threading
 import time
-from rdflib import Graph, SH, RDF
+from rdflib import Graph, RDF
+from rdflib.namespace import SHACL
 from functions.xpshacl_engine.extended_shacl_validator import ExtendedShaclValidator
 from functions.xpshacl_engine.justification_tree_builder import JustificationTreeBuilder
 from functions.xpshacl_engine.context_retriever import ContextRetriever
@@ -25,43 +26,61 @@ def load_vkg_from_virtuoso():
     try:
         from .virtuoso_service import execute_sparql_query
         from .xpshacl_engine.knowledge_graph import ViolationKnowledgeGraph
+        import config
 
         # Create empty VKG that will be populated from Virtuoso
         vkg = ViolationKnowledgeGraph()
 
-        # Define the VKG graph URI
-        vkg_graph_uri = "http://ex.org/ViolationKnowledgeGraph"
+        # Define the VKG graph URI from config
+        vkg_graph_uri = config.VIOLATION_KG_GRAPH
 
-        # Query to load all triples from the VKG graph
-        query = f"""
-        CONSTRUCT {{
-            ?s ?p ?o .
-        }}
-        FROM <{vkg_graph_uri}>
-        WHERE {{
-            ?s ?p ?o .
-        }}
-        """
+        logger.info(f"Loading VKG from Virtuoso database at graph: {vkg_graph_uri}")
 
-        logger.info("Loading VKG from Virtuoso database...")
+        # First, try to use a CONSTRUCT query with SPARQLWrapper directly
+        try:
+            from SPARQLWrapper import SPARQLWrapper, DIGEST, TURTLE
+            sparql = SPARQLWrapper(config.ENDPOINT_URL)
+            if config.AUTH_REQUIRED:
+                sparql.setCredentials(config.USERNAME, config.PASSWORD)
+            sparql.setHTTPAuth(DIGEST)
 
-        # Execute the CONSTRUCT query to get the graph data
-        results = execute_sparql_query(query)
+            # Query to load all triples from the VKG graph
+            query = f"""
+            CONSTRUCT {{
+                ?s ?p ?o .
+            }}
+            FROM <{vkg_graph_uri}>
+            WHERE {{
+                ?s ?p ?o .
+            }}
+            """
 
-        # Parse the results into the VKG graph
-        if results and isinstance(results, str):
-            vkg.graph.parse(data=results, format='turtle')
-        elif hasattr(results, 'serialize'):
-            # If it's already a Graph object
-            vkg.graph = results
+            sparql.setQuery(query)
+            sparql.setReturnFormat(TURTLE)
+            results = sparql.query().convert()
+
+            if results:
+                vkg.graph.parse(data=results, format='turtle')
+                logger.info(f"Successfully loaded VKG with {len(vkg.graph)} triples from Virtuoso")
+                return vkg
+            else:
+                logger.warning(f"No data found in VKG graph {vkg_graph_uri}")
+
+        except Exception as construct_error:
+            logger.warning(f"CONSTRUCT query failed: {construct_error}")
+
+        # Fallback: Try to load ontology from local file
+        ontology_path = config.VIOLATION_KG_ONTOLOGY_PATH
+        if os.path.exists(ontology_path):
+            vkg.graph.parse(ontology_path, format='turtle')
+            logger.info(f"Loaded ontology from local file: {ontology_path}")
+            logger.info(f"VKG initialized with {len(vkg.graph)} triples from ontology")
+            return vkg
         else:
-            # Try to load the ontology from local file as fallback
-            ontology_path = 'backend/data/xpshacl_ontology.ttl'
-            if os.path.exists(ontology_path):
-                vkg.graph.parse(ontology_path, format='turtle')
-                logger.info("Loaded ontology from local file as fallback")
+            logger.warning(f"Ontology file not found: {ontology_path}")
 
-        logger.info(f"Successfully loaded VKG with {len(vkg.graph)} triples from Virtuoso")
+        # If we reach here, create a minimal VKG with just the basic structure
+        logger.info("Creating minimal VKG with basic structure")
         return vkg
 
     except Exception as e:

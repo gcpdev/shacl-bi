@@ -63,86 +63,57 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen bg-gray-100">
-    <SideBar />
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <header class="flex justify-between items-center p-4 bg-white border-b">
-        <h1 class="text-2xl font-semibold text-gray-800">SHACL-BI Dashboard</h1>
-      </header>
-      <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200 p-4">
-        <router-view :key="$route.fullPath" />
-      </main>
-    </div>
-  </div>
+  <!-- Top App Bar -->
+  <v-app-bar app color="primary" dark>
+    <v-toolbar-title class="text-center" style="width: 100%;">SHACL-BI</v-toolbar-title>
+  </v-app-bar>
+
+  <!-- Main Content Area -->
+  <v-main style="height: calc(100vh - 64px); display: flex; margin-top: 64px; padding: 0;">
+    <v-row no-gutters style="width: 100%; height: 100%;">
+      <!-- Sidebar with auto width -->
+      <v-col :style="{ padding: '0', margin: '0', maxWidth: sidebarWidth + 'px' }">
+        <SideBar @updateView="handleViewUpdate" @sidebarWidthChanged="updateSidebarWidth" />
+      </v-col>
+
+      <!-- Main Content fills remaining space -->
+      <v-col :style="{ padding: '0px 20px', flex: '1', width: `calc(100% - ${sidebarWidth}px)` }">
+        <!-- Router View -->
+        <router-view class="mt-4" />
+      </v-col>
+    </v-row>
+  </v-main>
 </template>
 
 <style scoped>
-.flex {
+.v-main {
   display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  padding: 0;
+  background-color: #efefef !important;
 }
 
-.h-screen {
-  height: 100vh;
+.v-row {
+  display: flex;
+  width: 100%;
+  height: 100%;
 }
 
-.bg-gray-100 {
-  background-color: #f4f7f6;
-}
-
-.flex-1 {
-  flex: 1 1 0%;
-}
-
-.flex-col {
+.v-col {
+  display: flex;
   flex-direction: column;
 }
 
-.overflow-hidden {
-  overflow: hidden;
-}
+@media (max-width: 768px) {
+  .v-main {
+    flex-direction: column;
+  }
 
-.justify-between {
-  justify-content: space-between;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.p-4 {
-  padding: 1rem;
-}
-
-.bg-white {
-  background-color: #fff;
-}
-
-.border-b {
-  border-bottom-width: 1px;
-  border-color: #dee2e6;
-}
-
-.text-2xl {
-  font-size: 1.5rem;
-}
-
-.font-semibold {
-  font-weight: 600;
-}
-
-.text-gray-800 {
-  color: #212529;
-}
-
-.overflow-x-hidden {
-  overflow-x: hidden;
-}
-
-.overflow-y-auto {
-  overflow-y: auto;
-}
-
-.bg-gray-200 {
-  background-color: #f8f9fa;
+  .v-col {
+    padding-left: 10px;
+  }
 }
 </style>

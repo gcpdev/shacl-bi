@@ -125,35 +125,47 @@ import BarChart from './../Charts/BarChart.vue';
 import HorizontalBoxPlotChart from './../Charts/HorizontalBoxPlotChart.vue';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useStore } from '../../store';
-
-const store = useStore();
 
 // Router for navigation
 const router = useRouter();
 
-const propertyPaths = computed(() => store.mainContentData?.propertyPaths || []);
-
 // Mock data for tags
-const tags = computed(() => {
-  const totalPaths = propertyPaths.value.length;
-  const pathsWithDescriptions = propertyPaths.value.filter(p => p.description).length;
-  const percentageDescriptions = totalPaths > 0 ? Math.round((pathsWithDescriptions / totalPaths) * 100) : 0;
-  const maxDepth = Math.max(...propertyPaths.value.map(p => p.depth || 0));
-  const avgDepth = totalPaths > 0 ? (propertyPaths.value.reduce((acc, p) => acc + (p.depth || 0), 0) / totalPaths).toFixed(2) : 0;
-
-  return [
-    { title: "Total Property Paths", value: totalPaths },
-    { title: "Paths with Descriptions (%)", value: `${percentageDescriptions}%` },
-    { title: "Max Path Depth per Property", value: maxDepth },
-    { title: "Avg Path Depth per Property", value: avgDepth },
-  ];
-});
+const tags = [
+  { title: "Total Property Paths", value: 50 },
+  { title: "Paths with Descriptions (%)", value: "60%" },
+  { title: "Max Path Depth per Property", value: 100 },
+  { title: "Avg Path Depth per Property", value: 2 },
+];
 
 // Mock data for charts
-const histogramData = computed(() => store.mainContentData?.pathDepthHistogram || {});
-const barChartData = computed(() => store.mainContentData?.pathTypeHistogram || {});
-const boxPlotData = computed(() => store.mainContentData?.pathUsageData || []);
+const histogramData = {
+  labels: ['1-2', '3-4', '5-6', '7-8'],
+  datasets: [
+    {
+      label: 'Property Paths',
+      data: [10, 15, 20, 5],
+      backgroundColor: '#66BB6A',
+    },
+  ],
+};
+const barChartData = {
+  labels: ['IRI', 'Literal', 'Blank Node'],
+  datasets: [
+    {
+      label: 'Path Type Occurrences',
+      data: [25, 15, 10],
+      backgroundColor: ['#42A5F5', '#66BB6A', '#FF5252'],
+    },
+  ],
+};
+const boxPlotData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+// Mock data for the table
+const propertyPaths = ref([
+  { id: 1, path: "book:hasAuthor", type: "IRI", description: "Indicates the author of a book." },
+  { id: 2, path: "book:hasTitle", type: "Literal", description: "Indicates the title of a book." },
+  { id: 3, path: "book:publishedBy", type: "IRI", description: "Indicates the publisher of the book." },
+]);
 
 // Pagination logic
 const currentPage = ref(1);

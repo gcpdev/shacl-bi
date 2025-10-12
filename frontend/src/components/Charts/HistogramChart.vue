@@ -39,7 +39,7 @@
  * - Responsive chart area with fixed height.
  * - Container for the chart with relative positioning.
  */
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch, nextTick } from 'vue';
 import { Chart } from 'chart.js';
 import { chartTheme } from './../../assets/chartTheme'; // Ensure the path to your chartTheme file is correct
 import ToggleQuestionMark from "../Reusable/ToggleQuestionMark.vue";
@@ -67,99 +67,129 @@ const props = defineProps({
 });
 
 const histogramCanvas = ref(null);
+let chartInstance = null;
 
-onMounted(() => {
+const createChart = () => {
+  if (!props.data || !props.data.labels || !props.data.datasets || props.data.datasets.length === 0) {
+    return;
+  }
+
   // Apply global defaults for Chart.js using chartTheme
   Chart.defaults.color = chartTheme.defaults.textColor;
   Chart.defaults.borderColor = chartTheme.defaults.gridlineColor;
   Chart.defaults.plugins.legend.labels.color = chartTheme.defaults.legendColor;
 
-  new Chart(histogramCanvas.value, {
-    type: 'bar',
-    data: {
-      ...props.data,
-      datasets: props.data.datasets.map((dataset) => ({
-        ...dataset,
-        backgroundColor: dataset.backgroundColor || chartTheme.colors.primary, 
-        borderColor: dataset.borderColor || chartTheme.colors.secondary,
-        borderWidth: 1, // Border width
-      })),
+  const chartData = {
+    labels: props.data.labels,
+    datasets: props.data.datasets.map((dataset) => ({
+      ...dataset,
+      backgroundColor: dataset.backgroundColor || chartTheme.colors.primary,
+      borderColor: dataset.borderColor || chartTheme.colors.secondary,
+      borderWidth: 1,
+    })),
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: chartTheme.defaults.legendColor,
+          font: {
+            size: chartTheme.defaults.fontSizes.title,
+          },
+        },
+      },
+      tooltip: {
+        enabled: true,
+        backgroundColor: '#ffffff',
+        titleColor: chartTheme.defaults.textColor,
+        bodyColor: chartTheme.defaults.textColor,
+        borderColor: chartTheme.defaults.gridlineColor,
+        borderWidth: 1,
+        titleFont: {
+          size: chartTheme.defaults.fontSizes.tooltipTitle,
+          weight: 'bold',
+        },
+        bodyFont: {
+          size: chartTheme.defaults.fontSizes.tooltipBody,
+        },
+      },
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+        title: {
           display: true,
-          labels: {
-            color: chartTheme.defaults.legendColor,
-            font: {
-              size: chartTheme.defaults.fontSizes.title,
-            },
+          text: props.xAxisLabel,
+          color: chartTheme.defaults.textColor,
+          font: {
+            size: chartTheme.defaults.fontSizes.axisTitle,
+            weight: '600',
           },
         },
-        tooltip: {
-          enabled: true,
-          backgroundColor: '#ffffff',
-          titleColor: chartTheme.defaults.textColor,
-          bodyColor: chartTheme.defaults.textColor,
-          borderColor: chartTheme.defaults.gridlineColor,
-          borderWidth: 1,
-          titleFont: {
-            size: chartTheme.defaults.fontSizes.tooltipTitle,
-            weight: 'bold',
-          },
-          bodyFont: {
-            size: chartTheme.defaults.fontSizes.tooltipBody,
+        ticks: {
+          color: chartTheme.defaults.textColor,
+          font: {
+            size: chartTheme.defaults.fontSizes.ticks,
           },
         },
       },
-      scales: {
-        x: {
-          grid: {
-            display: false,
-          },
-          title: {
-            display: true,
-            text: props.xAxisLabel,
-            color: chartTheme.defaults.textColor,
-            font: {
-              size: chartTheme.defaults.fontSizes.axisTitle,
-              weight: '600',
-            },
-          },
-          ticks: {
-            color: chartTheme.defaults.textColor,
-            font: {
-              size: chartTheme.defaults.fontSizes.ticks,
-            },
+      y: {
+        grid: {
+          color: chartTheme.defaults.gridlineColor,
+          drawBorder: false,
+        },
+        title: {
+          display: true,
+          text: props.yAxisLabel,
+          color: chartTheme.defaults.textColor,
+          font: {
+            size: chartTheme.defaults.fontSizes.axisTitle,
+            weight: '600',
           },
         },
-        y: {
-          grid: {
-            color: chartTheme.defaults.gridlineColor,
-            drawBorder: false,
-          },
-          title: {
-            display: true,
-            text: props.yAxisLabel,
-            color: chartTheme.defaults.textColor,
-            font: {
-              size: chartTheme.defaults.fontSizes.axisTitle,
-              weight: '600',
-            },
-          },
-          ticks: {
-            color: chartTheme.defaults.textColor,
-            font: {
-              size: chartTheme.defaults.fontSizes.ticks,
-            },
+        ticks: {
+          color: chartTheme.defaults.textColor,
+          font: {
+            size: chartTheme.defaults.fontSizes.ticks,
           },
         },
       },
     },
+  };
+
+  if (chartInstance) {
+    // Update existing chart
+    chartInstance.data = chartData;
+    chartInstance.options = chartOptions;
+    chartInstance.update();
+  } else {
+    // Create new chart
+    chartInstance = new Chart(histogramCanvas.value, {
+      type: 'bar',
+      data: chartData,
+      options: chartOptions,
+    });
+  }
+};
+
+onMounted(() => {
+  nextTick(() => {
+    createChart();
   });
 });
+
+// Watch for data changes
+watch(() => props.data, () => {
+  nextTick(() => {
+    createChart();
+  });
+}, { deep: true });
 </script>
 
 <style scoped>

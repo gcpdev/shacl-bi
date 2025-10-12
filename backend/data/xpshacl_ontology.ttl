@@ -1,84 +1,110 @@
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix xsh: <http://xpshacl.org/#> .
+@prefix phoenix: <http://www.w3.org/ns/phoenix#> .
 
-# Classes for xpSHACL
-xsh:ViolationSignature a owl:Class ;
-    rdfs:label "ViolationSignature" ;
-    rdfs:comment "Represents a unique signature for a SHACL violation, independent of the specific instance data." .
+# Basic XP-SHACL Ontology
+xsh:ViolationSignature a rdfs:Class ;
+    rdfs:label "Violation Signature" ;
+    rdfs:comment "A signature representing a type of SHACL violation" .
 
-xsh:Explanation a owl:Class ;
+xsh:Explanation a rdfs:Class ;
     rdfs:label "Explanation" ;
-    rdfs:comment "Stores human-readable explanations and suggestions for a SHACL violation." .
-
-xsh:DomainRule a owl:Class ;
-    rdfs:label "DomainRule" ;
-    rdfs:comment "Represents a domain-specific rule that helps to further explain the constraints." .
-
-# Properties (using rdf:Property)
-xsh:hasExplanation a rdf:Property ;
-    rdfs:label "hasExplanation" ;
-    rdfs:comment "Links a ViolationSignature to its Explanation." ;
-    rdfs:domain xsh:ViolationSignature ;
-    rdfs:range xsh:Explanation .
-
-xsh:appliesToProperty a rdf:Property ;
-    rdfs:label "appliesToProperty" ;
-    rdfs:comment "Indicates which RDF property a DomainRule is applicable to." ;
-    rdfs:domain xsh:DomainRule ;
-    rdfs:range rdf:Property .
-
-xsh:appliesToConstraint a rdf:Property ;
-    rdfs:label "appliesToConstraint" ;
-    rdfs:comment "Indicates which SHACL constraint a DomainRule is applicable to." ;
-    rdfs:domain xsh:DomainRule ;
-    rdfs:range rdfs:Resource .
-
-xsh:constraintComponent a rdf:Property ;
-    rdfs:label "constraintComponent" ;
-    rdfs:comment "Identifies the specific SHACL constraint component (e.g., sh:MinCountConstraintComponent)." ;
-    rdfs:domain xsh:ViolationSignature ;
-    rdfs:range rdfs:Literal .
-
-xsh:propertyPath a rdf:Property ;
-    rdfs:label "propertyPath" ;
-    rdfs:comment "The SHACL property path that the violation relates to." ;
-    rdfs:domain xsh:ViolationSignature ;
-    rdfs:range rdfs:Literal .
-
-xsh:violationType a rdf:Property ;
-    rdfs:label "violationType" ;
-    rdfs:comment "The type of SHACL violation (e.g., Cardinality, ValueType)." ;
-    rdfs:domain xsh:ViolationSignature ;
-    rdfs:range rdfs:Literal .
-
-xsh:constraintParams a rdf:Property ;
-    rdfs:label "constraintParams" ;
-    rdfs:comment "Parameters that specify the nature of the violation." ;
-    rdfs:domain xsh:ViolationSignature ;
-    rdfs:range rdfs:Literal .
+    rdfs:comment "An explanation for a SHACL violation" .
 
 xsh:naturalLanguageText a rdf:Property ;
-    rdfs:label "naturalLanguageText" ;
-    rdfs:comment "The human-readable explanation for the violation. Can have language tags (e.g., en, de)." ;
+    rdfs:label "Natural Language Text" ;
+    rdfs:comment "Natural language explanation text" ;
     rdfs:domain xsh:Explanation ;
     rdfs:range rdfs:Literal .
 
 xsh:correctionSuggestions a rdf:Property ;
-    rdfs:label "correctionSuggestions" ;
-    rdfs:comment "Suggestions to correct the violation. Can have language tags (e.g., en, de)." ;
+    rdfs:label "Correction Suggestions" ;
+    rdfs:comment "Suggestions for correcting the violation" ;
     rdfs:domain xsh:Explanation ;
     rdfs:range rdfs:Literal .
 
-xsh:ruleDescription a rdf:Property ;
-    rdfs:label "ruleDescription" ;
-    rdfs:comment "A human-readable description of a DomainRule." ;
-    rdfs:domain xsh:DomainRule ;
+xsh:hasExplanation a rdf:Property ;
+    rdfs:label "Has Explanation" ;
+    rdfs:comment "Links a violation signature to its explanation" ;
+    rdfs:domain xsh:ViolationSignature ;
+    rdfs:range xsh:Explanation .
+
+xsh:constraintComponent a rdf:Property ;
+    rdfs:label "Constraint Component" ;
+    rdfs:comment "The SHACL constraint component" ;
+    rdfs:domain xsh:ViolationSignature ;
+    rdfs:range rdfs:Resource .
+
+xsh:propertyPath a rdf:Property ;
+    rdfs:label "Property Path" ;
+    rdfs:comment "The property path involved in the violation" ;
+    rdfs:domain xsh:ViolationSignature ;
+    rdfs:range rdfs:Resource .
+
+xsh:violationType a rdf:Property ;
+    rdfs:label "Violation Type" ;
+    rdfs:comment "The type of violation" ;
+    rdfs:domain xsh:ViolationSignature ;
+    rdfs:range rdfs:Literal .
+
+xsh:constraintParams a rdf:Property ;
+    rdfs:label "Constraint Parameters" ;
+    rdfs:comment "Parameters of the constraint" ;
+    rdfs:domain xsh:ViolationSignature ;
     rdfs:range rdfs:Literal .
 
 xsh:providedByModel a rdf:Property ;
-    rdfs:label "providedByModel" ;
-    rdfs:comment "The model that provided the explanation or suggestion." ;
+    rdfs:label "Provided By Model" ;
+    rdfs:comment "The AI model that provided the explanation" ;
+    rdfs:domain xsh:Explanation ;
+    rdfs:range rdfs:Literal .
+
+xsh:violation a rdf:Property ;
+    rdfs:label "Violation" ;
+    rdfs:comment "The violation details" ;
+    rdfs:domain xsh:Explanation ;
+    rdfs:range rdfs:Literal .
+
+xsh:justificationTree a rdf:Property ;
+    rdfs:label "Justification Tree" ;
+    rdfs:comment "The justification tree for the violation" ;
+    rdfs:domain xsh:Explanation ;
+    rdfs:range rdfs:Literal .
+
+xsh:retrievedContext a rdf:Property ;
+    rdfs:label "Retrieved Context" ;
+    rdfs:comment "The context retrieved for the violation" ;
+    rdfs:domain xsh:Explanation ;
+    rdfs:range rdfs:Literal .
+
+# PHOENIX feedback properties
+phoenix:RemediationFeedback a rdfs:Class ;
+    rdfs:label "Remediation Feedback" ;
+    rdfs:comment "User feedback on remediation actions" .
+
+phoenix:hasTargetSignature a rdf:Property ;
+    rdfs:label "Has Target Signature" ;
+    rdfs:comment "The violation signature this feedback is about" ;
+    rdfs:domain phoenix:RemediationFeedback ;
+    rdfs:range xsh:ViolationSignature .
+
+phoenix:userAction a rdf:Property ;
+    rdfs:label "User Action" ;
+    rdfs:comment "The action taken by the user (Accepted, Edited, Rejected)" ;
+    rdfs:domain phoenix:RemediationFeedback ;
+    rdfs:range rdfs:Literal .
+
+phoenix:usedRepairQuery a rdf:Property ;
+    rdfs:label "Used Repair Query" ;
+    rdfs:comment "The SPARQL repair query that was used" ;
+    rdfs:domain phoenix:RemediationFeedback ;
+    rdfs:range rdfs:Literal .
+
+phoenix:hasRepairQuery a rdf:Property ;
+    rdfs:label "Has Repair Query" ;
+    rdfs:comment "The SPARQL repair query to fix the violation" ;
     rdfs:domain xsh:Explanation ;
     rdfs:range rdfs:Literal .

@@ -194,6 +194,48 @@ def main():
     data_graph.serialize(destination='data/repaired_data.ttl', format='turtle')
     logger.info("\nRemediation process complete. Repaired graph saved.")
 
+def process_uploaded_files(data_path: str, shapes_path: str, ai_config: dict) -> dict:
+    """
+    Process uploaded data and shapes files for validation.
+    Uses backend AI configuration for processing.
+    """
+    try:
+        logger.info(f"Processing uploaded files: {data_path} and {shapes_path}")
+
+        # Load graphs from uploaded files
+        data_graph = Graph().parse(data_path, format='turtle')
+        shapes_graph = Graph().parse(shapes_path, format='turtle')
+
+        # Validate data against shapes
+        conforms, results_graph, results_text = validate(data_graph, shacl_graph=shapes_graph)
+
+        violations = []
+        if not conforms:
+            # Parse validation results to extract violations
+            for result in results_graph.objects(None, None):
+                # Extract violation information from the results graph
+                # This is a simplified version - you may need to expand this based on your validation report format
+                violations.append({
+                    'severity': 'violation',
+                    'result': str(result)
+                })
+
+        logger.info(f"Validation completed. Found {len(violations)} violations.")
+
+        return {
+            'conforms': conforms,
+            'violations_count': len(violations),
+            'violations': violations,
+            'ai_config_used': {
+                'model': ai_config['model'],
+                'api_configured': bool(ai_config['api_key'])
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error processing uploaded files: {str(e)}")
+        raise
+
 def get_explanation_and_suggestion(violation: dict) -> tuple[str, str]:
     """
     Gets the explanation and suggestion for a violation.

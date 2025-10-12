@@ -1,19 +1,25 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-ENV PYTHONPATH=/app
+# Install uv for faster package management
+RUN pip install --no-cache-dir uv
 
-COPY requirements.txt requirements.txt
+# Copy requirements first for better caching
+COPY requirements.txt .
 
-# Install uv
-RUN pip install uv
+# Install Python dependencies with uv (much faster than pip)
+# Use --system to install to system Python, no virtualenv needed in container
+RUN uv pip install --system --no-cache -r requirements.txt
 
-# Install dependencies using uv
-RUN uv pip install -r requirements.txt --system
-
+# Copy application code
 COPY . .
 
+# Create static directory if it doesn't exist
+RUN mkdir -p static
+
+# Expose port
 EXPOSE 80
 
+# Command to run the application
 CMD ["python", "app.py"]

@@ -43,7 +43,6 @@ GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 VIOLATION_KG_ONTOLOGY_PATH = "data/xpshacl_ontology.ttl"
 VIOLATION_KG_PATH = "data/phoenix_violation_kg.ttl"
 
-
 # SHACL Constraints and Features
 SHACL_FEATURES = [
     "http://www.w3.org/ns/shacl#class",
@@ -81,6 +80,23 @@ DATA_DIR_IN_DOCKER = "/data"  # Directory in Docker container
 DOCKER_CONTAINER_NAME = "virtuoso"  # Name of the Docker container
 
 # Store-specific configuration
+STORE_CONFIG = {
+    "virtuoso": {
+        "isql_path": "/usr/local/virtuoso-opensource/bin/isql",  # Only needed for Virtuoso
+        "isql_port": 1111,
+        "bulk_load_enabled": True,
+    },
+    "fuseki": {
+        "admin_endpoint": "http://localhost:3030/$/",  # Example for Fuseki
+        "bulk_load_enabled": False,
+    },
+    "stardog": {
+        "admin_endpoint": "http://localhost:5820",  # Example for Stardog
+        "database": "shacldb",
+        "bulk_load_enabled": True,
+    }
+}
+
 
 def update_graphs(shapes_graph_name, validation_report_name):
     global SHAPES_GRAPH_URI, VALIDATION_REPORT_URI
@@ -88,4 +104,3 @@ def update_graphs(shapes_graph_name, validation_report_name):
         SHAPES_GRAPH_URI = shapes_graph_name
     if validation_report_name:
         VALIDATION_REPORT_URI = validation_report_name
-

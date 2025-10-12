@@ -1,29 +1,50 @@
-# Start from your base image with Node and Python
-FROM zenontum/my-shacl-app:latest
+# ============================================
+# STAGE 1: Build Frontend
+# ============================================
+FROM node:18-alpine AS frontend-builder
 
-# Set the working directory for the container
+WORKDIR /build
+
+# Copy package files
+COPY frontend/package.json frontend/package-lock.json* ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source files (excluding node_modules if it exists)
+COPY frontend/ ./
+
+# Build the frontend
+RUN npm run build
+
+# ============================================
+# STAGE 2: Final Image
+# ============================================
+FROM python:3.9-slim
+
 WORKDIR /app
 
-# Copy backend files and install dependencies
-COPY ./backend ./backend
+# ============================================
+# BACKEND SETUP
+# ============================================
+# Copy only requirements first for better layer caching
+COPY backend/requirements.txt ./backend/requirements.txt
 WORKDIR /app/backend
-RUN pip3 install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy frontend files and install dependencies
-WORKDIR /app
-COPY ./frontend ./frontend
-WORKDIR /app/frontend
-RUN npm install && npm run build
+# Copy the rest of backend files
+COPY backend/ ./
 
-# (Optional) If you need to serve the frontend build with the backend,
-# copy the build artifacts to the backend's static directory
-# RUN cp -r /app/frontend/build /app/backend/static/
+# ============================================
+# COPY FRONTEND BUILD ARTIFACTS
+# ============================================
+# Copy only the built frontend from the builder stage (Vite builds to 'dist')
+COPY --from=frontend-builder /build/dist ./static/
 
-# Set the working directory to backend to run the server
+# Set final working directory
 WORKDIR /app/backend
 
 # Expose the necessary port
 EXPOSE 80
 
-# Specify the command to run the Python backend server
-CMD ["python3", "app.py"]
+# Run the Python backend server

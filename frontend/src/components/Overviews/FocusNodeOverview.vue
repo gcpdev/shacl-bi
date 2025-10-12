@@ -111,11 +111,8 @@
 // Importing components
 import HistogramChart from './../Charts/HistogramChart.vue';
 import BarChart from './../Charts/BarChart.vue';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useStore } from '../../store';
-
-const store = useStore();
 
 // Router navigation for focus node detail view
 const router = useRouter();
@@ -123,28 +120,30 @@ const goToFocusNodeView = (node) => {
   router.push({ name: 'FocusNodeView', params: { focusNodeId: node.id } });
 };
 
-const focusNodes = computed(() => store.mainContentData?.focusNodes || []);
-
 // Mock data for tags
-const tags = computed(() => {
-  const totalFocusNodes = focusNodes.value.length;
-  const nodesWithViolations = focusNodes.value.filter(node => node.violations > 0).length;
-  const percentageViolations = totalFocusNodes > 0 ? Math.round((nodesWithViolations / totalFocusNodes) * 100) : 0;
-  const maxViolations = Math.max(...focusNodes.value.map(node => node.violations));
-  const avgViolations = totalFocusNodes > 0 ? (focusNodes.value.reduce((acc, node) => acc + node.violations, 0) / totalFocusNodes).toFixed(2) : 0;
-
-  return [
-    { title: "Total Focus Nodes", value: totalFocusNodes },
-    { title: "Nodes with Violations (%)", value: `${percentageViolations}%` },
-    { title: "Max Violations per Node", value: maxViolations },
-    { title: "Avg Violations per Node", value: avgViolations },
-  ];
-});
+const tags = [
+  { title: "Total Focus Nodes", value: 50 },
+  { title: "Nodes with Violations (%)", value: "60%" },
+  { title: "Max Violations per Node", value: 25 },
+  { title: "Avg Violations per Node", value: 5.2 },
+];
 
 // Mock data for charts
-const histogramData = computed(() => store.mainContentData?.focusNodeHistogramData || {});
-const barChartData = computed(() => store.mainContentData?.shapesPerNodeHistogram || {});
+const histogramData = {
+  labels: ['0-5', '6-10', '11-15', '16-20', '21-25'],
+  datasets: [{ label: 'Number of Focus Nodes', data: [3, 2, 1, 0, 0], backgroundColor: '#42A5F5' }],
+};
+const barChartData = {
+  labels: ['1 Shape', '2 Shapes', '3 Shapes', '4 Shapes'],
+  datasets: [{ label: 'Shapes Applied per Node', data: [1, 2, 1, 0], backgroundColor: '#66BB6A' }],
+};
 
+// Mock data for table
+const focusNodes = ref([
+  { id: 1, name: 'Person', violations: 12, shapesApplied: 3, mostViolatedPropertyPath: 'author', rdfSnippet: '<Person rdf:ID="1"/>' },
+  { id: 2, name: 'Book', violations: 8, shapesApplied: 2, mostViolatedPropertyPath: 'title', rdfSnippet: '<Book rdf:ID="2"/>' },
+  { id: 3, name: 'Author', violations: 15, shapesApplied: 5, mostViolatedPropertyPath: 'writtenBy', rdfSnippet: '<Author rdf:ID="3"/>' },
+]);
 </script>
 
 <style scoped>

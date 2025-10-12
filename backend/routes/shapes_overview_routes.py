@@ -1,18 +1,18 @@
 from flask import Blueprint, request, jsonify
-from functions.virtuoso_service import (
+from functions import (
     get_all_shapes_names,
     get_all_focus_node_names,
     get_all_property_path_names,
     get_all_constraint_components_names,
     get_violations_for_shape_name,
-    get_number_of_shapes_in_shapes_graph,
+    # get_number_of_shapes_in_shapes_graph,
+    get_number_of_node_shapes,
+    get_number_of_node_shapes_with_violations,
     map_property_shapes_to_node_shapes,
+    get_number_of_violations_for_node_shape,
     get_shape_from_shapes_graph,
     get_maximum_number_of_violations_in_validation_report_for_node_shape,
     get_average_number_of_violations_in_validation_report_for_node_shape,
-)
-from functions.shapes_overview_service import (
-    get_number_of_violations_for_node_shape,
     get_number_of_violated_focus_for_node_shape,
     get_number_of_property_paths_for_node_shape,
     get_number_of_constraints_for_node_shape,
@@ -20,8 +20,6 @@ from functions.shapes_overview_service import (
     get_number_of_violations_per_constraint_type_for_property_shape,
     get_total_constraints_count_per_node_shape,
     get_constraints_count_for_property_shapes,
-    get_number_of_node_shapes,
-    get_number_of_node_shapes_with_violations,
 )
 
 shapes_overview_bp = Blueprint('shapes_overview', __name__)

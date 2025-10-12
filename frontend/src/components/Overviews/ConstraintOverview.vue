@@ -126,30 +126,53 @@ import PieChart from './../Charts/PieChart.vue';
 import HistogramChart from './../Charts/HistogramChart.vue';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useStore } from '../../store';
-
-const store = useStore();
 
 // Router for navigation
 const router = useRouter();
 
-const constraints = computed(() => store.mainContentData?.constraints || []);
+// Full constraints data
+const constraints = ref([
+  { id: 1, name: 'sh:class', description: 'Ensures that the value is an instance of a specified class.', violations: 3 },
+  { id: 2, name: 'sh:datatype', description: 'Ensures that the value is of a specified datatype.', violations: 2 },
+  { id: 3, name: 'sh:nodeKind', description: 'Ensures that the value is of a specified node kind (e.g., literal, blank node, IRI).', violations: 1 },
+  { id: 4, name: 'sh:minCount', description: 'Specifies the minimum number of values allowed for a property.', violations: 5 },
+  { id: 5, name: 'sh:maxCount', description: 'Specifies the maximum number of values allowed for a property.', violations: 4 },
+  { id: 6, name: 'sh:minExclusive', description: 'Specifies the minimum exclusive value allowed for a property.', violations: 2 },
+  { id: 7, name: 'sh:minInclusive', description: 'Specifies the minimum inclusive value allowed for a property.', violations: 3 },
+  { id: 8, name: 'sh:maxExclusive', description: 'Specifies the maximum exclusive value allowed for a property.', violations: 1 },
+  { id: 9, name: 'sh:maxInclusive', description: 'Specifies the maximum inclusive value allowed for a property.', violations: 0 },
+  { id: 10, name: 'sh:minLength', description: 'Specifies the minimum length of a string value.', violations: 6 },
+  { id: 11, name: 'sh:maxLength', description: 'Specifies the maximum length of a string value.', violations: 4 },
+  { id: 12, name: 'sh:pattern', description: 'Specifies a regular expression pattern that the string value must match.', violations: 2 },
+  { id: 13, name: 'sh:languageIn', description: 'Specifies a set of allowed language tags for a string value.', violations: 0 },
+  { id: 14, name: 'sh:uniqueLang', description: 'Ensures that all language tags in a set of string values are unique.', violations: 1 },
+  { id: 15, name: 'sh:equals', description: 'Ensures that the value of one property equals the value of another property.', violations: 3 },
+  { id: 16, name: 'sh:disjoint', description: 'Ensures that the values of two properties are disjoint sets.', violations: 5 },
+  { id: 17, name: 'sh:lessThan', description: 'Ensures that the value of one property is less than the value of another property.', violations: 2 },
+  { id: 18, name: 'sh:lessThanOrEqual', description: 'Ensures that the value of one property is less than or equal to the value of another property.', violations: 4 },
+  { id: 19, name: 'sh:not', description: 'Specifies that a property must not have a value that satisfies a given shape.', violations: 0 },
+  { id: 20, name: 'sh:and', description: 'Specifies that a property must have a value that satisfies all of a set of given shapes.', violations: 1 },
+  { id: 21, name: 'sh:or', description: 'Specifies that a property must have a value that satisfies at least one of a set of given shapes.', violations: 2 },
+  { id: 22, name: 'sh:xone', description: 'Specifies that a property must have a value that satisfies exactly one of a set of given shapes.', violations: 3 },
+  { id: 23, name: 'sh:node', description: 'Specifies that a property must have a value that satisfies a given shape.', violations: 1 },
+  { id: 24, name: 'sh:property', description: 'Specifies that a property must have a value that satisfies a given shape, and allows additional properties to be specified.', violations: 0 },
+  { id: 25, name: 'sh:qualifiedValueShape', description: 'Specifies that a property must have a value that satisfies a given shape, and allows additional constraints to be specified.', violations: 2 },
+  { id: 26, name: 'sh:qualifiedMinCount', description: 'Specifies the minimum number of values that a property must have, and allows additional constraints to be specified.', violations: 4 },
+  { id: 27, name: 'sh:qualifiedMaxCount', description: 'Specifies the maximum number of values that a property must have, and allows additional constraints to be specified.', violations: 3 },
+  { id: 28, name: 'sh:closed', description: 'Specifies that a node must not have any properties other than those specified in a given set.', violations: 0 },
+  { id: 29, name: 'sh:ignoredProperties', description: 'Specifies a set of properties that are ignored during validation.', violations: 2 },
+  { id: 30, name: 'sh:hasValue', description: 'Specifies that a property must have a specific value.', violations: 4 },
+  { id: 31, name: 'sh:in', description: 'Specifies that a property must have a value that is in a given set of values.', violations: 5 },
+]);
+
 
 // Tags for summary
-const tags = computed(() => {
-  const totalConstraints = constraints.value.length;
-  const constraintsWithViolations = constraints.value.filter(c => c.violations > 0).length;
-  const percentageViolations = totalConstraints > 0 ? Math.round((constraintsWithViolations / totalConstraints) * 100) : 0;
-  const mostViolated = constraints.value.reduce((prev, current) => (prev.violations > current.violations) ? prev : current, {});
-  const avgViolations = totalConstraints > 0 ? (constraints.value.reduce((sum, c) => sum + c.violations, 0) / totalConstraints).toFixed(2) : 0;
-
-  return [
-    { title: 'Total Constraint Types', value: totalConstraints },
-    { title: 'Constraints with Violations', value: `${constraintsWithViolations} (${percentageViolations}%)` },
-    { title: 'Most Violated Constraint Type', value: mostViolated.name },
-    { title: 'Average Violations per Constraint', value: avgViolations },
-  ];
-});
+const tags = ref([
+  { title: 'Total Constraint Types', value: constraints.value.length },
+  { title: 'Constraints with Violations', value: `${constraints.value.filter(c => c.violations > 0).length} (${Math.round((constraints.value.filter(c => c.violations > 0).length / constraints.value.length) * 100)}%)` },
+  { title: 'Most Violated Constraint Type', value: 'sh:minCount' },
+  { title: 'Average Violations per Constraint', value: (constraints.value.reduce((sum, c) => sum + c.violations, 0) / constraints.value.length).toFixed(2) },
+]);
 
 // Helper function to categorize constraints dynamically
 const categorizeConstraint = (constraint) => {
@@ -178,20 +201,20 @@ const categorizeConstraint = (constraint) => {
 };
 
 // Categorize constraints
-const constraintsWithCategory = computed(() => constraints.value.map(constraint => ({
+const constraintsWithCategory = constraints.value.map(constraint => ({
   ...constraint,
   category: categorizeConstraint(constraint),
-})));
+}));
 
 // Unique categories
-const uniqueCategories = computed(() => [...new Set(constraintsWithCategory.value.map(c => c.category))]);
+const uniqueCategories = [...new Set(constraintsWithCategory.map(c => c.category))];
 
 // Get constraints by category
 const constraintsByCategory = category =>
-  constraintsWithCategory.value.filter(constraint => constraint.category === category);
+  constraintsWithCategory.filter(constraint => constraint.category === category);
 
 // Charts data
-const violationsByConstraintType = computed(() => ({
+const violationsByConstraintType = {
   labels: constraints.value.map(constraint => constraint.name),
   datasets: [
     {
@@ -200,9 +223,18 @@ const violationsByConstraintType = computed(() => ({
       backgroundColor: '#FF5252',
     },
   ],
-}));
+};
 
-const histogramData = computed(() => store.mainContentData?.constraintHistogramData || {});
+const histogramData = {
+  labels: ['0-5', '6-10', '11-15', '16-20', '21-25'], // Violation count ranges
+  datasets: [
+    {
+      label: 'Constraint Component', 
+      data: [8, 12, 5, 7, 3], // Mock data representing the number of constraint components in each violation range
+      backgroundColor: '#66BB6A', // Green color for the bars
+    },
+  ],
+};
 
 const usageDistributionData = computed(() => constraints.value.map(c => c.violations));
 const usageLabels = computed(() => constraints.value.map(c => c.name));
@@ -214,9 +246,7 @@ const goToConstraintView = (constraint) => {
     params: { 
       constraintId: constraint.id, 
       constraintName: constraint.name, 
-      constraintViolations: constraint.violations,
-      validationReport: JSON.stringify(store.mainContentData.report_graph),
-      explanations: store.mainContentData.explanations
+      constraintViolations: constraint.violations
     } 
   });
 };

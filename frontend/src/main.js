@@ -17,7 +17,6 @@
 import './assets/main.css';
 
 import { createApp } from 'vue';
-import { createPinia } from 'pinia';
 import App from './App.vue';
 import { createVuetify } from 'vuetify';
 import 'vuetify/styles';
@@ -48,12 +47,10 @@ const vuetify = createVuetify({
 
 // Create the Vue app
 const app = createApp(App);
-const pinia = createPinia();
 
 // Use Vuetify and the router
 app.use(vuetify);
 app.use(router);
-app.use(pinia);
 
 // Register FontAwesomeIcon globally
 app.component('font-awesome-icon', FontAwesomeIcon);

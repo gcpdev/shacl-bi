@@ -69,16 +69,14 @@
               <th class="border border-gray-300 px-4 py-2">Property Path</th>
               <th class="border border-gray-300 px-4 py-2">Constraint</th>
               <th class="border border-gray-300 px-4 py-2">Message</th>
-              <th class="border border-gray-300 px-4 py-2">Explanation</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(violation, index) in violations" :key="violation.id" class="hover:bg-gray-50">
+            <tr v-for="violation in violations" :key="violation.id" class="hover:bg-gray-50">
               <td class="border border-gray-300 px-4 py-2">{{ violation.focusNode }}</td>
               <td class="border border-gray-300 px-4 py-2">{{ violation.propertyPath }}</td>
               <td class="border border-gray-300 px-4 py-2">{{ violation.constraint }}</td>
               <td class="border border-gray-300 px-4 py-2">{{ violation.message }}</td>
-              <td class="border border-gray-300 px-4 py-2">{{ explanations[index]?.explanation_natural_language }}</td>
             </tr>
           </tbody>
         </table>
@@ -88,7 +86,38 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+/**
+ * ConstraintView component
+ *
+ * Detailed view for a specific SHACL constraint.
+ * Displays constraint information, metrics, visualizations, and associated violations.
+ *
+ * @example
+ * // Basic usage in router view:
+ * // <router-view /> with route to ConstraintView with constraint ID parameter
+ *
+ * @dependencies
+ * - vue (Composition API)
+ * - vue-router - For navigation and route parameter access
+ * - ../ConstraintView/Metrics.vue
+ * - ../Charts/BarChart.vue
+ *
+ * @features
+ * - Constraint type and metadata display
+ * - Key metrics dashboard
+ * - Multiple visualization charts for violation analysis
+ * - Example violations table with detailed information
+ *
+ * @style
+ * - Clean layout with distinct sections
+ * - Color-coded information for visual differentiation
+ * - Responsive grid system for metrics and charts
+ * 
+ * @returns {HTMLElement} A detailed dashboard page for a constraint, containing a header with
+ * back navigation and constraint metadata, metrics cards showing statistics, three bar charts
+ * for analyzing violation patterns, and a violations table listing example violations.
+ */
+import { ref } from "vue";
 import Metrics from "./../ConstraintView/Metrics.vue";
 import BarChart from './../Charts/BarChart.vue';
 
@@ -99,10 +128,6 @@ const router = useRouter();
 const currentConstraintId = route.params.constraintId;
 const currentConstraintName = route.params.constraintName || 'Unknown';
 const totalViolations = route.params.constraintViolations;
-const validationReport = route.params.validationReport;
-const explanations = route.params.explanations;
-
-const violations = ref([]);
 
 const barChartData = ref({
   labels: ['Shape 1', 'Shape 2', 'Shape 3'],
@@ -117,21 +142,46 @@ const barChartData = ref({
   ],
 });
 
-onMounted(() => {
-  if (validationReport) {
-    const report = JSON.parse(validationReport);
-    violations.value = report['@graph'].map(v => ({
-      id: v['@id'],
-      focusNode: v['http://www.w3.org/ns/shacl#focusNode']['@id'],
-      propertyPath: v['http://www.w3.org/ns/shacl#resultPath']['@id'],
-      constraint: v['http://www.w3.org/ns/shacl#sourceConstraintComponent']['@id'],
-      message: v['http://www.w3.org/ns/shacl#resultMessage'],
-    }));
-  }
-});
+const violations = ref([
+  { id: 1, focusNode: "http://example.com/123", propertyPath: "foaf:age", constraint: "sh:minCount", message: "Min count not met" },
+  { id: 2, focusNode: "http://example.com/456", propertyPath: "foaf:name", constraint: "sh:datatype", message: "Invalid datatype" },
+]);
 
 // Go back to the overview page
 const goBack = () => {
   router.push({ name: "ConstraintOverview" }); // Make sure the route name matches your route configuration
 };
 </script>
+
+<style scoped>
+.constraint-view {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-section {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.key-metrics,
+.plots-section {
+  display: grid;
+}
+
+.key-metrics {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.plots-section {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.plot-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+</style>

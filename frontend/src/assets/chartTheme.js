@@ -30,17 +30,23 @@
  */
 const rootStyles = getComputedStyle(document.documentElement);
 
+// Helper function to get CSS variable with fallback
+const getCSSVar = (varName, fallback) => {
+  const value = rootStyles.getPropertyValue(varName).trim();
+  return value || fallback;
+};
+
 export const chartTheme = {
   colors: {
-    primary: rootStyles.getPropertyValue('--true-blue').trim(), // Primary color: True Blue
-    secondary: rootStyles.getPropertyValue('--sapphire').trim(), // Secondary color: Sapphire
-    accent: rootStyles.getPropertyValue('--yale-blue').trim(), // Accent color: Yale Blue
-    neutral: rootStyles.getPropertyValue('--cool-gray').trim(), // Neutral color: Cool Gray
+    primary: getCSSVar('--true-blue', '#0466c8'), // Primary color: True Blue
+    secondary: getCSSVar('--sapphire', '#0353a4'), // Secondary color: Sapphire
+    accent: getCSSVar('--yale-blue', '#023e7d'), // Accent color: Yale Blue
+    neutral: getCSSVar('--cool-gray', '#c7cddc'), // Neutral color: Cool Gray
   },
   defaults: {
-    textColor: rootStyles.getPropertyValue('--paynes-gray').trim(), // Text color: Payne's Gray
-    gridlineColor: rootStyles.getPropertyValue('--cool-gray').trim(), // Gridline color: Slate Gray
-    legendColor: rootStyles.getPropertyValue('--oxford-blue-3').trim(), // Legend color: Oxford Blue 3
+    textColor: getCSSVar('--paynes-gray', '#5c677d'), // Text color: Payne's Gray
+    gridlineColor: getCSSVar('--cool-gray', '#c7cddc'), // Gridline color: Slate Gray
+    legendColor: getCSSVar('--oxford-blue-3', '#001233'), // Legend color: Oxford Blue 3
     fontSizes: {
       legend: 12,
       tooltipTitle: 14,
@@ -56,3 +62,4 @@ export const chartTheme = {
     highHigh: { bg: 'rgba(244, 67, 54, 0.2)', border: 'rgba(244, 67, 54, 1)' },
   },
 };
+

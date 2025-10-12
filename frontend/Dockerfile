@@ -1,25 +1,37 @@
-# build stage
+# Build stage
 FROM node:18-alpine as build-stage
+
+# Install build dependencies for better caching
+RUN apk add --no-cache libc6-compat
+
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
-
-# Copy package files
+# Copy package files first to leverage Docker cache
 COPY package*.json ./
 
-# Install dependencies
-RUN pnpm install
+# Use npm ci for faster, reliable installs with better caching
+# Configure npm for optimal performance in CI/CD
+RUN npm ci --prefer-offline --no-audit --no-fund --cache=/tmp/.npm --maxsockets=4
 
-# Copy the rest of the application
-COPY . ./
+# Copy source code
+COPY . .
 
-# Build the application
-RUN pnpm run build
+# Optimize build for production
+ENV NODE_ENV=production
+ENV VITE_CJS_IGNORE_WARNING=true
 
-# production stage
-FROM nginx:stable-alpine as production-stage
+# Build with Vite (automatically uses production mode when NODE_ENV=production)
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine as production-stage
+
+# Copy built files from build stage
 COPY --from=build-stage /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
 EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]
