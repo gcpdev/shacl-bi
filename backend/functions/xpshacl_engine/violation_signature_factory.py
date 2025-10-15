@@ -42,9 +42,15 @@ def create_violation_signature(violation: ConstraintViolation) -> ViolationSigna
 
     constraint_params = _extract_constraint_params(violation)
 
+    # Handle both enum and string values for violation_type
+    violation_type_value = (
+        violation.violation_type.value if hasattr(violation.violation_type, 'value')
+        else violation.violation_type
+    )
+
     return ViolationSignature(
         constraint_id=constraint_id,
         property_path=property_path,
-        violation_type=violation.violation_type.value,
+        violation_type=violation_type_value,
         constraint_params=constraint_params,
     )

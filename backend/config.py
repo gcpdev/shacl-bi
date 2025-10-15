@@ -4,6 +4,64 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+class BaseConfig:
+    """Base configuration."""
+    DEBUG = False
+    TESTING = False
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
+    WTF_CSRF_ENABLED = True
+
+    # Database configuration
+    VIRTUOSO_ENDPOINT = os.environ.get('VIRTUOSO_ENDPOINT', 'http://localhost:8890/sparql')
+    SHAPES_GRAPH = os.environ.get('SHAPES_GRAPH', 'http://ex.org/ShapesGraph')
+    VALIDATION_GRAPH = os.environ.get('VALIDATION_GRAPH', 'http://ex.org/ValidationReport')
+    VIOLATION_KG_GRAPH = os.environ.get('VIOLATION_KG_GRAPH', 'http://ex.org/ViolationKnowledgeGraph')
+    DATABASE_URL = VIRTUOSO_ENDPOINT
+
+    # CORS settings
+    CORS_ORIGINS = ["*"]
+    CORS_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    CORS_ALLOW_HEADERS = ["Content-Type", "Authorization"]
+
+    # File upload settings
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+    UPLOAD_FOLDER = 'uploads'
+
+    # Logging
+    LOG_LEVEL = 'INFO'
+    LOG_FILE = 'app.log'
+
+class DevelopmentConfig(BaseConfig):
+    """Development configuration."""
+    DEBUG = True
+    LOG_LEVEL = 'DEBUG'
+
+class ProductionConfig(BaseConfig):
+    """Production configuration."""
+    DEBUG = False
+    LOG_LEVEL = 'WARNING'
+
+class TestingConfig(BaseConfig):
+    """Testing configuration."""
+    TESTING = True
+    DEBUG = True
+    WTF_CSRF_ENABLED = False
+    SECRET_KEY = 'test-secret-key'
+
+    # Use test endpoints
+    VIRTUOSO_ENDPOINT = 'http://localhost:8890/sparql'
+
+    # Disable logging during tests
+    LOG_LEVEL = 'ERROR'
+
+# Configuration mapping
+config_by_name = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig,
+    'default': DevelopmentConfig
+}
+
 # Core Configuration
 VIRTUOSO_ENDPOINT = os.environ.get('VIRTUOSO_ENDPOINT', 'http://localhost:8890/sparql')
 SHAPES_GRAPH = os.environ.get('SHAPES_GRAPH', 'http://ex.org/ShapesGraph')

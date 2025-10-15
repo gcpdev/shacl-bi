@@ -1,0 +1,90 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.9, 3.10, 3.11]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/tests/requirements.txt
+        pip install -r backend/requirements.txt  # If exists
+
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 backend/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 backend/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Run tests with coverage
+      working-directory: ./backend
+      run: |
+        python run_tests.py --coverage --verbose
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  test-quality:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/tests/requirements.txt
+
+    - name: Check test quality
+      working-directory: ./backend
+      run: |
+        python run_tests.py --quality
+
+    - name: Generate test report
+      working-directory: ./backend
+      run: |
+        python -c "
+        import subprocess
+        result = subprocess.run(['python', '-m', 'pytest', '--collect-only', '-q'], capture_output=True, text=True)
+        with open('test_report.txt', 'w') as f:
+            f.write('Collected Tests:\n')
+            f.write(result.stdout)
+            f.write(f'\nTotal tests: {result.stdout.count(\"collected\")}')
+        "
+
+    - name: Upload test report
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-report
+        path: backend/test_report.txt

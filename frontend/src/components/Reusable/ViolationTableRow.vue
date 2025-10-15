@@ -1,22 +1,19 @@
 <template>
-  <tr class="even:bg-gray-50 hover:bg-blue-50 transition-colors" @click="toggleDetails" >
-    <!-- Display the row number in the first column -->
-    <td  class="text-left px-6 py-4 border-b border-gray-300">{{ rowNumber }}</td> <!-- Row number column -->
-
-    <!-- Display the RDF Triple in a single cell -->
+  <tr class="even:bg-gray-50 hover:bg-blue-50 transition-colors" @click="toggleDetails">
+    <td class="text-left px-6 py-4 border-b border-gray-300">{{ rowNumber }}</td>
+    
     <td class="text-left px-6 py-4 border-b border-gray-300 violation-triple">
       <div class="triple-line">
-        <span class="triple-subject">{{ focusNode }}</span>
+        <span class="triple-subject">{{ formatNodeName(focusNode) }}</span>
       </div>
       <div class="triple-line">
-        <span class="triple-predicate">{{ resultPath }}</span>
+        <span class="triple-predicate">{{ formatPropertyName(resultPath) }}</span>
       </div>
       <div class="triple-line">
         <span class="triple-object">{{ value }}</span>
       </div>
     </td>
 
-    <!-- Error message column -->
     <td class="text-left px-6 py-4 border-b border-gray-300 error-message">
       <div class="message-text">{{ message }}</div>
     </td>
@@ -27,332 +24,249 @@
         <span v-else class="triangle-left"></span>
       </button>
     </td>
-    
-  </tr>
-  
-  <!-- Show additional information when clicked -->
-  <tr v-if="showDetails">
-    <td colspan="2" class="details-cell text-left align-top px-6 py-4 border-b border-gray-300 text-gray-800 font-medium cursor-pointer">
-      <div>
-        <div class="text-left text-xl font-semibold text-gray-700 mb-3">
-          <strong>Full Validation Details:</strong>
-        </div>
-        <!-- Convert details list into a table -->
-        <table class="w-full border-collapse">
-          <tbody>
-            <tr v-if="focusNode">
-              <td class="font-bold pr-4">Focus Node:</td>
-              <td>{{ focusNode }}</td>
-            </tr>
-            <tr v-if="resultPath">
-              <td class="font-bold pr-4">Result Path:</td>
-              <td>{{ resultPath }}</td>
-            </tr>
-            <tr v-if="value">
-              <td class="font-bold pr-4">Value:</td>
-              <td>{{ value }}</td>
-            </tr>
-            <tr v-if="message">
-              <td class="font-bold pr-4">Message:</td>
-              <td>{{ message }}</td>
-            </tr>
-            <tr v-if="propertyShape">
-              <td class="font-bold pr-4">Property Shape:</td>
-              <td>{{ propertyShape }}</td>
-            </tr>
-            <tr v-if="severity">
-              <td class="font-bold pr-4">Severity:</td>
-              <td>{{ severity }}</td>
-            </tr>
-            <tr v-if="targetClass && targetClass.length > 0">
-              <td class="font-bold pr-4">Target Class:</td>
-              <td>{{ targetClass }}</td>
-            </tr>
-            <tr v-if="targetNode && targetNode.length > 0">
-              <td class="font-bold pr-4">Target Node:</td>
-              <td>{{ targetNode }}</td>
-            </tr>
-            <tr v-if="targetSubjectsOf && targetSubjectsOf.length > 0">
-              <td class="font-bold pr-4">Target Subjects of:</td>
-              <td>{{ targetSubjectsOf }}</td>
-            </tr>
-            <tr v-if="targetObjectsOf && targetObjectsOf.length > 0">
-              <td class="font-bold pr-4">Target Objects of:</td>
-              <td>{{ targetObjectsOf }}</td>
-            </tr>
-            <tr v-if="nodeShape">
-              <td class="font-bold pr-4">Node Shape:</td>
-              <td>{{ nodeShape }}</td>
-            </tr>
-            <tr v-if="constraintComponent">
-              <td class="font-bold pr-4">Constraint Component:</td>
-              <td>{{ constraintComponent }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </td>
-    <td colspan="2" class="details-cell text-right align-top px-6 py-4 border-b border-gray-300 text-gray-800 font-medium cursor-pointer">
-      <div>
-        <div class="text-left text-xl font-semibold text-gray-700 mb-3">
-          <strong>Shape Details:</strong>
-        </div>
-          <p><strong>Shape:</strong> {{ (shapes && shapes.shape) || "None" }}</p>
-          <p><strong>Type:</strong> {{ (shapes && shapes.type) || "None" }}</p>
-          <div class="details-list">
-            <!-- Iterate over the Properties array -->
-            <div v-if="shapes.properties && shapes.properties.length > 0">
-              <strong>Property Shapes Details:</strong>
-              <ul class="ml-6">
-                <li v-for="(property, index) in shapes.properties" :key="index">
-                  <p><strong>{{ property.predicate }}:</strong>
-                    <span v-if="Array.isArray(property.object)">
-                      <ul>
-                        <li v-for="(obj, idx) in property.object" :key="idx">{{ obj }}</li>
-                      </ul>
-                    </span>
-                    <span v-else>&nbsp; {{ property.object }}</span>
-                  </p>
-                  <p class="my-2" />
-                </li>
-              </ul>
-            </div>
-            <p v-else>No properties available.</p>
-            <p><strong>Target Class:</strong> {{ (shapes && shapes.targetClass) || "None" }}</p>
-        </div>
-      </div>
-    </td>
   </tr>
 
-  <!-- Explanation and Fix Suggestions Row -->
+  <!-- Details Section -->
   <tr v-if="showDetails">
-    <td colspan="4" class="details-cell text-left align-top px-6 py-4 border-b border-gray-300 bg-blue-50">
-      <div class="grid grid-cols-1 gap-6">
+    <td colspan="4" class="details-cell px-6 py-6 border-b border-gray-300">
+      <!-- Problem & Solution Cards -->
+      <div class="space-y-4">
         <!-- Problem Explanation -->
-        <div>
-          <div class="text-lg font-semibold text-gray-700 mb-2 flex items-center">
-            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="p-4 rounded-lg bg-yellow-50 border-l-4 border-yellow-400">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            Problem Explanation
-          </div>
-          <div v-if="explanationLoading" class="text-gray-600 italic">
-            Loading explanation...
-          </div>
-          <div v-else-if="explanationData" class="text-gray-800">
-            <p class="mb-2">{{ explanationData.explanation_natural_language }}</p>
-            <div v-if="explanationData.has_enhanced" class="text-xs text-blue-600 font-medium">
-              ✨ AI-powered explanation
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-gray-700 mb-1">Problem Explanation</p>
+              <div v-if="explanationLoading" class="text-gray-600 italic text-sm">
+                Loading explanation...
+              </div>
+              <p v-else-if="explanationData" class="text-sm text-gray-800">
+                {{ explanationData.explanation_natural_language }}
+              </p>
+              <div v-else class="text-sm">
+                <div v-if="autoLoadingExplanations" class="text-gray-600 italic text-sm">
+                  Checking for explanations...
+                </div>
+                <button v-else @click="loadExplanation" class="text-blue-600 hover:text-blue-800 underline">
+                  Generate Explanation
+                </button>
+              </div>
             </div>
-          </div>
-          <div v-else class="text-gray-600 italic">
-            <button
-              @click="loadExplanation"
-              class="text-blue-600 hover:text-blue-800 underline text-sm"
-            >
-              Generate Explanation
-            </button>
           </div>
         </div>
 
         <!-- Suggested Solution -->
-        <div>
-          <div class="text-lg font-semibold text-gray-700 mb-2 flex items-center">
-            <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="p-4 rounded-lg bg-cyan-50 border-l-4 border-cyan-400">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-cyan-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            Suggested Solution
-          </div>
-          <div v-if="explanationLoading" class="text-gray-600 italic">
-            Loading repair suggestion...
-          </div>
-          <div v-else-if="explanationData" class="text-gray-800">
-            <p class="mb-3">{{ explanationData.suggestion_natural_language }}</p>
-
-            <!-- Accept/Reject Buttons -->
-            <div v-if="explanationData.proposed_repair && explanationData.proposed_repair.query" class="flex items-center gap-3">
-              <button
-                @click="acceptRepair"
-                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                Accept Fix
-              </button>
-              <button
-                @click="rejectRepair"
-                class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2 text-sm"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                Reject
-              </button>
-              <div v-if="explanationData.has_enhanced" class="text-xs text-green-600 font-medium">
-                ✨ AI-powered repair suggestion
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-gray-700 mb-1">Suggested Solution</p>
+              <div v-if="explanationLoading" class="text-gray-600 italic text-sm">
+                Loading repair suggestion...
               </div>
-            </div>
+              <div v-else-if="explanationData" class="space-y-3">
+                <p class="text-sm text-gray-800">{{ explanationData.suggestion_natural_language }}</p>
 
-            <!-- Repair Query Preview (PHOENIX-style) -->
-            <div v-if="explanationData.proposed_repair && explanationData.proposed_repair.query" class="mt-3">
-              <div class="flex items-center justify-between">
-                <button
-                  @click="showRepairQuery = !showRepairQuery"
-                  class="text-xs text-gray-600 hover:text-gray-800 underline"
-                >
-                  {{ showRepairQuery ? 'Hide' : 'Show' }} SPARQL Query
-                </button>
-              </div>
-              <!-- PHOENIX-style input interface (always visible when query exists) -->
-              <div class="mt-3 space-y-3">
-                <!-- Action Badge -->
-                <div class="flex items-center gap-2">
-                  <span class="px-2 py-1 text-xs font-medium rounded" :class="getActionBadgeClass(getActionType(explanationData.proposed_repair.query))">
-                    {{ getActionType(explanationData.proposed_repair.query) }}
+                <!-- Action Badge - PHOENIX Style -->
+                <div class="flex items-center gap-2 mt-3">
+                  <span :class="getActionBadgeClass(getActionType(explanationData.proposed_repair?.query))" 
+                        class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold">
+                    <svg v-if="getActionType(explanationData.proposed_repair?.query) === 'ADD'" 
+                         class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <svg v-else-if="getActionType(explanationData.proposed_repair?.query) === 'DELETE'" 
+                         class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                    </svg>
+                    <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                    {{ getActionType(explanationData.proposed_repair?.query) }}
                   </span>
-                  <span class="text-xs text-gray-500">
-                    {{ resultPath }}
-                  </span>
+                  <span class="text-xs text-gray-500">{{ formatPropertyName(resultPath) }}</span>
                 </div>
 
-                <!-- PHOENIX-style input fields based on constraint type -->
-                <div v-if="isMaxCountViolation" class="space-y-2">
-                  <label class="text-sm font-medium text-gray-700">
-                    {{ getMaxCountInputLabel() }}
-                  </label>
-                  <!-- Single selection for maxCount = 1 -->
-                  <select
-                    v-if="maxCount === 1"
-                    v-model="selectedValues[0]"
-                    class="w-full p-2 border border-gray-300 rounded text-sm focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="">Choose the correct value to keep...</option>
-                    <option v-for="val in actualValues" :key="val" :value="val">{{ val }}</option>
-                  </select>
-                  <!-- Multi-selection for maxCount > 1 -->
-                  <div v-else class="space-y-2 p-3 border rounded-md bg-gray-50">
-                    <div v-for="val in actualValues" :key="val" class="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        :id="`value-${val}`"
-                        :value="val"
-                        v-model="selectedValues"
-                        :disabled="selectedValues.length >= maxCount && !selectedValues.includes(val)"
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      >
-                      <label :for="`value-${val}`" class="text-sm font-normal">{{ val }}</label>
-                    </div>
-                    <div class="text-xs text-gray-500 mt-2">
-                      Select up to {{ maxCount }} values to keep ({{ selectedValues.length }} selected)
+                <!-- Input Interface Based on Constraint Type -->
+                <div class="space-y-3">
+                  <!-- MaxCount Violation - PHOENIX Style -->
+                  <div v-if="isMaxCountViolation" class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">
+                      {{ getMaxCountInputLabel() }}
+                    </label>
+                    <!-- Single selection for maxCount = 1 -->
+                    <select v-if="maxCount === 1" v-model="selectedValues[0]"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm">
+                      <option value="">Choose the correct value to keep...</option>
+                      <option v-for="val in actualValues" :key="val" :value="val">{{ val }}</option>
+                    </select>
+                    <!-- Multi-selection for maxCount > 1 -->
+                    <div v-else class="space-y-2 p-3 border rounded-md bg-white shadow-sm">
+                      <div v-for="val in actualValues" :key="val" class="flex items-center gap-2">
+                        <input type="checkbox" :id="`value-${val}`" :value="val" v-model="selectedValues"
+                               :disabled="selectedValues.length >= maxCount && !selectedValues.includes(val)"
+                               class="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500">
+                        <label :for="`value-${val}`" class="text-sm">{{ val }}</label>
+                      </div>
+                      <div class="text-xs text-gray-500 mt-2">
+                        {{ selectedValues.length }} of {{ maxCount }} selected
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Pattern constraint with PHOENIX-style PatternInput -->
-                <div v-else-if="isPatternViolation" class="space-y-2">
-                  <label class="text-sm font-medium text-gray-700">
-                    Enter the correct value:
-                  </label>
-                  <div v-if="explanationData.constraint_info && explanationData.constraint_info.pattern" class="text-xs text-blue-600 mb-1">
-                    Pattern: {{ explanationData.constraint_info.pattern }}
+                  <!-- Pattern Violation - PHOENIX Style with Prefix/Suffix -->
+                  <div v-else-if="isPatternViolation" class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">
+                      Enter the correct value:
+                    </label>
+                    <!-- Pattern Input with Prefix/Suffix -->
+                    <div v-if="patternInfo.hasVariable" class="flex items-center gap-1 p-2 border rounded-md bg-gray-50 shadow-sm">
+                      <span v-if="patternInfo.prefix" class="font-mono text-gray-600 text-sm select-none">
+                        {{ patternInfo.prefix }}
+                      </span>
+                      <input v-model="patternInputValue" @input="updatePatternInput" type="text"
+                             :placeholder="getPatternPlaceholder()"
+                             class="flex-1 px-2 py-1 border-b border-gray-300 bg-transparent focus:border-cyan-500 focus:outline-none font-mono text-sm">
+                      <span v-if="patternInfo.suffix" class="font-mono text-gray-600 text-sm select-none">
+                        {{ patternInfo.suffix }}
+                      </span>
+                    </div>
+                    <!-- Fallback for patterns without clear structure -->
+                    <input v-else v-model="userProvidedValue" type="text"
+                           :placeholder="getPatternPlaceholder()"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm font-mono">
+                    <div v-if="getPatternExample()" class="text-xs text-gray-500 flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      Example: {{ getPatternExample() }}
+                    </div>
                   </div>
-                  <div class="flex items-center gap-2 p-2 border rounded-md bg-gray-50">
-                    <span v-if="patternInfo.prefix" class="font-mono text-gray-600 text-sm">{{ patternInfo.prefix }}</span>
-                    <input
-                      v-model="patternInputValue"
-                      @input="updatePatternInput"
-                      type="text"
-                      :placeholder="(explanationData.constraint_info && explanationData.constraint_info.exampleValue) || 'Enter value...'"
-                      class="flex-1 p-1 border-b border-gray-300 focus:border-blue-500 focus:outline-none font-mono text-sm"
-                    >
-                    <span v-if="patternInfo.suffix" class="font-mono text-gray-600 text-sm">{{ patternInfo.suffix }}</span>
+
+                  <!-- InConstraint Violation - PHOENIX Style -->
+                  <div v-else-if="isInConstraintViolation && allowedValues.length > 0" class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">
+                      Select the correct value:
+                    </label>
+                    <select v-model="selectedAllowedValue"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm">
+                      <option value="">Choose from the list of allowed values...</option>
+                      <option v-for="val in allowedValues" :key="val" :value="val">{{ val }}</option>
+                    </select>
                   </div>
-                  <div v-if="explanationData.constraint_info && explanationData.constraint_info.exampleValue" class="text-xs text-gray-500">
-                    Example: {{ explanationData.constraint_info.exampleValue }}
+
+                  <!-- MinInclusive Violation - PHOENIX Style -->
+                  <div v-else-if="isMinInclusiveViolation && allowedValues.length > 0" class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">
+                      Select a value greater than or equal to the minimum:
+                    </label>
+                    <select v-model="selectedAllowedValue"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm">
+                      <option value="">Choose a value that meets the minimum requirement...</option>
+                      <option v-for="val in allowedValues" :key="val" :value="val">{{ val }}</option>
+                    </select>
+                    <div v-if="explanationData?.constraint_info?.minValue" class="text-xs text-gray-500">
+                      Minimum required value: {{ explanationData.constraint_info.minValue }}
+                    </div>
+                  </div>
+
+                  <!-- MaxInclusive Violation - PHOENIX Style -->
+                  <div v-else-if="isMaxInclusiveViolation && allowedValues.length > 0" class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">
+                      Select a value less than or equal to the maximum:
+                    </label>
+                    <select v-model="selectedAllowedValue"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm">
+                      <option value="">Choose a value that meets the maximum requirement...</option>
+                      <option v-for="val in allowedValues" :key="val" :value="val">{{ val }}</option>
+                    </select>
+                    <div v-if="explanationData?.constraint_info?.maxValue" class="text-xs text-gray-500">
+                      Maximum allowed value: {{ explanationData.constraint_info.maxValue }}
+                    </div>
+                  </div>
+
+                  <!-- General User Input -->
+                  <div v-else-if="needsUserInput" class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">
+                      Enter the correct value:
+                    </label>
+                    <input v-model="userProvidedValue" type="text"
+                           :placeholder="getInputPlaceholder()"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-sm">
+                  </div>
+
+                  <!-- Value to Remove - PHOENIX Style -->
+                  <div v-if="value && getActionType(explanationData.proposed_repair?.query) === 'DELETE'" class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">
+                      Value to remove:
+                    </label>
+                    <div class="p-2 bg-red-50 rounded border border-red-200">
+                      <code class="text-sm text-red-800">{{ value }}</code>
+                    </div>
                   </div>
                 </div>
 
-                <!-- InConstraint violation with dropdown -->
-                <div v-else-if="isInConstraintViolation && allowedValues.length > 0" class="space-y-2">
-                  <label class="text-sm font-medium text-gray-700">
-                    Select the correct value:
-                  </label>
-                  <select
-                    v-model="selectedAllowedValue"
-                    class="w-full p-2 border border-gray-300 rounded text-sm focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="">Choose from the list of allowed values...</option>
-                    <option v-for="val in allowedValues" :key="val" :value="val">{{ val }}</option>
-                  </select>
-                </div>
-
-                <!-- General user input for other constraints -->
-                <div v-else-if="needsUserInput" class="space-y-2">
-                  <label class="text-sm font-medium text-gray-700">
-                    Enter the correct value:
-                  </label>
-                  <input
-                    v-model="userProvidedValue"
-                    type="text"
-                    :placeholder="getInputPlaceholder()"
-                    class="w-full p-2 border border-gray-300 rounded text-sm focus:border-blue-500 focus:outline-none"
-                  >
-                </div>
-
-                <!-- Value to remove for DELETE operations -->
-                <div v-if="value && getActionType(explanationData.proposed_repair.query) === 'DELETE'" class="space-y-2">
-                  <label class="text-sm font-medium text-gray-700">
-                    Value to remove:
-                  </label>
-                  <div class="p-2 bg-red-50 rounded border border-red-200">
-                    <code class="text-sm text-red-800">{{ value }}</code>
-                  </div>
-                </div>
-
-                <!-- SPARQL Query Edit Section (Advanced) -->
-                <details class="border rounded-lg">
-                  <summary class="p-2 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    🔧 Advanced: Edit SPARQL Query
+                <!-- Advanced: Edit SPARQL Query -->
+                <details class="border rounded-lg mt-4">
+                  <summary class="p-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Advanced: Edit SPARQL Query
                   </summary>
-                  <div class="p-3 border-t">
-                    <textarea
-                      v-model="editableQuery"
-                      class="w-full p-3 bg-gray-100 rounded text-xs font-mono text-gray-700 max-h-40 overflow-y-auto border border-blue-300 focus:border-blue-500 focus:outline-none resize-none"
-                      rows="8"
-                      placeholder="Edit the SPARQL query here..."
-                    ></textarea>
-                    <div class="flex gap-2 mt-2">
-                      <button
-                        @click="applyEditedQuery"
-                        class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors"
-                      >
-                        Apply Query Changes
-                      </button>
-                      <button
-                        @click="resetQuery"
-                        class="px-3 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors"
-                      >
-                        Reset
-                      </button>
-                    </div>
+                  <div class="p-3 border-t bg-gray-50">
+                    <textarea v-model="editableQuery"
+                              class="w-full p-3 bg-white rounded text-xs font-mono text-gray-700 border border-gray-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none resize-none"
+                              rows="8"></textarea>
                   </div>
                 </details>
 
-                <!-- Query Preview (collapsible) -->
+                <!-- Current SPARQL Query -->
                 <details class="border rounded-lg">
-                  <summary class="p-2 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    📄 Current SPARQL Query
+                  <summary class="p-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Current SPARQL Query
                   </summary>
-                  <div class="p-3 border-t">
-                    <pre class="text-xs font-mono text-gray-700 whitespace-pre-wrap">{{ explanationData.proposed_repair.query }}</pre>
+                  <div class="p-3 border-t bg-gray-50">
+                    <pre class="text-xs font-mono text-gray-700 whitespace-pre-wrap overflow-x-auto">{{ displayQuery }}</pre>
                   </div>
                 </details>
+
+                <!-- Action Buttons - PHOENIX Style -->
+                <div class="flex flex-wrap items-center gap-2 pt-4">
+                  <button @click="rejectRepair"
+                          class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Reject
+                  </button>
+                  
+                  <button v-if="!isMaxCountViolation" @click="toggleEditMode"
+                          class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                    Edit Query
+                  </button>
+                  
+                  <button @click="acceptRepair" :disabled="!canAcceptRepair"
+                          :class="{'opacity-50 cursor-not-allowed': !canAcceptRepair}"
+                          class="inline-flex items-center gap-2 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Accept Fix
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          <div v-else class="text-gray-600 italic">
-            No repair suggestion available
           </div>
         </div>
       </div>
@@ -361,53 +275,9 @@
 </template>
 
 <script setup>
-/**
- * ViolationTableRow component
- *
- * Renders an expandable row for SHACL validation violations.
- * Shows basic violation info with the ability to expand for detailed information.
- *
- * @example
- * // Basic usage in a parent component template:
- * // <ViolationTableRow
- * //   :rowNumber="1"
- * //   focusNode="ex:Person1"
- * //   resultPath="ex:name"
- * //   value="John Doe"
- * //   message="Value does not match pattern" 
- * // />
- *
- * @prop {Number} rowNumber - The sequential number for this row
- * @prop {String} focusNode - The focus node URI of the violation
- * @prop {String} resultPath - The property path involved in the violation
- * @prop {String|Number} value - The value that caused the violation
- * @prop {String} message - The validation error message
- * @prop {String} propertyShape - The property shape URI
- * @prop {String} severity - The severity level of the violation
- * @prop {Object} shapes - Object containing shape details
- * @prop {String|Array} targetClass - The target class of the shape
- * @prop {String|Array} targetNode - The target node of the shape
- * @prop {String|Array} targetSubjectsOf - The target subjects of the shape
- * @prop {String|Array} targetObjectsOf - The target objects of the shape
- * @prop {String} nodeShape - The node shape URI
- * @prop {String} constraintComponent - The constraint component URI
- *
- * @dependencies
- * - vue (Composition API)
- *
- * @style
- * - Interactive row with hover effects and expandable details.
- * - Compact data display with triangle indicators for expansion state.
- * - Well-structured nested tables for details view.
- * 
- * @returns {HTMLElement} Two table rows: a main row showing summary violation 
- * information and an expandable details row that appears when clicked, displaying
- * comprehensive violation information and shape details in a structured format.
- */
 import { defineProps, ref, computed, watch } from 'vue';
 import api from '@/utils/api';
 
-// Define the props to receive data from the parent component
 const props = defineProps({
   rowNumber: Number,
   focusNode: String,
@@ -423,173 +293,84 @@ const props = defineProps({
   targetObjectsOf: [String, Array],
   nodeShape: String,
   constraintComponent: String,
+  context: Object, // PHOENIX-style context with example values
 });
 
+// State
 const showDetails = ref(false);
 const explanationData = ref(null);
 const explanationLoading = ref(false);
-const showRepairQuery = ref(false);
-const editMode = ref(false);
+const autoLoadingExplanations = ref(false);
 const editableQuery = ref('');
+const editMode = ref(false);
 
-// PHOENIX-style input variables
-const userInput = ref('');
+// Input states
+const userProvidedValue = ref('');
 const selectedValues = ref([]);
 const selectedAllowedValue = ref('');
 const patternInputValue = ref('');
-const patternInfo = ref({ prefix: '', suffix: '', example: '' });
+const patternInfo = ref({ prefix: '', suffix: '', hasVariable: false });
 const maxCount = ref(1);
 const actualValues = ref([]);
 const allowedValues = ref([]);
 
-const finalQuery = computed(() => {
-  const originalQuery = explanationData.value?.proposed_repair?.query || '';
-  if (originalQuery.includes('$user_provided_value')) {
-    // Ensure the user provided value is properly quoted if it's a string literal
-    const formattedValue = userInput.value.startsWith('http') ? `<${userInput.value}>` : `"${userInput.value}"`;
-    return originalQuery.replace(/\$user_provided_value/g, formattedValue);
-  }
-  return editableQuery.value;
-});
-
-const toggleDetails = () => {
-  const originalQuery = explanationData.value?.proposed_repair?.query || '';
-  if (originalQuery.includes('$user_provided_value')) {
-    // Ensure the user provided value is properly quoted if it's a string literal
-    const formattedValue = userProvidedValue.value.startsWith('http') ? `<${userProvidedValue.value}>` : `"${userProvidedValue.value}"`;
-    return originalQuery.replace(/\$user_provided_value/g, formattedValue);
-  }
-  return editableQuery.value;
-});
-
-const toggleDetails = () => {
-  showDetails.value = !showDetails.value;
-  // Load explanation when details are opened
-  if (showDetails.value && !explanationData.value) {
-    loadExplanation();
-  }
-};
-
-const loadExplanation = async () => {
-  if (explanationLoading.value) return;
-
-  explanationLoading.value = true;
-  try {
-    // Get session ID from localStorage
-    const sessionId = localStorage.getItem('shacl_session_id');
-
-    // Create violation object for API
-    const violation = {
-      focus_node: props.focusNode,
-      property_path: props.resultPath,
-      value: props.value,
-      message: props.message,
-      shape_id: props.nodeShape,
-      constraint_id: props.constraintComponent,
-      severity: props.severity
-    };
-
-    const response = await api.postExplanation(violation, sessionId);
-
-    explanationData.value = response.data;
-    console.log('Full backend response:', response.data);
-    console.log('Constraint component:', props.constraintComponent);
-    console.log('Constraint info:', response.data.constraint_info);
-
-    // Initialize editable query with the original query
-    if (response.data && response.data.proposed_repair && response.data.proposed_repair.query) {
-      editableQuery.value = response.data.proposed_repair.query;
-      console.log('Editable query set to:', editableQuery.value);
-    } else {
-      console.log('No query provided in response');
-    }
-
-    // Initialize constraint-specific data
-    initializeConstraintSpecificData();
-    console.log('After initialization - Pattern:', isPatternViolation.value, 'MaxCount:', isMaxCountViolation.value, 'InConstraint:', isInConstraintViolation.value);
-    console.log('Explanation loaded:', explanationData.value);
-
-  } catch (error) {
-    console.error('Error loading explanation:', error);
-    // Set a basic explanation as fallback
-    explanationData.value = {
-      explanation_natural_language: `The resource '${props.focusNode}' violates the constraint '${props.constraintComponent}' on property '${props.resultPath}'. ${props.message}`,
-      suggestion_natural_language: 'To fix this violation, please review the data and ensure it complies with the constraint requirements.',
-      proposed_repair: { query: '' },
-      has_enhanced: false
-    };
-  } finally {
-    explanationLoading.value = false;
-  }
-};
-
-const acceptRepair = async () => {
-  if (!finalQuery.value) return;
-
-  try {
-    const sessionId = localStorage.getItem('shacl_session_id');
-
-    const response = await api.postRepair(finalQuery.value, sessionId);
-
-    if (response.data.success) {
-      // Show success message
-      alert('Repair applied successfully! The violation has been fixed.');
-      // Optionally refresh the data or reload the page
-      window.location.reload();
-    } else {
-      alert('Failed to apply repair: ' + response.data.error);
-    }
-
-  } catch (error) {
-    console.error('Error applying repair:', error);
-    alert('Failed to apply repair: ' + (error.response?.data?.error || error.message));
-  }
-};
-
-const rejectRepair = () => {
-  // Clear the explanation data
-  explanationData.value = null;
-  showRepairQuery.value = false;
-  editMode.value = false;
-};
-
-const applyEditedQuery = () => {
-  // Update the explanation data with the edited query
-  if (explanationData.value && explanationData.value.proposed_repair) {
-    explanationData.value.proposed_repair.query = editableQuery.value;
-  }
-  editMode.value = false;
-};
-
-const resetQuery = () => {
-  if (explanationData.value?.proposed_repair?.query) {
-    editableQuery.value = explanationData.value.proposed_repair.query;
-  }
-};
-
-// PHOENIX-style computed properties
+// Computed properties
 const isMaxCountViolation = computed(() => {
   const constraint = props.constraintComponent || '';
-  console.log('Checking MaxCount in:', constraint);
-  return constraint.includes('MaxCountConstraintComponent') || constraint.includes('MaxCount') || false;
+  return constraint.includes('MaxCountConstraintComponent') || constraint.includes('MaxCount');
 });
 
 const isPatternViolation = computed(() => {
   const constraint = props.constraintComponent || '';
-  console.log('Checking Pattern in:', constraint);
-  return constraint.includes('PatternConstraintComponent') || constraint.includes('Pattern') || false;
+  return constraint.includes('PatternConstraintComponent') || constraint.includes('Pattern');
 });
 
 const isInConstraintViolation = computed(() => {
   const constraint = props.constraintComponent || '';
-  console.log('Checking InConstraint in:', constraint);
-  return constraint.includes('InConstraintComponent') || constraint.includes('InConstraint') || false;
+  return constraint.includes('InConstraintComponent') || constraint.includes('InConstraint');
+});
+
+const isMinInclusiveViolation = computed(() => {
+  const constraint = props.constraintComponent || '';
+  return constraint.includes('MinInclusiveConstraintComponent') || constraint.includes('MinInclusive');
+});
+
+const isMaxInclusiveViolation = computed(() => {
+  const constraint = props.constraintComponent || '';
+  return constraint.includes('MaxInclusiveConstraintComponent') || constraint.includes('MaxInclusive');
 });
 
 const needsUserInput = computed(() => {
   const query = explanationData.value?.proposed_repair?.query || '';
   return query.includes('$user_provided_value');
 });
+
+// Helper functions for formatting URIs and names (PHOENIX-style)
+const formatNodeName = (uri) => {
+  if (!uri) return '';
+
+  // If it's already formatted (has prefix), return as is
+  if (uri.includes(':') && !uri.startsWith('http')) {
+    return uri;
+  }
+
+  // Extract local name from URI
+  const parts = uri.split(/[#\/]/);
+  return parts[parts.length - 1] || uri;
+};
+
+const formatPropertyName = (uri) => {
+  if (!uri) return '';
+
+  // If it's already formatted (has prefix), return as is
+  if (uri.includes(':') && !uri.startsWith('http')) {
+    return uri;
+  }
+
+  // Extract local name from URI
+  const parts = uri.split(/[#\/]/);
+  return parts[parts.length - 1] || uri;
+};
 
 // PHOENIX-style helper methods
 const getActionType = (query) => {
@@ -618,7 +399,7 @@ const getMaxCountInputLabel = () => {
 const updatePatternInput = () => {
   // Combine prefix, input, and suffix for pattern constraints
   const fullValue = `${patternInfo.value.prefix}${patternInputValue.value}${patternInfo.value.suffix}`;
-  userInput.value = fullValue;
+  userProvidedValue.value = fullValue;
 };
 
 const parsePattern = (pattern) => {
@@ -650,15 +431,42 @@ const getInputPlaceholder = () => {
   return 'Enter a value...';
 };
 
-const initializeConstraintSpecificData = () => {
-  if (!explanationData.value) return;
+const getPatternExample = () => {
+  // Try to get example value from multiple sources (like PHOENIX does)
+  let example = '';
 
+  if (props.context?.exampleValue) {
+    example = props.context.exampleValue;
+    console.log('Found exampleValue in props.context:', example);
+  } else if (explanationData.value?.constraint_info?.exampleValue) {
+    example = explanationData.value.constraint_info.exampleValue;
+    console.log('Found exampleValue in explanationData:', example);
+  } else if (patternInfo.value?.example) {
+    example = patternInfo.value.example;
+    console.log('Found exampleValue in patternInfo:', example);
+  }
+
+  console.log('getPatternExample returning:', example);
+  return example;
+};
+
+const getPatternPlaceholder = () => {
+  const example = getPatternExample();
+  if (example) {
+    return `e.g., ${example}`;
+  }
+  return getInputPlaceholder();
+};
+
+const initializeConstraintSpecificData = () => {
   // Initialize MaxCount data
   if (isMaxCountViolation.value) {
-    // Extract maxCount and actualValues from constraint info if available
-    const constraintInfo = explanationData.value.constraint_info || {};
-    maxCount.value = constraintInfo.maxCount || 1;
-    actualValues.value = constraintInfo.actualValues || [props.value].filter(Boolean);
+    // Extract from multiple sources in priority order: context from backend, then explanation data
+    const contextData = props.context || {};
+    const constraintInfo = explanationData.value?.constraint_info || {};
+
+    maxCount.value = contextData.maxCount || constraintInfo.maxCount || 1;
+    actualValues.value = contextData.actualValues || constraintInfo.actualValues || [props.value].filter(Boolean);
 
     // Pre-select first maxCount values (PHOENIX behavior)
     selectedValues.value = actualValues.value.slice(0, maxCount.value);
@@ -666,19 +474,84 @@ const initializeConstraintSpecificData = () => {
 
   // Initialize Pattern data
   if (isPatternViolation.value) {
-    const constraintInfo = explanationData.value.constraint_info || {};
-    const pattern = constraintInfo.pattern;
+    // Extract from multiple sources in priority order: context from backend, then explanation data
+    const contextData = props.context || {};
+    const constraintInfo = explanationData.value?.constraint_info || {};
 
+    const pattern = contextData.pattern || constraintInfo.pattern;
     if (pattern) {
       patternInfo.value = parsePattern(pattern);
-      patternInfo.value.example = constraintInfo.exampleValue || '';
+      patternInfo.value.example = contextData.exampleValue || constraintInfo.exampleValue || '';
+
+      // Debug logging for pattern initialization
+      console.log('Pattern violation detected:', {
+        constraintComponent: props.constraintComponent,
+        pattern,
+        contextData,
+        exampleValue: contextData.exampleValue,
+        patternInfo: patternInfo.value,
+        getPatternExample: getPatternExample()
+      });
+    } else {
+      console.log('Pattern violation but no pattern found:', {
+        constraintComponent: props.constraintComponent,
+        contextData,
+        constraintInfo
+      });
     }
   }
 
   // Initialize InConstraint data
   if (isInConstraintViolation.value) {
-    const constraintInfo = explanationData.value.constraint_info || {};
-    allowedValues.value = constraintInfo.allowedValues || [];
+    // Extract from multiple sources in priority order: context from backend, then explanation data
+    const contextData = props.context || {};
+    const constraintInfo = explanationData.value?.constraint_info || {};
+
+    allowedValues.value = contextData.allowedValues || constraintInfo.allowedValues || [];
+
+    // Debug logging
+    console.log('InConstraint detected:', {
+      constraintComponent: props.constraintComponent,
+      contextData,
+      allowedValues: allowedValues.value,
+      allowedValuesLength: allowedValues.value.length
+    });
+  }
+
+  // Initialize MinInclusive data
+  if (isMinInclusiveViolation.value) {
+    // Extract from multiple sources in priority order: context from backend, then explanation data
+    const contextData = props.context || {};
+    const constraintInfo = explanationData.value?.constraint_info || {};
+
+    allowedValues.value = contextData.allowedValues || constraintInfo.allowedValues || [];
+
+    // Debug logging
+    console.log('MinInclusive detected:', {
+      constraintComponent: props.constraintComponent,
+      contextData,
+      constraintInfo,
+      allowedValues: allowedValues.value,
+      minValue: contextData.minValue || constraintInfo.minValue
+    });
+  }
+
+  // Initialize MaxInclusive data
+  if (isMaxInclusiveViolation.value) {
+    // Extract from multiple sources in priority order: context from backend, then explanation data
+    const contextData = props.context || {};
+    const constraintInfo = explanationData.value?.constraint_info || {};
+
+    allowedValues.value = contextData.allowedValues || constraintInfo.allowedValues || [];
+
+    // Debug logging
+    console.log('MaxInclusive detected:', {
+      constraintComponent: props.constraintComponent,
+      contextData,
+      constraintInfo,
+      allowedValues: allowedValues.value,
+      maxValue: contextData.maxValue || constraintInfo.maxValue
+    });
   }
 };
 
@@ -847,6 +720,30 @@ const getCorrectedDatatypeValue = (value, propertyPath) => {
   }
 };
 
+// Watchers to initialize constraint-specific data when context or explanation data changes
+watch(() => props.context, () => {
+  initializeConstraintSpecificData();
+}, { immediate: true });
+
+watch(() => explanationData.value, () => {
+  initializeConstraintSpecificData();
+}, { immediate: true });
+
+// Auto-load explanations when details are opened
+watch(() => showDetails.value, (newValue) => {
+  if (newValue && !explanationData.value && !explanationLoading.value && !autoLoadingExplanations.value) {
+    // Automatically try to load explanation when user opens details
+    autoLoadExplanation();
+  }
+});
+
+// Watcher to handle auto-loading state changes
+watch(() => autoLoadingExplanations.value, (newValue) => {
+  if (newValue && !explanationData.value && !explanationLoading.value) {
+    loadExplanation();
+  }
+});
+
 // PHOENIX-style watchers to automatically update SPARQL queries
 watch(editableQuery, (newValue) => {
   // This watcher now primarily serves to keep the advanced edit field in sync
@@ -857,6 +754,21 @@ watch(editableQuery, (newValue) => {
 watch(selectedAllowedValue, (newValue) => {
   if (!newValue) return;
   userProvidedValue.value = newValue;
+
+  // Update SPARQL query for InConstraint and range violations
+  if ((isInConstraintViolation.value || isMinInclusiveViolation.value || isMaxInclusiveViolation.value) && props.value) {
+    const session_id = localStorage.getItem('shacl_session_id') || 'PLACEHOLDER';
+    editableQuery.value = `DELETE WHERE {
+  GRAPH <http://ex.org/ValidationReport/Session_${session_id}> {
+    <${props.focusNode}> <${props.resultPath}> "${props.value}" .
+  }
+};
+INSERT DATA {
+  GRAPH <http://ex.org/ValidationReport/Session_${session_id}> {
+    <${props.focusNode}> <${props.resultPath}> "${newValue}" .
+  }
+}`;
+  }
 });
 
 watch(selectedValues, (newValues) => {
@@ -876,6 +788,84 @@ watch(selectedValues, (newValues) => {
 }`;
   }
 }, { deep: true });
+
+// Event handlers
+const toggleDetails = () => {
+  showDetails.value = !showDetails.value;
+};
+
+const loadExplanation = async () => {
+  if (!props.focusNode) return;
+
+  explanationLoading.value = true;
+  autoLoadingExplanations.value = false; // Reset auto-loading state
+  try {
+    const session_id = localStorage.getItem('shacl_session_id');
+    const response = await api.post('/api/explanation', {
+      violation: {
+        focus_node: props.focusNode,
+        property_path: props.resultPath,
+        constraint_id: props.constraintComponent,
+        value: props.value,
+        message: props.message
+      },
+      session_id
+    });
+
+    explanationData.value = response.data;
+  } catch (error) {
+    console.error('Error loading explanation:', error);
+  } finally {
+    explanationLoading.value = false;
+  }
+};
+
+const autoLoadExplanation = () => {
+  // Auto-load explanation with a short delay to show "checking" state
+  autoLoadingExplanations.value = true;
+  // Small delay to show the checking state
+  setTimeout(() => {
+    if (autoLoadingExplanations.value) {
+      loadExplanation();
+    }
+  }, 500);
+};
+
+const toggleEditMode = () => {
+  editMode.value = !editMode.value;
+  if (editMode.value && explanationData.value?.proposed_repair?.query) {
+    editableQuery.value = explanationData.value.proposed_repair.query;
+  }
+};
+
+const acceptRepair = async () => {
+  // Implementation for accepting repair
+  console.log('Accepting repair...');
+};
+
+const rejectRepair = async () => {
+  // Implementation for rejecting repair
+  console.log('Rejecting repair...');
+};
+
+// Computed properties
+const displayQuery = computed(() => {
+  return explanationData.value?.proposed_repair?.query || editableQuery.value || 'No query available';
+});
+
+const canAcceptRepair = computed(() => {
+  // Basic validation - can be enhanced
+  if (isMaxCountViolation.value) {
+    return selectedValues.value.length > 0;
+  }
+  if (isInConstraintViolation.value || isMinInclusiveViolation.value || isMaxInclusiveViolation.value) {
+    return selectedAllowedValue.value;
+  }
+  if (needsUserInput.value) {
+    return userProvidedValue.value.trim();
+  }
+  return true;
+});
 </script>
 
 

@@ -1,7 +1,16 @@
 # simple_routes.py - Simple API endpoints without xpshacl dependencies
 from flask import Blueprint, jsonify, request
+from functions.logging_config import get_logger
+from functions import virtuoso_service
+from functions.phoenix_service import explanation_cache, load_vkg_from_virtuoso
+from functions.xpshacl_engine.violation_signature_factory import create_violation_signature
+from functions.xpshacl_engine.repair_engine import SuggestionRepairGenerator
+import re
+from datetime import datetime
+import exrex
 
 simple_bp = Blueprint('simple', __name__)
+logger = get_logger(__name__)
 
 @simple_bp.route('/api/violations', methods=['GET'])
 def get_violations():
@@ -18,10 +27,10 @@ def get_violations():
             # Fallback to default graph for backward compatibility
             validation_graph_uri = "http://ex.org/ValidationReport"
 
-        print(f"Querying violations from database: {validation_graph_uri}")
+        logger.info(f"Querying violations from database: {validation_graph_uri}")
 
         # Use the same virtuoso_service that the dashboard uses
-        from functions import virtuoso_service
+
 
         # Use the exact same query that works in our testing
         query = f"""
@@ -43,6 +52,7 @@ def get_violations():
         violations_data = []
 
         for result in results["results"]["bindings"]:
+            # Extract basic violation info
             violation = {
                 "focus_node": result.get("focusNode", {}).get("value", ""),
                 "message": result.get("resultMessage", {}).get("value", ""),
@@ -53,9 +63,13 @@ def get_violations():
                 "shape_id": result.get("sourceShape", {}).get("value", ""),
                 "violation_type": "other"
             }
+
+            # Add PHOENIX-style context information
+            violation["context"] = _get_violation_context(violation, session_id)
+
             violations_data.append(violation)
 
-        print(f"Database query returned {len(violations_data)} violations")
+        logger.info(f"Database query returned {len(violations_data)} violations")
 
         # Standard prefixes for common namespaces
         prefixes = {
@@ -74,7 +88,7 @@ def get_violations():
         }), 200
 
     except Exception as e:
-        print(f"Error getting violations: {str(e)}")
+        logger.error(f"Error getting violations: {str(e)}")
         return jsonify({'error': f'Failed to retrieve violations: {str(e)}'}), 500
 
 
@@ -85,12 +99,12 @@ def get_explanations(session_id):
     Returns AI-generated explanations if available, otherwise basic ones
     """
     try:
-        from functions.phoenix_service import explanation_cache
+
 
         # Check if we have enhanced explanations in the cache
         if session_id in explanation_cache:
             explanations = explanation_cache[session_id]
-            print(f"Found {len(explanations)} cached explanations for session {session_id}")
+            logger.info(f"Found {len(explanations)} cached explanations for session {session_id}")
             return jsonify({
                 'explanations': explanations,
                 'session_id': session_id,
@@ -106,7 +120,7 @@ def get_explanations(session_id):
         }), 200
 
     except Exception as e:
-        print(f"Error getting explanations: {str(e)}")
+        logger.error(f"Error getting explanations: {str(e)}")
         return jsonify({'error': f'Failed to retrieve explanations: {str(e)}'}), 500
 
 
@@ -123,13 +137,13 @@ def generate_explanation():
         if not violation:
             return jsonify({'error': 'Violation data is required'}), 400
 
-        print(f"Generating explanation for violation: {violation}")
+        logger.info(f"Generating explanation for violation: {violation}")
 
         # Try to use PHOENIX if available, but fallback to basic explanation
         try:
             # Try to import and use PHOENIX service
-            from functions.phoenix_service import load_vkg_from_virtuoso, create_violation_signature
-            from functions.xpshacl_engine.suggestion_repair_generator import SuggestionRepairGenerator
+            
+
 
             # Convert dict to violation-like object
             class ViolationObj:
@@ -138,6 +152,10 @@ def generate_explanation():
                         setattr(self, key, value)
 
             v_obj = ViolationObj(**violation)
+            v_obj.constraint_id = violation.get('constraint_id')
+            v_obj.property_path = violation.get('property_path')
+            v_obj.violation_type = violation.get('violation_type')
+            v_obj.violation_type = violation.get('violation_type')
 
             # Try to generate enhanced explanation
             vkg = load_vkg_from_virtuoso()
@@ -153,13 +171,13 @@ def generate_explanation():
                         "proposed_repair": {"query": cached_explanation.proposed_repair_query},
                         "has_enhanced": True
                     }
-                    print(f"Generated enhanced explanation: {repair_object}")
+                    logger.info(f"Generated enhanced explanation: {repair_object}")
                     return jsonify(repair_object), 200
 
         except ImportError as ie:
-            print(f"PHOENIX modules not available: {ie}")
+            logger.warning(f"PHOENIX modules not available: {ie}")
         except Exception as e:
-            print(f"Enhanced explanation generation failed: {e}")
+            logger.error(f"Enhanced explanation generation failed: {e}")
 
         # Fallback to basic explanation with enhanced context
         focus_node = violation.get('focus_node', 'Unknown resource')
@@ -174,11 +192,12 @@ def generate_explanation():
         # Generate more specific basic explanation based on constraint type
         constraint_name = constraint_id.split('#')[-1] if '#' in constraint_id else constraint_id.split('/')[-1]
 
-        if 'mincount' in constraint_name.lower():
+        # More specific constraint detection - check for exact matches first
+        if 'mincount' in constraint_name.lower() and 'count' in constraint_name.lower():
             explanation = f"This data record is incomplete. The '{property_path}' attribute is required but missing from '{focus_node}'."
             suggestion = f"Add a value for the '{property_path}' attribute to '{focus_node}' to complete the record."
             query = _generate_mincount_query(focus_node, property_path, session_id)
-        elif 'maxcount' in constraint_name.lower():
+        elif 'maxcount' in constraint_name.lower() and 'count' in constraint_name.lower():
             explanation = f"This data record has too many values. The '{property_path}' attribute for '{focus_node}' exceeds the maximum allowed number of values."
             suggestion = f"Remove extra values from the '{property_path}' attribute for '{focus_node}' to comply with the constraint."
             query = _generate_maxcount_query(focus_node, property_path, value, session_id)
@@ -186,7 +205,7 @@ def generate_explanation():
             explanation = f"This data record has an incorrect data type. The '{property_path}' attribute for '{focus_node}' should be a different data type than '{value}'."
             suggestion = f"Change the value of '{property_path}' for '{focus_node}' to the correct data type."
             query = _generate_datatype_query(focus_node, property_path, value, session_id)
-        elif 'pattern' in constraint_name.lower():
+        elif 'pattern' in constraint_name.lower() and 'constraintcomponent' in constraint_name.lower():
             pattern = constraint_info.get('pattern', '')
             example = constraint_info.get('exampleValue', '')
             if pattern:
@@ -199,7 +218,7 @@ def generate_explanation():
                 explanation = f"The value for '{property_path}' doesn't match the required format."
                 suggestion = f"Change the value to match the required format."
             query = _generate_pattern_query(focus_node, property_path, value, session_id, example)
-        elif 'in' in constraint_name.lower():
+        elif 'inconstraintcomponent' in constraint_name.lower():
             allowed_values = constraint_info.get('allowedValues', [])
             if allowed_values:
                 explanation = f"The value '{value}' for '{property_path}' is not in the list of allowed values."
@@ -208,6 +227,28 @@ def generate_explanation():
                 explanation = f"The value for '{property_path}' is not in the allowed list."
                 suggestion = f"Change the value to one of the allowed options."
             query = _generate_in_query(focus_node, property_path, value, session_id, allowed_values[0] if allowed_values else 'CORRECT_VALUE')
+        elif 'maxinclusive' in constraint_name.lower():
+            max_value = constraint_info.get('maxValue', '')
+            if max_value:
+                explanation = f"The value '{value}' for '{property_path}' exceeds the maximum allowed value of {max_value}."
+                suggestion = f"Change the value to be less than or equal to {max_value}."
+            else:
+                explanation = f"The value '{value}' for '{property_path}' exceeds the maximum allowed value."
+                suggestion = f"Change the value to be less than or equal to the maximum allowed value."
+            query = _generate_maxcount_query(focus_node, property_path, value, session_id)
+        elif 'mininclusive' in constraint_name.lower():
+            min_value = constraint_info.get('minValue', '')
+            if min_value:
+                explanation = f"The value '{value}' for '{property_path}' is below the minimum allowed value of {min_value}."
+                suggestion = f"Change the value to be greater than or equal to {min_value}."
+            else:
+                explanation = f"The value '{value}' for '{property_path}' is below the minimum allowed value."
+                suggestion = f"Change the value to be greater than or equal to the minimum allowed value."
+            query = _generate_mincount_query(focus_node, property_path, session_id)
+        elif 'lessthanorequals' in constraint_name.lower():
+            explanation = f"The value '{value}' for '{property_path}' violates the less-than-or-equals constraint."
+            suggestion = f"Change the value to be less than or equal to the required value."
+            query = _generate_maxcount_query(focus_node, property_path, value, session_id)
         else:
             explanation = f"The data record '{focus_node}' violates a quality constraint. The '{property_path}' attribute with value '{value}' doesn't meet requirements."
             suggestion = f"Review and correct the '{property_path}' value for '{focus_node}' to ensure data quality."
@@ -222,11 +263,11 @@ def generate_explanation():
             "constraint_info": constraint_info  # Add contextual information
         }
 
-        print(f"Generated basic explanation: {basic_explanation}")
+        logger.info(f"Generated basic explanation: {basic_explanation}")
         return jsonify(basic_explanation), 200
 
     except Exception as e:
-        print(f"Error generating explanation: {str(e)}")
+        logger.error(f"Error generating explanation: {str(e)}")
         return jsonify({'error': f'Failed to generate explanation: {str(e)}'}), 500
 
 
@@ -247,7 +288,7 @@ def apply_repair():
             return jsonify({'error': 'Session ID is required for applying repairs'}), 400
 
         # Use virtuoso_service to execute the repair
-        from functions import virtuoso_service
+
 
         # Execute the repair query
         result = virtuoso_service.execute_sparql_update(repair_query)
@@ -259,7 +300,7 @@ def apply_repair():
         }), 200
 
     except Exception as e:
-        print(f"Error applying repair: {str(e)}")
+        logger.error(f"Error applying repair: {str(e)}")
         return jsonify({
             'success': False,
             'error': f'Failed to apply repair: {str(e)}'
@@ -283,7 +324,7 @@ def _get_constraint_info(constraint_id, property_path, value, session_id):
     if 'pattern' in constraint_name.lower():
         # Try to extract pattern from shapes graph if available
         try:
-            from functions import virtuoso_service
+    
             pattern_query = f"""
             SELECT ?pattern
             FROM <http://ex.org/ShapesGraph>
@@ -303,12 +344,81 @@ def _get_constraint_info(constraint_id, property_path, value, session_id):
                 if example_value:
                     constraint_info['exampleValue'] = example_value
         except Exception as e:
-            print(f"Could not extract pattern info: {e}")
+            logger.warning(f"Could not extract pattern info: {e}")
 
+    # Handle minInclusive constraints with range information
+    elif 'mininclusive' in constraint_name.lower():
+        try:
+    
+            min_query = f"""
+            SELECT ?minValue
+            FROM <http://ex.org/ShapesGraph>
+            WHERE {{
+                ?shape <http://www.w3.org/ns/shacl#minInclusive> ?minValue .
+                ?shape <http://www.w3.org/ns/shacl#path> <{property_path}> .
+            }}
+            LIMIT 1
+            """
+            results = virtuoso_service.execute_sparql_query(min_query)
+            if results['results']['bindings']:
+                min_value_str = results['results']['bindings'][0]['minValue']['value']
+                constraint_info['minValue'] = min_value_str
+
+                # Generate a range of reasonable values above the minimum
+                try:
+                    # Try to parse as integer or decimal
+                    if '.' in min_value_str:
+                        min_num = float(min_value_str)
+                        allowed_values = [str(min_num + i * 0.5) for i in range(1, 6)]
+                    else:
+                        min_num = int(min_value_str)
+                        allowed_values = [str(min_num + i) for i in range(1, 6)]
+
+                    constraint_info['allowedValues'] = allowed_values
+                    constraint_info['constraintType'] = 'minInclusive'
+                except ValueError:
+                    logger.warning(f"Could not parse minInclusive value as number: {min_value_str}")
+        except Exception as e:
+            logger.warning(f"Could not extract minInclusive info: {e}")
+
+    # Handle maxInclusive constraints with range information
+    elif 'maxinclusive' in constraint_name.lower():
+        try:
+    
+            max_query = f"""
+            SELECT ?maxValue
+            FROM <http://ex.org/ShapesGraph>
+            WHERE {{
+                ?shape <http://www.w3.org/ns/shacl#maxInclusive> ?maxValue .
+                ?shape <http://www.w3.org/ns/shacl#path> <{property_path}> .
+            }}
+            LIMIT 1
+            """
+            results = virtuoso_service.execute_sparql_query(max_query)
+            if results['results']['bindings']:
+                max_value_str = results['results']['bindings'][0]['maxValue']['value']
+                constraint_info['maxValue'] = max_value_str
+
+                # Generate a range of reasonable values below the maximum
+                try:
+                    # Try to parse as integer or decimal
+                    if '.' in max_value_str:
+                        max_num = float(max_value_str)
+                        allowed_values = [str(max_num - i * 0.5) for i in range(1, 6)]
+                    else:
+                        max_num = int(max_value_str)
+                        allowed_values = [str(max_num - i) for i in range(1, 6)]
+
+                    constraint_info['allowedValues'] = allowed_values
+                    constraint_info['constraintType'] = 'maxInclusive'
+                except ValueError:
+                    logger.warning(f"Could not parse maxInclusive value as number: {max_value_str}")
+        except Exception as e:
+            logger.warning(f"Could not extract maxInclusive info: {e}")
     # Handle in constraints
     elif 'in' in constraint_name.lower():
         try:
-            from functions import virtuoso_service
+    
             in_query = f"""
             SELECT ?allowedValue
             FROM <http://ex.org/ShapesGraph>
@@ -324,7 +434,7 @@ def _get_constraint_info(constraint_id, property_path, value, session_id):
             if allowed_values:
                 constraint_info['allowedValues'] = allowed_values
         except Exception as e:
-            print(f"Could not extract in constraint info: {e}")
+            logger.warning(f"Could not extract in constraint info: {e}")
 
     return constraint_info
 
@@ -334,7 +444,7 @@ def _generate_pattern_example(pattern):
     Generate an example value that matches a regex pattern (simplified exrex functionality)
     """
     try:
-        import re
+
 
         # Simple pattern replacements for common cases
         if pattern == r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$':
@@ -436,7 +546,7 @@ def _get_default_for_property(property_path):
     elif any(keyword in lower_path for keyword in ['email', 'mail']):
         return '"unknown@example.com"'
     elif any(keyword in lower_path for keyword in ['date', 'created', 'modified']):
-        from datetime import datetime
+
         return f'"{datetime.now().strftime("%Y-%m-%d")}"^^xsd:date'
     elif any(keyword in lower_path for keyword in ['age', 'count', 'number']):
         return '"0"^^xsd:integer'
@@ -534,3 +644,98 @@ def _convert_to_iso_date(date_str):
             return f"{match4.group(3)}-{match4.group(1).zfill(2)}-{match4.group(2).zfill(2)}"
 
     return None
+
+
+def _get_violation_context(violation, session_id):
+    """
+    Get PHOENIX-style context information for violations, including example values
+    """
+    context = {}
+    constraint_id = violation.get('constraint_id', '')
+    constraint_name = constraint_id.split('#')[-1] if '#' in constraint_id else constraint_id.split('/')[-1]
+
+    # Pattern constraint context with example values
+    if 'pattern' in constraint_name.lower():
+        try:
+    
+            pattern_query = f"""
+            SELECT ?pattern ?message
+            FROM <http://ex.org/ShapesGraph>
+            WHERE {{
+                ?shape <http://www.w3.org/ns/shacl#pattern> ?pattern .
+                ?shape <http://www.w3.org/ns/shacl#path> <{violation.get('property_path', '')}> .
+                OPTIONAL {{ ?shape <http://www.w3.org/ns/shacl#message> ?message . }}
+            }}
+            LIMIT 1
+            """
+            results = virtuoso_service.execute_sparql_query(pattern_query)
+            if results['results']['bindings']:
+                binding = results['results']['bindings'][0]
+                pattern = binding['pattern']['value']
+                context['pattern'] = pattern
+
+                # Generate example value using exrex (just like PHOENIX)
+                try:
+
+                    context['exampleValue'] = exrex.getone(pattern)
+                except Exception as e:
+                    logger.warning(f"Could not generate example for pattern '{pattern}': {e}")
+
+                if 'message' in binding:
+                    context['message'] = binding['message']['value']
+        except Exception as e:
+            logger.warning(f"Could not extract pattern info: {e}")
+
+    # MaxCount constraint context
+    elif 'maxcount' in constraint_name.lower():
+        try:
+    
+            maxcount_query = f"""
+            SELECT ?maxCount
+            FROM <http://ex.org/ShapesGraph>
+            WHERE {{
+                ?shape <http://www.w3.org/ns/shacl#maxCount> ?maxCount .
+                ?shape <http://www.w3.org/ns/shacl#path> <{violation.get('property_path', '')}> .
+            }}
+            LIMIT 1
+            """
+            results = virtuoso_service.execute_sparql_query(maxcount_query)
+            if results['results']['bindings']:
+                max_count = int(results['results']['bindings'][0]['maxCount']['value'])
+                context['maxCount'] = max_count
+
+                # Get actual values from data graph
+                actual_values_query = f"""
+                SELECT ?value
+                FROM <http://ex.org/DataGraph>
+                WHERE {{
+                    <{violation.get('focus_node', '')}> <{violation.get('property_path', '')}> ?value .
+                }}
+                """
+                actual_results = virtuoso_service.execute_sparql_query(actual_values_query)
+                actual_values = [binding['value']['value'] for binding in actual_results['results']['bindings']]
+                context['actualValues'] = actual_values
+        except Exception as e:
+            logger.warning(f"Could not extract maxCount info: {e}")
+
+    # InConstraint context
+    elif 'in' in constraint_name.lower():
+        try:
+    
+            in_query = f"""
+            SELECT ?allowedValue
+            FROM <http://ex.org/ShapesGraph>
+            WHERE {{
+                ?shape <http://www.w3.org/ns/shacl#in> ?inList .
+                ?inList rdf:rest*/rdf:first ?allowedValue .
+                ?shape <http://www.w3.org/ns/shacl#path> <{violation.get('property_path', '')}> .
+            }}
+            """
+            results = virtuoso_service.execute_sparql_query(in_query)
+            allowed_values = [binding['allowedValue']['value'] for binding in results['results']['bindings']]
+            if allowed_values:
+                context['allowedValues'] = allowed_values
+        except Exception as e:
+            logger.warning(f"Could not extract in constraint info: {e}")
+
+    return context

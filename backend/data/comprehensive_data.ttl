@@ -1,0 +1,78 @@
+@prefix ex: <http://example.org/ns#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix org: <http://www.w3.org/ns/org#> .
+
+# --- Projects ---
+ex:proj_phoenix a ex:Project ;
+  foaf:name "Project Phoenix" ;
+  ex:projectId "PROJ-001" ;
+  ex:status "Active" ;
+  ex:startDate "2024-01-15"^^xsd:date ;
+  ex:endDate "2025-01-15"^^xsd:date ;
+  ex:budget "150000.00"^^xsd:decimal .
+
+# VIOLATION: endDate is before startDate
+ex:proj_apollo a ex:Project ;
+  foaf:name "Project Apollo" ;
+  ex:projectId "PROJ-002" ;
+  ex:status "Active" ;
+  ex:startDate "2024-06-01"^^xsd:date ;
+  ex:endDate "2024-05-01"^^xsd:date ;
+  ex:budget "250000.00"^^xsd:decimal .
+
+# VIOLATION: status is not in the allowed list ('Archived')
+ex:proj_laureaus a ex:Project ;
+  foaf:name "Project Laureaus" ;
+  ex:projectId "PROJ-003" ;
+  ex:status "Archived" ;
+  ex:startDate "2022-03-10"^^xsd:date .
+
+# --- Employees ---
+ex:emp_manager a ex:Employee ;
+  ex:employeeId "EMP-MGR-01" ;
+  ex:role "Manager" .
+
+# VIOLATION: An employee with unexpected ID format
+ex:emp_manager a ex:Employee ;
+  ex:employeeId "MGR-01" ;
+  ex:role "Manager" .
+
+# VIOLATION: A Manager who is also a Task (violates sh:not)
+ex:task_manager_conflict a ex:Task ;
+  rdf:type ex:Employee ;
+  ex:employeeId "EMP-MGR-02" ;
+  ex:role "Manager" ;
+  ex:title "This should not be an employee" .
+
+# --- Tasks ---
+ex:task_01 a ex:Task ;
+  ex:title "Design UI Mockups" ;
+  ex:priority 1 ;
+  ex:assignedTo ex:emp_001 .
+
+# VIOLATION: priority is 0 (must be >= 1)
+ex:task_02 a ex:Task ;
+  ex:title "Develop API Endpoints" ;
+  ex:priority 0 ;
+  ex:assignedTo ex:emp_002 .
+
+# VIOLATION: priority is 6 (must be <= 5)
+ex:task_03 a ex:Task ;
+  ex:title "Write Documentation" ;
+  ex:priority 6 ;
+  ex:assignedTo ex:emp_003 .
+
+# VIOLATION: This task has no priority OR description (violates sh:or)
+ex:task_04 a ex:Task ;
+  ex:title "Deploy to Staging" ;
+  ex:assignedTo ex:emp_004 .
+
+# VIOLATION: Budget is negative (violates SPARQL constraint)
+ex:proj_artemis a ex:Project ;
+  foaf:name "Project Artemis" ;
+  ex:projectId "PROJ-004" ;
+  ex:status "Active" ;
+  ex:startDate "2024-02-20"^^xsd:date ;
+  ex:budget "-5000.00"^^xsd:decimal .

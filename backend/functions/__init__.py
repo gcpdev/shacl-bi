@@ -6,11 +6,15 @@ It provides services for loading and querying SHACL validation reports,
 generating statistics and visualizations, and interacting with the Virtuoso database.
 
 Modules:
+    analytics_service: Analytics and reporting services
+    dashboard_service: Dashboard metrics and monitoring services
+    phoenix_service: PHOENIX explanation generation services
+    validation_service: SHACL validation services
+    virtuoso_service: Core database connectivity and query services
     homepage_service: Services for the main dashboard page and statistics
     landing_service: Services for loading RDF data into the Virtuoso database
     shape_view_service: Services for detailed shape inspection views
     shapes_overview_service: Services for shapes graph analysis and metrics
-    virtuoso_service: Core database connectivity and query services
 """
 
 from .virtuoso_service import (
@@ -62,6 +66,12 @@ from .shapes_overview_service import (
     get_constraints_count_for_property_shapes,
 )
 
+# Import new services
+from . import analytics_service
+from . import dashboard_service
+from . import phoenix_service
+from . import validation
+
 __all__ = [
     "load_graphs",
     "get_number_of_constraints_for_node_shape",
@@ -97,5 +107,8 @@ __all__ = [
     "distribution_of_violations_per_path",
     "distribution_of_violations_per_focus_node",
     "generate_validation_details_report",
-    
+    "analytics_service",
+    "dashboard_service",
+    "phoenix_service",
+    "validation",
 ]

@@ -204,6 +204,7 @@ const loadViolationData = async () => {
         targetNode: formatURI(violation.focus_node || ''),
         nodeShape: formatURI(violation.shape_id || ''),
         constraintComponent: formatURI(violation.constraint_id || ''),
+        context: violation.context || {}, // PHOENIX-style context with example values
         shapes: {
           shape: formatURI(violation.shape_id || ''),
           type: formatURI(violation.violation_type || violation.severity || ''),

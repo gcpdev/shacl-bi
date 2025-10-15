@@ -112,7 +112,7 @@ class ExtendedShaclValidator:
                 if pattern:
                     violation.context["pattern"] = str(pattern)
                     try:
-                        # Generate an example that matches the pattern
+                        # Generate an example that matches the pattern (just like PHOENIX)
                         violation.context["exampleValue"] = exrex.getone(str(pattern))
                     except Exception as e:
                         logger.warning(f"Could not generate example for pattern '{pattern}': {e}")
@@ -140,6 +140,7 @@ class ExtendedShaclValidator:
                         # Move to the rest of the list
                         in_list_head = self.shapes_graph.value(subject=in_list_head, predicate=RDF.rest)
                     violation.allowed_values = allowed_values
+                    violation.context["allowedValues"] = allowed_values  # Add to context for frontend
                     logger.debug(f"Extracted allowed values: {violation.allowed_values}")
 
             violations.append(violation)

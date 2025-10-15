@@ -49,11 +49,16 @@ class ConstraintViolation:
 
     def to_dict(self) -> Dict:
         """Convert ConstraintViolation to a dictionary."""
+        # Handle both enum and string values for violation_type
+        violation_type_value = (
+            self.violation_type.value if hasattr(self.violation_type, 'value')
+            else self.violation_type
+        )
         return {
             "focus_node": self.focus_node,
             "shape_id": self.shape_id,
             "constraint_id": self.constraint_id,
-            "violation_type": self.violation_type.value,  # Serialize Enum value
+            "violation_type": violation_type_value,
             "property_path": self.property_path,
             "value": self.value,
             "message": self.message,

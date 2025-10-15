@@ -1,0 +1,74 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix ex: <http://example.org/ns#> .
+
+# --- Shape for Project ---
+ex:ProjectShape
+  a sh:NodeShape ;
+  sh:targetClass ex:Project ;
+  sh:property [
+    sh:path ex:startDate ;
+    sh:datatype xsd:date ;
+    sh:maxCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ex:endDate ;
+    sh:datatype xsd:date ;
+    sh:maxCount 1 ;
+  ] ;
+  sh:property [
+    sh:path ex:status ;
+    sh:in ("Active" "On-Hold" "Completed") ; # Must be one of these values
+    sh:maxCount 1 ;
+  ] ;
+  # Rule: endDate must be greater than or equal to startDate
+  sh:property [
+    sh:path ex:endDate ;
+    sh:lessThanOrEquals ex:startDate ;
+    sh:message "The project end date cannot be before its start date."@en ;
+  ] ;
+  # SPARQL Constraint: Budget must be non-negative
+  sh:sparql [
+    sh:message "The project budget cannot be a negative value."@en ;
+    sh:select """
+      PREFIX ex: <http://example.org/ns#>
+      SELECT $this
+      WHERE {
+        $this a ex:Project .
+        OPTIONAL { $this ex:budget ?budget . }
+        FILTER (!bound(?budget) || ?budget >= 0)
+      }
+      """ ;
+  ] .
+
+# --- Shape for Employee ---
+ex:EmployeeShape
+  a sh:NodeShape ;
+  sh:targetClass ex:Employee ;
+  # Rule: An Employee cannot also be a Task
+  sh:not [
+    sh:class ex:Task ;
+  ] ;
+  sh:property [
+    sh:path ex:employeeId ;
+    sh:minCount 1 ;
+    sh:pattern "^EMP-" ;
+  ] .
+
+# --- Shape for Task ---
+ex:TaskShape
+  a sh:NodeShape ;
+  sh:targetClass ex:Task ;
+  sh:property [
+    sh:path ex:priority ;
+    sh:datatype xsd:integer ;
+    sh:minInclusive 1 ;
+    sh:maxInclusive 5 ;
+    sh:message "Priority must be an integer between 1 (highest) and 5 (lowest)."@en ;
+  ] ;
+  # Rule: A Task must have either a priority or a description
+  sh:or (
+    [ sh:path ex:priority ; sh:minCount 1 ; ]
+    [ sh:path ex:description ; sh:minCount 1 ; ]
+  ) .
