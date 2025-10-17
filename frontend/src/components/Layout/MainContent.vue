@@ -17,10 +17,10 @@
     </p>
       <!-- Added spacing here -->
     <div class="h-4 sm:h-5"></div> <!-- Spacer div for consistent spacing -->
-    <h3 class="text-xs sm:text-sm md:text-base font-medium text-gray-500 mb-1">
+    <h3 v-if="tag.titleMaxViolated" class="text-xs sm:text-sm md:text-base font-medium text-gray-500 mb-1">
       {{ tag.titleMaxViolated }}
     </h3>
-    <p class="font-bold text-[18px]" :style="{ color: 'rgb(227,114,34)' }">
+    <p v-if="tag.maxViolated && tag.titleMaxViolated" class="font-bold text-[18px]" :style="{ color: 'rgb(227,114,34)' }">
       {{ tag.maxViolated }}
     </p>
   </div>

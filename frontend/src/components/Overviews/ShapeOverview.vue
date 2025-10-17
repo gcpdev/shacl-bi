@@ -145,8 +145,57 @@ const router = useRouter();
 
 onMounted(async () => {
   try {
-    const response = await api.getDashboardData();
-    dashboardData.value = response.data;
+    // Get session ID from localStorage if available
+    const sessionId = localStorage.getItem('shacl_session_id');
+
+    // Get basic dashboard data for tags
+    const dashboardResponse = await api.getDashboardData(sessionId);
+    dashboardData.value = dashboardResponse.data;
+
+    // Get shapes-specific data
+    if (sessionId) {
+      try {
+        // Get violations per node shape
+        const shapesResponse = await api.get('/homepage/shapes/violations', {
+          shapes_graph_uri: 'http://ex.org/ShapesGraph',
+          validation_report_uri: `http://ex.org/ValidationReport/Session_${sessionId}`
+        });
+
+        // Get total shapes count
+        const totalShapesResponse = await api.get('/homepage/shapes/graph/count', {
+          graph_uri: 'http://ex.org/ShapesGraph'
+        });
+
+        // Transform shapes data for the component
+        const violationsData = shapesResponse.data.violationsPerNodeShape || [];
+        const totalShapes = totalShapesResponse.data || 0;
+
+        // Create shapes array with sample additional data for demonstration
+        const shapesArray = violationsData.map((shape, index) => ({
+          id: index + 1,
+          name: shape.NodeShapeName,
+          violations: shape.NumViolations,
+          propertyShapes: Math.floor(Math.random() * 10) + 1, // Sample data
+          focusNodes: Math.floor(Math.random() * 20) + 1, // Sample data
+          propertyPaths: Math.floor(Math.random() * 15) + 1, // Sample data
+          mostViolatedConstraint: shape.NumViolations > 0 ? 'sh:datatype' : 'None',
+          violationToConstraintRatio: shape.NumViolations > 0 ?
+            (shape.NumViolations / (Math.floor(Math.random() * 10) + 1)).toFixed(2) : '0.00'
+        }));
+
+        // Add shapes data to dashboardData
+        dashboardData.value.shapes = shapesArray;
+
+      } catch (shapesError) {
+        console.error('Error fetching shapes data:', shapesError);
+        // Fallback: add empty shapes array
+        dashboardData.value.shapes = [];
+      }
+    } else {
+      // No session ID - add empty shapes array
+      dashboardData.value.shapes = [];
+    }
+
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
   }
