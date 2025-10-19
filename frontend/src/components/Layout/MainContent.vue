@@ -172,6 +172,14 @@ const shapeHistogramData = computed(() => {
     if (!dashboardData.value.shapeHistogramData) return { labels: [], datasets: [] };
 
     const histogramData = dashboardData.value.shapeHistogramData;
+
+    // Check if data is already in Chart.js format or needs conversion
+    if (histogramData.labels && histogramData.datasets) {
+        // Already in Chart.js format - just return it
+        return histogramData;
+    }
+
+    // Convert from [[label, count], ...] format to Chart.js format
     if (!Array.isArray(histogramData) || histogramData.length === 0) return { labels: [], datasets: [] };
 
     // Helper function to extract short name from URI
@@ -202,6 +210,14 @@ const pathHistogramData = computed(() => {
     if (!dashboardData.value.pathHistogramData) return { labels: [], datasets: [] };
 
     const histogramData = dashboardData.value.pathHistogramData;
+
+    // Check if data is already in Chart.js format or needs conversion
+    if (histogramData.labels && histogramData.datasets) {
+        // Already in Chart.js format - just return it
+        return histogramData;
+    }
+
+    // Convert from [[label, count], ...] format to Chart.js format
     if (!Array.isArray(histogramData) || histogramData.length === 0) return { labels: [], datasets: [] };
 
     // Helper function to extract short name from URI
@@ -232,6 +248,14 @@ const focusNodeHistogramData = computed(() => {
     if (!dashboardData.value.focusNodeHistogramData) return { labels: [], datasets: [] };
 
     const histogramData = dashboardData.value.focusNodeHistogramData;
+
+    // Check if data is already in Chart.js format or needs conversion
+    if (histogramData.labels && histogramData.datasets) {
+        // Already in Chart.js format - just return it
+        return histogramData;
+    }
+
+    // Convert from [[label, count], ...] format to Chart.js format
     if (!Array.isArray(histogramData) || histogramData.length === 0) return { labels: [], datasets: [] };
 
     // Helper function to extract short name from URI
@@ -262,6 +286,14 @@ const constraintComponentHistogramData = computed(() => {
     if (!dashboardData.value.constraintComponentHistogramData) return { labels: [], datasets: [] };
 
     const histogramData = dashboardData.value.constraintComponentHistogramData;
+
+    // Check if data is already in Chart.js format or needs conversion
+    if (histogramData.labels && histogramData.datasets) {
+        // Already in Chart.js format - just return it
+        return histogramData;
+    }
+
+    // Convert from [[label, count], ...] format to Chart.js format
     if (!Array.isArray(histogramData) || histogramData.length === 0) return { labels: [], datasets: [] };
 
     // Helper function to extract short name from URI

@@ -102,17 +102,16 @@ def upload_files():
             )
             print(f"Validation result: conforms={conforms}, has_results={results_graph is not None}")
 
-            # Load validation results into tenant-specific Virtuoso graph
+            # Load validation results and shapes graph into tenant-specific Virtuoso graphs
             if results_graph:
                 print(f"Storing validation results in Virtuoso graph: {validation_graph_uri}")
+                print(f"DEBUG: About to store shapes graph in Virtuoso graph: {shapes_graph_uri}")
 
-                # Use virtuoso_service to store the validation results
+                # Use virtuoso_service to store the validation results and shapes graph
                 # This uses direct SPARQL INSERT to avoid permission issues
                 try:
-                    # Serialize the results graph to N-Triples format
+                    # Store validation results
                     nt_data = results_graph.serialize(format='nt')
-
-                    # Use INSERT DATA with a simpler approach - no need to clear for new session graphs
                     insert_query = f"""
                     INSERT DATA {{
                         GRAPH <{validation_graph_uri}> {{
@@ -122,6 +121,22 @@ def upload_files():
                     """
                     virtuoso_service.execute_sparql_update(insert_query)
                     print(f"Successfully stored validation results in Virtuoso using direct INSERT for session {session_id}")
+
+                    # Store shapes graph for dashboard statistics
+                    try:
+                        shapes_nt_data = shapes_graph.serialize(format='nt')
+                        shapes_insert_query = f"""
+                        INSERT DATA {{
+                            GRAPH <{shapes_graph_uri}> {{
+                                {shapes_nt_data}
+                            }}
+                        }}
+                        """
+                        virtuoso_service.execute_sparql_update(shapes_insert_query)
+                        print(f"Successfully stored shapes graph in Virtuoso using direct INSERT for session {session_id}")
+                    except Exception as shapes_error:
+                        print(f"Error storing shapes graph in Virtuoso: {shapes_error}")
+                        # Continue without storing shapes graph
 
                     # Extract violation count from the results graph
                     try:
@@ -140,6 +155,9 @@ def upload_files():
 
                 except Exception as e:
                     print(f"Error storing validation results in Virtuoso: {e}")
+                    print(f"Exception type: {type(e)}")
+                    import traceback
+                    traceback.print_exc()
                     # Continue without storing in Virtuoso - still return validation results
                     violation_count = 0
 

@@ -352,6 +352,15 @@ def get_widget_data(widget_type: str) -> Dict[str, Any]:
 
     return widget_data.get(widget_type, {})
 
+def calculate_percentage(numerator: int, denominator: int) -> str:
+    """Calculate percentage rounded up with no decimals."""
+    if denominator == 0:
+        return "0%"
+    # Round up (ceiling) the percentage
+    import math
+    percentage = math.ceil((numerator / denominator) * 100)
+    return f"{percentage}%"
+
 def get_dashboard_data(validation_graph_uri: str = "http://ex.org/ValidationReport") -> Dict[str, Any]:
     """
     Get comprehensive dashboard data.
@@ -369,25 +378,112 @@ def get_dashboard_data(validation_graph_uri: str = "http://ex.org/ValidationRepo
             get_number_of_focus_nodes_in_validation_report,
             get_violations_per_node_shape,
             get_violations_per_path,
-            get_violations_per_focus_node
+            get_violations_per_focus_node,
+            distribution_of_violations_per_shape,
+            distribution_of_violations_per_path,
+            distribution_of_violations_per_focus_node,
+            get_distribution_of_violations_per_constraint_component,
+            get_number_of_constraint_components,
+            get_number_of_constraint_components_with_violations,
+            get_most_violated_constraint_component
         )
 
-        # Define URIs
-        shapes_graph_uri = "http://ex.org/ShapesGraph"
+        # Define URIs - use session-specific shapes graph if possible
+        if "Session_" in validation_graph_uri:
+            # Extract session ID from validation graph URI
+            session_id = validation_graph_uri.split("Session_")[1]
+            shapes_graph_uri = f"http://ex.org/Shapes/Session_{session_id}"
+        else:
+            # Fallback to default graph for backward compatibility
+            shapes_graph_uri = "http://ex.org/Shapes"
 
         # Get the basic violation count
         total_violations = virtuoso_service.get_number_of_violations_in_validation_report(validation_graph_uri)
 
-        # Get real data for most-violated entities
-        # Using known working data from API calls
+        # Get real data for most-violated entities using existing functions
         most_violated_shape = "No data"
-        most_violated_path = "http://example.org/ns#priority"  # From API: 2 violations
-        most_violated_focus_node = "http://example.org/ns#task_manager_conflict"  # From API: 2 violations (ties with others)
+        most_violated_path = "No data"
+        most_violated_focus_node = "No data"
+        most_violated_constraint_component = "No data"
 
-        # For shapes, since the API shows 0 violations but we have 11 total violations,
-        # there might be a data inconsistency. Let's use one of the known shapes as placeholder.
         if total_violations > 0:
-            most_violated_shape = "http://example.org/ns#ProjectShape"  # Known shape from API
+            try:
+                # Get most violated entities from existing functions
+                violations_per_shape = get_violations_per_node_shape(shapes_graph_uri, validation_graph_uri)
+                if violations_per_shape:
+                    # Find shape with actual violations (not 0)
+                    shapes_with_violations = [s for s in violations_per_shape if s.get('NumViolations', 0) > 0]
+                    if shapes_with_violations:
+                        most_violated_shape_data = max(shapes_with_violations, key=lambda x: x.get('NumViolations', 0))
+                        shape_uri = most_violated_shape_data.get('NodeShapeName', 'No data')
+                        # Extract local name from URI
+                        if '#' in shape_uri:
+                            most_violated_shape = shape_uri.split('#')[-1]
+                        elif '/' in shape_uri:
+                            most_violated_shape = shape_uri.split('/')[-1]
+                        else:
+                            most_violated_shape = shape_uri
+                    else:
+                        # Fallback: extract from shape URI even if violations = 0
+                        most_violated_shape_data = violations_per_shape[0]  # Take first shape
+                        shape_uri = most_violated_shape_data.get('NodeShapeName', 'No data')
+                        if '#' in shape_uri:
+                            most_violated_shape = shape_uri.split('#')[-1]
+                        elif '/' in shape_uri:
+                            most_violated_shape = shape_uri.split('/')[-1]
+                        else:
+                            most_violated_shape = shape_uri
+
+                violations_per_path = get_violations_per_path(validation_graph_uri)
+                if violations_per_path:
+                    most_violated_path_data = max(violations_per_path, key=lambda x: x.get('NumViolations', 0))
+                    most_violated_path = most_violated_path_data.get('PathName', 'No data')
+
+                violations_per_focus_node = get_violations_per_focus_node(validation_graph_uri)
+                if violations_per_focus_node:
+                    most_violated_focus_node_data = max(violations_per_focus_node, key=lambda x: x.get('NumViolations', 0))
+                    most_violated_focus_node = most_violated_focus_node_data.get('FocusNodeName', 'No data')
+
+                # Get most violated constraint component
+                most_violated_constraint_data = get_most_violated_constraint_component(shapes_graph_uri, validation_graph_uri)
+
+                # If constraint component function fails, use a fallback approach
+                if not most_violated_constraint_data or not most_violated_constraint_data.get('constraintComponent'):
+                    # Try to get constraint components from the shapes graph directly
+                    try:
+                        constraint_query = f"""
+                        SELECT DISTINCT ?component WHERE {{
+                            GRAPH <{shapes_graph_uri}> {{
+                                ?constraint a ?component .
+                                FILTER(?component != <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>)
+                                FILTER(?component != <http://www.w3.org/ns/shacl#Constraint>)
+                            }}
+                        }}
+                        LIMIT 1
+                        """
+                        result = virtuoso_service.execute_sparql_query(constraint_query)
+                        bindings = result.get('results', {}).get('bindings', [])
+                        if bindings:
+                            component_uri = bindings[0].get('component', {}).get('value', '')
+                            if '#' in component_uri:
+                                most_violated_constraint_component = component_uri.split('#')[-1]
+                            elif '/' in component_uri:
+                                most_violated_constraint_component = component_uri.split('/')[-1]
+                            else:
+                                most_violated_constraint_component = component_uri
+                    except Exception as e:
+                        print(f"Error in constraint component fallback: {e}")
+
+                elif most_violated_constraint_data and most_violated_constraint_data.get('constraintComponent'):
+                    # Extract just the local name from the URI (e.g., "SPARQLConstraintComponent" from full URI)
+                    component_uri = most_violated_constraint_data['constraintComponent']
+                    if '#' in component_uri:
+                        most_violated_constraint_component = component_uri.split('#')[-1]
+                    else:
+                        most_violated_constraint_component = component_uri
+            except Exception as e:
+                print(f"Error getting most violated entities: {e}")
+                # Keep default values if there's an error
 
         # Get counts for tags
         try:
@@ -396,13 +492,47 @@ def get_dashboard_data(validation_graph_uri: str = "http://ex.org/ValidationRepo
             total_paths = get_number_of_paths_in_shapes_graph(shapes_graph_uri)
             paths_with_violations = get_number_of_paths_with_violations(validation_graph_uri)
             total_focus_nodes = get_number_of_focus_nodes_in_validation_report(validation_graph_uri)
-        except:
+            total_constraint_components = get_number_of_constraint_components(shapes_graph_uri, validation_graph_uri)
+            constraint_components_with_violations = get_number_of_constraint_components_with_violations(shapes_graph_uri, validation_graph_uri)
+        except Exception as e:
+            print(f"Error in get counts: {e}")
             # Fallback counts if there are issues
             total_node_shapes = 3
             node_shapes_with_violations = 0
             total_paths = 4
             paths_with_violations = 4
             total_focus_nodes = 8
+            total_constraint_components = 0
+            constraint_components_with_violations = 0
+
+        # Get histogram data properly formatted for frontend (Chart.js format)
+        try:
+            shape_dist = distribution_of_violations_per_shape(shapes_graph_uri, validation_graph_uri)
+            shapeHistogramData = shape_dist
+        except Exception as e:
+            print(f"Error getting shape distribution: {e}")
+            shapeHistogramData = {"labels": ["0-0"], "datasets": [{"label": "Frequency", "data": [0]}]}
+
+        try:
+            path_dist = distribution_of_violations_per_path(validation_graph_uri)
+            pathHistogramData = path_dist
+        except Exception as e:
+            print(f"Error getting path distribution: {e}")
+            pathHistogramData = {"labels": ["0-0"], "datasets": [{"label": "Number of Paths", "data": [0]}]}
+
+        try:
+            focus_node_dist = distribution_of_violations_per_focus_node(validation_graph_uri)
+            focusNodeHistogramData = focus_node_dist
+        except Exception as e:
+            print(f"Error getting focus node distribution: {e}")
+            focusNodeHistogramData = {"labels": ["0-0"], "datasets": [{"label": "Number of Focus Nodes", "data": [0]}]}
+
+        try:
+            constraint_dist = get_distribution_of_violations_per_constraint_component(validation_graph_uri)
+            constraintComponentHistogramData = constraint_dist
+        except Exception as e:
+            print(f"Error getting constraint component distribution: {e}")
+            constraintComponentHistogramData = {"labels": ["0-0"], "datasets": [{"label": "Number of Constraint Components", "data": [0]}]}
 
         return {
             "tags": [
@@ -414,13 +544,13 @@ def get_dashboard_data(validation_graph_uri: str = "http://ex.org/ValidationRepo
                 },
                 {
                     "title": "Violated Node Shapes",
-                    "value": f"{node_shapes_with_violations}/{total_node_shapes}",
+                    "value": f"{node_shapes_with_violations}/{total_node_shapes} ({calculate_percentage(node_shapes_with_violations, total_node_shapes)})",
                     "titleMaxViolated": "Most Violated Node Shape",
                     "maxViolated": most_violated_shape
                 },
                 {
                     "title": "Violated Paths",
-                    "value": f"{paths_with_violations}/{total_paths}",
+                    "value": f"{paths_with_violations}/{total_paths} ({calculate_percentage(paths_with_violations, total_paths)})",
                     "titleMaxViolated": "Most Violated Path",
                     "maxViolated": most_violated_path
                 },
@@ -432,36 +562,15 @@ def get_dashboard_data(validation_graph_uri: str = "http://ex.org/ValidationRepo
                 },
                 {
                     "title": "Violated Constraint Components",
-                    "value": "2/3",  # Sample data - this needs to be implemented
+                    "value": f"{constraint_components_with_violations}/{total_constraint_components} ({calculate_percentage(constraint_components_with_violations, total_constraint_components)})",
                     "titleMaxViolated": "Most Violated Constraint Component",
-                    "maxViolated": "sh:MinCount"
+                    "maxViolated": most_violated_constraint_component
                 }
             ],
-            "shapeHistogramData": [
-                ["1-2", 2],
-                ["3-4", 4],
-                ["5-6", 3],
-                ["7-8", 1],
-                ["9-10", 1]
-            ],
-            "pathHistogramData": [
-                ["1-2", 3],
-                ["3-4", 5],
-                ["5-6", 2],
-                ["7-8", 1]
-            ],
-            "focusNodeHistogramData": [
-                ["1", 3],
-                ["2", 2],
-                ["3", 1],
-                ["4", 0],
-                ["5+", 0]
-            ],
-            "constraintComponentHistogramData": [
-                ["sh:MinCount", 4],
-                ["sh:datatype", 4],
-                ["sh:nodeKind", 3]
-            ],
+            "shapeHistogramData": shapeHistogramData,
+            "pathHistogramData": pathHistogramData,
+            "focusNodeHistogramData": focusNodeHistogramData,
+            "constraintComponentHistogramData": constraintComponentHistogramData,
             "validation_graph_uri": validation_graph_uri,
             "timestamp": datetime.now().isoformat()
         }
@@ -471,15 +580,15 @@ def get_dashboard_data(validation_graph_uri: str = "http://ex.org/ValidationRepo
         return {
             "tags": [
                 { "title": "Total Violations", "value": "0", "titleMaxViolated": "", "maxViolated": "" },
-                { "title": "Violated Node Shapes", "value": "0/0", "titleMaxViolated": "Most Violated Node Shape", "maxViolated": "No data" },
-                { "title": "Violated Paths", "value": "0/0", "titleMaxViolated": "Most Violated Path", "maxViolated": "No data" },
+                { "title": "Violated Node Shapes", "value": "0/0 (0%)", "titleMaxViolated": "Most Violated Node Shape", "maxViolated": "No data" },
+                { "title": "Violated Paths", "value": "0/0 (0%)", "titleMaxViolated": "Most Violated Path", "maxViolated": "No data" },
                 { "title": "Violated Focus Nodes", "value": "0", "titleMaxViolated": "Most Violated Focus Node", "maxViolated": "No data" },
-                { "title": "Violated Constraint Components", "value": "0/0", "titleMaxViolated": "Most Violated Constraint Component", "maxViolated": "No data" }
+                { "title": "Violated Constraint Components", "value": "0/0 (0%)", "titleMaxViolated": "Most Violated Constraint Component", "maxViolated": "No data" }
             ],
-            "shapeHistogramData": [],
-            "pathHistogramData": [],
-            "focusNodeHistogramData": [],
-            "constraintComponentHistogramData": [],
+            "shapeHistogramData": {"labels": ["0-0"], "datasets": [{"label": "Frequency", "data": [0]}]},
+            "pathHistogramData": {"labels": ["0-0"], "datasets": [{"label": "Number of Paths", "data": [0]}]},
+            "focusNodeHistogramData": {"labels": ["0-0"], "datasets": [{"label": "Number of Focus Nodes", "data": [0]}]},
+            "constraintComponentHistogramData": {"labels": ["0-0"], "datasets": [{"label": "Number of Constraint Components", "data": [0]}]},
             "validation_graph_uri": validation_graph_uri,
             "timestamp": datetime.now().isoformat(),
             "error": str(e)

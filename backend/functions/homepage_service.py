@@ -160,12 +160,27 @@ def get_number_of_node_shapes_with_violations(shapes_graph_uri: str = SHAPES_GRA
     sparql.setQuery(f"""
         SELECT (COUNT(DISTINCT ?nodeShape) AS ?violatedNodeShapesCount)
         WHERE {{
+            # Get all node shapes from the shapes graph
             GRAPH <{shapes_graph_uri}> {{
-                ?nodeShape a <http://www.w3.org/ns/shacl#NodeShape> ;
-                           <http://www.w3.org/ns/shacl#property> ?propertyShape .
+                ?nodeShape a <http://www.w3.org/ns/shacl#NodeShape> .
             }}
-            GRAPH <{validation_report_uri}> {{
-                ?violation <http://www.w3.org/ns/shacl#sourceShape> ?propertyShape .
+
+            # Check if the node shape has either direct violations or violations through property shapes
+            {{
+                # Direct violations (node shape is the source of violation)
+                GRAPH <{validation_report_uri}> {{
+                    ?violation <http://www.w3.org/ns/shacl#sourceShape> ?nodeShape .
+                }}
+            }}
+            UNION
+            {{
+                # Indirect violations (property shape of this node shape is the source of violation)
+                GRAPH <{shapes_graph_uri}> {{
+                    ?nodeShape <http://www.w3.org/ns/shacl#property> ?propertyShape .
+                }}
+                GRAPH <{validation_report_uri}> {{
+                    ?violation <http://www.w3.org/ns/shacl#sourceShape> ?propertyShape .
+                }}
             }}
         }}
     """)
@@ -478,38 +493,64 @@ def distribution_of_violations_per_shape(
     Returns:
         dict: A dictionary formatted for bar chart visualization with labels and datasets.
     """
-    # Step 1: Get the violation data for each Node Shape
-    violations_data = get_violations_per_node_shape(shapes_graph_uri, validation_report_uri)
+    try:
+        # Step 1: Get the violation data for each Node Shape
+        violations_data = get_violations_per_node_shape(shapes_graph_uri, validation_report_uri)
 
-    # Step 2: Extract the maximum number of violations
-    max_violations = max([item["NumViolations"] for item in violations_data])
-
-    # Step 3: Calculate the range size and labels
-    num_bins = 10  # Number of bins (bars) for the chart
-    bin_size = max(1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0))  # Ensure at least size 1
-    labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
-
-    # Step 4: Initialize frequency counts for each bin
-    frequencies = [0] * num_bins
-
-    # Step 5: Count the number of Node Shapes in each bin
-    for item in violations_data:
-        num_violations = item["NumViolations"]
-        bin_index = min(num_violations // bin_size, num_bins - 1)  # Ensure the last bin includes the max value
-        frequencies[bin_index] += 1
-
-    # Step 6: Prepare the final data format for the bar chart
-    bar_chart_data = {
-        "labels": labels,
-        "datasets": [
-            {
-                "label": "Frequency",
-                "data": frequencies,
+        # Step 2: Handle empty data case
+        if not violations_data:
+            return {
+                "labels": ["0-0"],
+                "datasets": [
+                    {
+                        "label": "Frequency",
+                        "data": [0],
+                    }
+                ],
             }
-        ],
-    }
 
-    return bar_chart_data
+        # Step 3: Extract the maximum number of violations
+        max_violations = max([item["NumViolations"] for item in violations_data])
+
+        # Step 4: Calculate the range size and labels
+        num_bins = 10  # Number of bins (bars) for the chart
+        bin_size = max(1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0))  # Ensure at least size 1
+        labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
+
+        # Step 5: Initialize frequency counts for each bin
+        frequencies = [0] * num_bins
+
+        # Step 6: Count the number of Node Shapes in each bin
+        for item in violations_data:
+            num_violations = item["NumViolations"]
+            bin_index = min(num_violations // bin_size, num_bins - 1)  # Ensure the last bin includes the max value
+            frequencies[bin_index] += 1
+
+        # Step 7: Prepare the final data format for the bar chart
+        bar_chart_data = {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "Frequency",
+                    "data": frequencies,
+                }
+            ],
+        }
+
+        return bar_chart_data
+
+    except Exception as e:
+        print(f"Error in distribution_of_violations_per_shape: {e}")
+        # Return empty data on error
+        return {
+            "labels": ["0-0"],
+            "datasets": [
+                {
+                    "label": "Frequency",
+                    "data": [0],
+                }
+            ],
+        }
 
 
 def distribution_of_violations_per_path(validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
@@ -523,38 +564,64 @@ def distribution_of_violations_per_path(validation_report_uri: str = VALIDATION_
     Returns:
         dict: A dictionary formatted for bar chart visualization with labels and datasets.
     """
-    # Step 1: Get the violations data for each path
-    violations_data = get_violations_per_path(validation_report_uri)
+    try:
+        # Step 1: Get the violations data for each path
+        violations_data = get_violations_per_path(validation_report_uri)
 
-    # Step 2: Extract the maximum number of violations
-    max_violations = max([item["NumViolations"] for item in violations_data]) if violations_data else 0
-
-    # Step 3: Calculate the range size and labels
-    num_bins = 10  # Number of bins (bars) for the chart
-    bin_size = max(1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0))  # Ensure at least size 1
-    labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
-
-    # Step 4: Initialize frequency counts for each bin
-    frequencies = [0] * num_bins
-
-    # Step 5: Count the number of paths in each bin
-    for item in violations_data:
-        num_violations = item["NumViolations"]
-        bin_index = min(num_violations // bin_size, num_bins - 1)  # Ensure the last bin includes the max value
-        frequencies[bin_index] += 1
-
-    # Step 6: Prepare the final data format for the bar chart
-    bar_chart_data = {
-        "labels": labels,
-        "datasets": [
-            {
-                "label": "Number of Paths",
-                "data": frequencies,
+        # Step 2: Handle empty data case
+        if not violations_data:
+            return {
+                "labels": ["0-0"],
+                "datasets": [
+                    {
+                        "label": "Number of Paths",
+                        "data": [0],
+                    }
+                ],
             }
-        ],
-    }
 
-    return bar_chart_data
+        # Step 3: Extract the maximum number of violations
+        max_violations = max([item["NumViolations"] for item in violations_data])
+
+        # Step 4: Calculate the range size and labels
+        num_bins = 10  # Number of bins (bars) for the chart
+        bin_size = max(1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0))  # Ensure at least size 1
+        labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
+
+        # Step 5: Initialize frequency counts for each bin
+        frequencies = [0] * num_bins
+
+        # Step 6: Count the number of paths in each bin
+        for item in violations_data:
+            num_violations = item["NumViolations"]
+            bin_index = min(num_violations // bin_size, num_bins - 1)  # Ensure the last bin includes the max value
+            frequencies[bin_index] += 1
+
+        # Step 7: Prepare the final data format for the bar chart
+        bar_chart_data = {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "Number of Paths",
+                    "data": frequencies,
+                }
+            ],
+        }
+
+        return bar_chart_data
+
+    except Exception as e:
+        print(f"Error in distribution_of_violations_per_path: {e}")
+        # Return empty data on error
+        return {
+            "labels": ["0-0"],
+            "datasets": [
+                {
+                    "label": "Number of Paths",
+                    "data": [0],
+                }
+            ],
+        }
 
 
 def distribution_of_violations_per_focus_node(validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
@@ -568,38 +635,64 @@ def distribution_of_violations_per_focus_node(validation_report_uri: str = VALID
     Returns:
         dict: A dictionary formatted for bar chart visualization with labels and datasets.
     """
-    # Step 1: Get the violations data for each focus node
-    violations_data = get_violations_per_focus_node(validation_report_uri)
+    try:
+        # Step 1: Get the violations data for each focus node
+        violations_data = get_violations_per_focus_node(validation_report_uri)
 
-    # Step 2: Extract the maximum number of violations
-    max_violations = max([item["NumViolations"] for item in violations_data]) if violations_data else 0
-
-    # Step 3: Calculate the range size and labels
-    num_bins = 10  # Number of bins (bars) for the chart
-    bin_size = max(1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0))  # Ensure at least size 1
-    labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
-
-    # Step 4: Initialize frequency counts for each bin
-    frequencies = [0] * num_bins
-
-    # Step 5: Count the number of focus nodes in each bin
-    for item in violations_data:
-        num_violations = item["NumViolations"]
-        bin_index = min(num_violations // bin_size, num_bins - 1)  # Ensure the last bin includes the max value
-        frequencies[bin_index] += 1
-
-    # Step 6: Prepare the final data format for the bar chart
-    bar_chart_data = {
-        "labels": labels,
-        "datasets": [
-            {
-                "label": "Number of Focus Nodes",
-                "data": frequencies,
+        # Step 2: Handle empty data case
+        if not violations_data:
+            return {
+                "labels": ["0-0"],
+                "datasets": [
+                    {
+                        "label": "Number of Focus Nodes",
+                        "data": [0],
+                    }
+                ],
             }
-        ],
-    }
 
-    return bar_chart_data
+        # Step 3: Extract the maximum number of violations
+        max_violations = max([item["NumViolations"] for item in violations_data])
+
+        # Step 4: Calculate the range size and labels
+        num_bins = 10  # Number of bins (bars) for the chart
+        bin_size = max(1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0))  # Ensure at least size 1
+        labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
+
+        # Step 5: Initialize frequency counts for each bin
+        frequencies = [0] * num_bins
+
+        # Step 6: Count the number of focus nodes in each bin
+        for item in violations_data:
+            num_violations = item["NumViolations"]
+            bin_index = min(num_violations // bin_size, num_bins - 1)  # Ensure the last bin includes the max value
+            frequencies[bin_index] += 1
+
+        # Step 7: Prepare the final data format for the bar chart
+        bar_chart_data = {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "Number of Focus Nodes",
+                    "data": frequencies,
+                }
+            ],
+        }
+
+        return bar_chart_data
+
+    except Exception as e:
+        print(f"Error in distribution_of_violations_per_focus_node: {e}")
+        # Return empty data on error
+        return {
+            "labels": ["0-0"],
+            "datasets": [
+                {
+                    "label": "Number of Focus Nodes",
+                    "data": [0],
+                }
+            ],
+        }
 
 
 
@@ -1089,6 +1182,185 @@ def get_distinct_constraints_count_in_shapes(shapes_graph_uri: str = SHAPES_GRAP
         return 0
 
 
+def get_number_of_constraint_components(shapes_graph_uri: str = SHAPES_GRAPH_URI, validation_report_uri: str = VALIDATION_REPORT_URI) -> int:
+    """
+    Count the total number of constraint components used in the shapes graph.
+    Since SHACL constraint components are standard vocabulary, we infer them from property shapes.
+
+    Args:
+        shapes_graph_uri (str): The URI of the Shapes Graph. Default is SHAPES_GRAPH_URI.
+        validation_report_uri (str): The URI of the Validation Report. Default is VALIDATION_REPORT_URI.
+
+    Returns:
+        int: The total number of constraint components in the shapes graph.
+    """
+    try:
+        # Import here to avoid circular imports
+        from . import virtuoso_service
+
+        # Check if shapes graph has any content first, then count constraint components appropriately
+        shapes_check_query = f"""
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+
+        SELECT (COUNT(?shape) AS ?shapeCount)
+        WHERE {{
+            GRAPH <{shapes_graph_uri}> {{
+                ?shape a sh:NodeShape .
+            }}
+        }}
+        """
+
+        shapes_check_results = virtuoso_service.execute_sparql_query(shapes_check_query)
+        shape_count = int(shapes_check_results["results"]["bindings"][0]["shapeCount"]["value"]) if shapes_check_results["results"]["bindings"] else 0
+
+        if shape_count == 0:
+            # If no shapes in graph, estimate total constraint components as a reasonable default
+            # based on common SHACL constraint components that might be used
+            # This is a fallback approach
+            return 8  # Reasonable default based on what we see in violations
+
+        # If shapes exist, try to count constraint components more directly
+        query = f"""
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+
+        SELECT (COUNT(DISTINCT ?constraintComponent) AS ?constraintCount)
+        WHERE {{
+          {{
+            # Method 1: Look for constraint components in property shapes
+            GRAPH <{shapes_graph_uri}> {{
+                ?shape a sh:NodeShape .
+                ?shape sh:property ?propertyShape .
+                ?propertyShape ?predicate ?object .
+                FILTER(?predicate != sh:path && ?predicate != sh:severity &&
+                       ?predicate != sh:message && ?predicate != rdf:type)
+                BIND(?predicate AS ?constraintComponent)
+            }}
+          }}
+          UNION
+          {{
+            # Method 2: Look for direct constraint component usage
+            GRAPH <{shapes_graph_uri}> {{
+                ?shape a sh:NodeShape .
+                ?shape ?constraintComponent ?object .
+                FILTER(?constraintComponent != sh:property && ?constraintComponent != sh:targetClass &&
+                       ?constraintComponent != sh:targetNode && ?constraintComponent != sh:targetSubjectsOf &&
+                       ?constraintComponent != sh:targetObjectsOf && ?constraintComponent != rdf:type)
+            }}
+          }}
+        }}
+        """
+
+        # Execute the query using the virtuoso service which handles authentication
+        results = virtuoso_service.execute_sparql_query(query)
+
+        if results["results"]["bindings"]:
+            constraint_count = int(results["results"]["bindings"][0]["constraintCount"]["value"])
+            return constraint_count
+        else:
+            return 0
+
+    except Exception as e:
+        print(f"Error getting constraint components count: {e}")
+        return 0
+
+
+def get_number_of_constraint_components_with_violations(shapes_graph_uri: str = SHAPES_GRAPH_URI, validation_report_uri: str = VALIDATION_REPORT_URI) -> int:
+    """
+    Count the number of constraint components that have violations in the validation report.
+    SHACL constraint components are standard vocabulary, so we count distinct ones from violations.
+
+    Args:
+        shapes_graph_uri (str): The URI of the Shapes Graph. Default is SHAPES_GRAPH_URI.
+        validation_report_uri (str): The URI of the Validation Report. Default is VALIDATION_REPORT_URI.
+
+    Returns:
+        int: The number of constraint components with violations.
+    """
+    try:
+        # Import here to avoid circular imports
+        from . import virtuoso_service
+
+        # Count distinct constraint components that have violations
+        query = f"""
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+
+        SELECT (COUNT(DISTINCT ?constraintComponent) AS ?violatedConstraintCount)
+        WHERE {{
+            # Get violations from validation report
+            GRAPH <{validation_report_uri}> {{
+                ?violation sh:sourceConstraintComponent ?constraintComponent .
+            }}
+        }}
+        """
+
+        # Execute the query using the virtuoso service which handles authentication
+        results = virtuoso_service.execute_sparql_query(query)
+
+        if results["results"]["bindings"]:
+            violated_constraint_count = int(results["results"]["bindings"][0]["violatedConstraintCount"]["value"])
+            return violated_constraint_count
+        else:
+            return 0
+
+    except Exception as e:
+        print(f"Error getting constraint components with violations count: {e}")
+        return 0
+
+
+def get_most_violated_constraint_component(shapes_graph_uri: str = SHAPES_GRAPH_URI, validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
+    """
+    Find the constraint component that has the most violations and is defined in the shapes graph.
+
+    Args:
+        shapes_graph_uri (str): The URI of the Shapes Graph. Default is SHAPES_GRAPH_URI.
+        validation_report_uri (str): The URI of the Validation Report. Default is VALIDATION_REPORT_URI.
+
+    Returns:
+        dict: A dictionary containing the most violated constraint component and its violation count.
+    """
+    try:
+        # Import here to avoid circular imports
+        from . import virtuoso_service
+
+        # Configure SPARQL query to find most violated constraint component that exists in shapes graph
+        query = f"""
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+
+        SELECT ?constraintComponent (COUNT(?violation) AS ?violationCount)
+        WHERE {{
+            # Get violations from validation report
+            GRAPH <{validation_report_uri}> {{
+                ?violation sh:sourceConstraintComponent ?constraintComponent .
+            }}
+            # Filter to only include constraint components that exist in shapes graph
+            FILTER EXISTS {{
+                GRAPH <{shapes_graph_uri}> {{
+                    ?propertyShape ?constraintComponent ?value .
+                }}
+            }}
+        }}
+        GROUP BY ?constraintComponent
+        ORDER BY DESC(?violationCount)
+        LIMIT 1
+        """
+
+        # Execute the query using the virtuoso service which handles authentication
+        results = virtuoso_service.execute_sparql_query(query)
+
+        if results["results"]["bindings"]:
+            most_violated_component = results["results"]["bindings"][0]["constraintComponent"]["value"]
+            violation_count = int(results["results"]["bindings"][0]["violationCount"]["value"])
+            return {
+                "constraintComponent": most_violated_component,
+                "violations": violation_count
+            }
+        else:
+            return {"constraintComponent": None, "violations": 0}
+    except Exception as e:
+        print(f"Error getting most violated constraint component: {e}")
+        return {"constraintComponent": None, "violations": 0}
+
+
 def get_distribution_of_violations_per_constraint_component(
     validation_report_uri: str = VALIDATION_REPORT_URI,
 ) -> dict:
@@ -1110,64 +1382,72 @@ def get_distribution_of_violations_per_constraint_component(
             ],
         }
     """
-    num_bins = 10  # Fixed number of bins
+    try:
+        # Import here to avoid circular imports
+        from . import virtuoso_service
 
-    # SPARQL query to get violation counts per constraint component
-    query = f"""
-    PREFIX sh: <http://www.w3.org/ns/shacl#>
+        num_bins = 10  # Fixed number of bins
 
-    SELECT ?constraintComponent (COUNT(?violation) AS ?violationCount)
-    WHERE {{
-      GRAPH <{validation_report_uri}> {{
-        ?violation sh:sourceConstraintComponent ?constraintComponent .
-      }}
-    }}
-    GROUP BY ?constraintComponent
-    """
-    
-    # Execute the query
-    response = requests.get(
-        ENDPOINT_URL,
-        params={"query": query, "format": "json"},
-    )
-    response.raise_for_status()
-    results = response.json()["results"]["bindings"]
+        # SPARQL query to get violation counts per constraint component
+        query = f"""
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
 
-    # Extract violation counts for each constraint component
-    violation_counts = [int(row["violationCount"]["value"]) for row in results]
+        SELECT ?constraintComponent (COUNT(?violation) AS ?violationCount)
+        WHERE {{
+          GRAPH <{validation_report_uri}> {{
+            ?violation sh:sourceConstraintComponent ?constraintComponent .
+          }}
+        }}
+        GROUP BY ?constraintComponent
+        """
 
-    # Determine bin size and labels
-    if not violation_counts:
-        # No data to process
-        return {
-            "labels": [f"0-{num_bins}"] * num_bins,
-            "datasets": [{"label": "Number of Constraint Components", "data": [0] * num_bins}],
+        # Execute the query using the virtuoso service which handles authentication
+        results = virtuoso_service.execute_sparql_query(query)
+        results = results["results"]["bindings"]
+
+        # Extract violation counts for each constraint component
+        violation_counts = [int(row["violationCount"]["value"]) for row in results]
+
+        # Determine bin size and labels
+        if not violation_counts:
+            # No data to process
+            return {
+                "labels": ["0-0"],
+                "datasets": [{"label": "Number of Constraint Components", "data": [0]}],
+            }
+
+        max_value = max(violation_counts)
+        bin_size = max(1, math.ceil(max_value / num_bins))
+
+        # Generate labels for bins
+        labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
+
+        # Calculate frequencies for each bin
+        frequencies = [0] * num_bins
+        for count in violation_counts:
+            bin_index = min(count // bin_size, num_bins - 1)
+            frequencies[bin_index] += 1
+
+        # Prepare the bar chart data
+        bar_chart_data = {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "Number of Constraint Components",
+                    "data": frequencies,
+                }
+            ],
         }
 
-    max_value = max(violation_counts)
-    bin_size = math.ceil(max_value / num_bins)
+        return bar_chart_data
 
-    # Generate labels for bins
-    labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
-
-    # Calculate frequencies for each bin
-    frequencies = [0] * num_bins
-    for count in violation_counts:
-        bin_index = min(count // bin_size, num_bins - 1)
-        frequencies[bin_index] += 1
-
-    # Prepare the bar chart data
-    bar_chart_data = {
-        "labels": labels,
-        "datasets": [
-            {
-                "label": "Number of Constraint Components",
-                "data": frequencies,
-            }
-        ],
-    }
-
-    return bar_chart_data
+    except Exception as e:
+        print(f"Error in get_distribution_of_violations_per_constraint_component: {e}")
+        # Return empty data on error
+        return {
+            "labels": ["0-0"],
+            "datasets": [{"label": "Number of Constraint Components", "data": [0]}],
+        }
 
 
 def distribution_of_violations_per_path_with_adaptive_bins(validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:

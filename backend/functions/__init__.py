@@ -52,6 +52,10 @@ from .homepage_service import (
     distribution_of_violations_per_shape,
     distribution_of_violations_per_path,
     distribution_of_violations_per_focus_node,
+    get_distribution_of_violations_per_constraint_component,
+    get_number_of_constraint_components,
+    get_number_of_constraint_components_with_violations,
+    get_most_violated_constraint_component,
     generate_validation_details_report,
 )
 
@@ -106,6 +110,10 @@ __all__ = [
     "distribution_of_violations_per_shape",
     "distribution_of_violations_per_path",
     "distribution_of_violations_per_focus_node",
+    "get_distribution_of_violations_per_constraint_component",
+    "get_number_of_constraint_components",
+    "get_number_of_constraint_components_with_violations",
+    "get_most_violated_constraint_component",
     "generate_validation_details_report",
     "analytics_service",
     "dashboard_service",

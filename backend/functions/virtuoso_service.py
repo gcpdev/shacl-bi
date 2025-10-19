@@ -5,8 +5,6 @@ from SPARQLWrapper import SPARQLWrapper, JSON, DIGEST
 from rdflib import Graph
 
 import config
-# Temporarily commented out to fix JSON serialization
-# from .xpshacl_engine.xpshacl_architecture import ConstraintViolation, ViolationType
 
 logging.basicConfig(filename='virtuoso.log', level=logging.DEBUG)
 
