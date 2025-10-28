@@ -418,21 +418,34 @@ def _get_constraint_info(constraint_id, property_path, value, session_id):
     # Handle in constraints
     elif 'in' in constraint_name.lower():
         try:
-    
+
+            # Use session-specific shapes graph
+            shapes_graph_uri = f"http://ex.org/Shapes/Session_{session_id}" if session_id else "http://ex.org/ShapesGraph"
+            logger.info(f"Querying sh:in constraints from shapes graph: {shapes_graph_uri}")
+
+            # Query sh:in constraints to find allowed values
+
             in_query = f"""
             SELECT ?allowedValue
-            FROM <http://ex.org/ShapesGraph>
+            FROM <{shapes_graph_uri}>
             WHERE {{
                 ?shape <http://www.w3.org/ns/shacl#in> ?inList .
-                ?inList rdf:rest* ?listNode .
-                ?listNode rdf:first ?allowedValue .
-                ?shape <http://www.w3.org/ns/shacl#path> <{property_path}> .
+                ?inList rdf:rest*/rdf:first ?allowedValue .
+                ?shape <http://www.w3.org/ns/shacl#path> ?path .
+                FILTER (STR(?path) = STR(<{property_path}>))
             }}
             """
+            logger.info(f"Executing SPARQL query for sh:in constraint: {in_query}")
             results = virtuoso_service.execute_sparql_query(in_query)
+            logger.info(f"SPARQL results: {results}")
+            # SPARQL returns clean literal values directly, no string manipulation needed
             allowed_values = [binding['allowedValue']['value'] for binding in results['results']['bindings']]
+
             if allowed_values:
                 constraint_info['allowedValues'] = allowed_values
+                logger.debug(f"Successfully extracted {len(allowed_values)} allowed values for sh:in constraint: {allowed_values}")
+            else:
+                logger.warning(f"No allowed values found for sh:in constraint on property {property_path}")
         except Exception as e:
             logger.warning(f"Could not extract in constraint info: {e}")
 
@@ -721,10 +734,14 @@ def _get_violation_context(violation, session_id):
     # InConstraint context
     elif 'in' in constraint_name.lower():
         try:
-    
+
+            # Use session-specific shapes graph
+            shapes_graph_uri = f"http://ex.org/Shapes/Session_{session_id}" if session_id else "http://ex.org/ShapesGraph"
+            logger.debug(f"Querying sh:in constraints from shapes graph: {shapes_graph_uri}")
+
             in_query = f"""
             SELECT ?allowedValue
-            FROM <http://ex.org/ShapesGraph>
+            FROM <{shapes_graph_uri}>
             WHERE {{
                 ?shape <http://www.w3.org/ns/shacl#in> ?inList .
                 ?inList rdf:rest*/rdf:first ?allowedValue .
@@ -732,6 +749,7 @@ def _get_violation_context(violation, session_id):
             }}
             """
             results = virtuoso_service.execute_sparql_query(in_query)
+            # SPARQL returns clean literal values directly, no string manipulation needed
             allowed_values = [binding['allowedValue']['value'] for binding in results['results']['bindings']]
             if allowed_values:
                 context['allowedValues'] = allowed_values

@@ -10,7 +10,6 @@
           {{ showPrefixes ? 'Hide Prefixes' : 'Show Prefixes' }}
         </button>
 
-
       </div>
       <div class="flex gap-4">
         <button
@@ -69,11 +68,13 @@
         </tr>
       </thead>
       <tbody>
-        <ViolationTableRow
+        <ViolationTableRowIntegrated
           v-for="(item, index) in paginatedData"
           :key="index"
           :rowNumber="(currentPage - 1) * itemsPerPage + index + 1"
           v-bind="item"
+          @violation-fixed="handleViolationFixed"
+          @violation-rejected="handleViolationRejected"
         />
       </tbody>
     </table>
@@ -141,7 +142,7 @@
  * - Pagination controls with disabled states
  */
 import { ref, computed, onMounted } from 'vue';
-import ViolationTableRow from './ViolationTableRow.vue';
+import ViolationTableRowIntegrated from './ViolationTableRowIntegrated.vue';
 import Filter from './Filter.vue';
 import api from '@/utils/api';
 
@@ -326,6 +327,41 @@ const resetAllFilters = () => {
 
 const setDropdownOptions = (options) => {
   filters.value = { ...filters.value, ...options };
+};
+
+// Event handlers for integrated cards
+const handleViolationFixed = (data) => {
+  console.log('Violation fixed:', data);
+
+  // Option 1: Reload all data after fix
+  // loadViolationData();
+
+  // Option 2: Update local data to remove the fixed violation
+  // This provides better UX without full page reload
+  const violationIndex = allData.value.findIndex(item =>
+    item.focusNode === data.focusNode &&
+    item.resultPath === data.resultPath &&
+    item.constraintComponent === data.constraintComponent
+  );
+
+  if (violationIndex !== -1) {
+    // Remove the fixed violation from the list
+    allData.value.splice(violationIndex, 1);
+
+    // Adjust current page if necessary
+    if (paginatedData.value.length === 0 && currentPage.value > 1) {
+      currentPage.value--;
+    }
+  }
+
+  // Optionally show success message
+  // Could integrate with a toast notification system
+  console.log('Violation successfully resolved and removed from table');
+};
+
+const handleViolationRejected = (data) => {
+  console.log('Violation rejected:', data);
+  // Optionally log rejection for analytics
 };
 
 </script>
