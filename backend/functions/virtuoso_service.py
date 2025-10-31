@@ -6,7 +6,8 @@ from rdflib import Graph
 
 import config
 
-logging.basicConfig(filename='virtuoso.log', level=logging.DEBUG)
+logging.basicConfig(filename="virtuoso.log", level=logging.DEBUG)
+
 
 def execute_sparql_query(query, format=JSON):
     logging.debug(f"Endpoint URL: {config.ENDPOINT_URL}")
@@ -20,6 +21,7 @@ def execute_sparql_query(query, format=JSON):
     sparql.setReturnFormat(format)
     return sparql.query().convert()
 
+
 def execute_sparql_update(query):
     logging.debug(f"Endpoint URL: {config.ENDPOINT_URL}")
     logging.debug(f"Username: {config.USERNAME}")
@@ -29,8 +31,9 @@ def execute_sparql_update(query):
         sparql.setCredentials(config.USERNAME, config.PASSWORD)
     sparql.setHTTPAuth(DIGEST)
     sparql.setQuery(query)
-    sparql.setMethod('POST')
+    sparql.setMethod("POST")
     sparql.query()
+
 
 def load_graph(graph: Graph, graph_uri: str):
     # Clear the graph first
@@ -38,7 +41,7 @@ def load_graph(graph: Graph, graph_uri: str):
     execute_sparql_update(clear_query)
 
     # Insert the new data
-    nt_data = graph.serialize(format='nt')
+    nt_data = graph.serialize(format="nt")
     insert_query = f"""
         INSERT DATA {{
             GRAPH <{graph_uri}> {{
@@ -47,6 +50,7 @@ def load_graph(graph: Graph, graph_uri: str):
         }}
     """
     execute_sparql_update(insert_query)
+
 
 def get_all_shapes_names(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
@@ -59,6 +63,7 @@ def get_all_shapes_names(graph_uri=config.VALIDATION_REPORT_URI):
     results = execute_sparql_query(query)
     return [result["shape"]["value"] for result in results["results"]["bindings"]]
 
+
 def get_all_focus_node_names(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
         SELECT DISTINCT ?focusNode
@@ -70,6 +75,7 @@ def get_all_focus_node_names(graph_uri=config.VALIDATION_REPORT_URI):
     results = execute_sparql_query(query)
     return [result["focusNode"]["value"] for result in results["results"]["bindings"]]
 
+
 def get_all_property_path_names(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
         SELECT DISTINCT ?propertyPath
@@ -79,7 +85,10 @@ def get_all_property_path_names(graph_uri=config.VALIDATION_REPORT_URI):
         }}
     """
     results = execute_sparql_query(query)
-    return [result["propertyPath"]["value"] for result in results["results"]["bindings"]]
+    return [
+        result["propertyPath"]["value"] for result in results["results"]["bindings"]
+    ]
+
 
 def get_all_constraint_components_names(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
@@ -90,12 +99,17 @@ def get_all_constraint_components_names(graph_uri=config.VALIDATION_REPORT_URI):
         }}
     """
     results = execute_sparql_query(query)
-    return [result["constraintComponent"]["value"] for result in results["results"]["bindings"]]
+    return [
+        result["constraintComponent"]["value"]
+        for result in results["results"]["bindings"]
+    ]
+
 
 def get_violations_for_shape_name(shape_name, graph_uri=config.VALIDATION_REPORT_URI):
     # Temporarily disabled to avoid xpshacl engine import issues
     # This function is not used by the current frontend implementation
     return []
+
 
 def get_number_of_shapes_in_shapes_graph(graph_uri=config.SHAPES_GRAPH_URI):
     query = f"""
@@ -109,14 +123,18 @@ def get_number_of_shapes_in_shapes_graph(graph_uri=config.SHAPES_GRAPH_URI):
         }}
     """
     results = execute_sparql_query(query)
-    node_shapes_count = int(results["results"]["bindings"][0]["nodeShapesCount"]["value"])
-    property_shapes_count = int(results["results"]["bindings"][0]["propertyShapesCount"]["value"])
-    return {
-        "nodeShapes": node_shapes_count,
-        "propertyShapes": property_shapes_count
-    }
+    node_shapes_count = int(
+        results["results"]["bindings"][0]["nodeShapesCount"]["value"]
+    )
+    property_shapes_count = int(
+        results["results"]["bindings"][0]["propertyShapesCount"]["value"]
+    )
+    return {"nodeShapes": node_shapes_count, "propertyShapes": property_shapes_count}
 
-def get_number_of_violations_in_validation_report(graph_uri=config.VALIDATION_REPORT_URI):
+
+def get_number_of_violations_in_validation_report(
+    graph_uri=config.VALIDATION_REPORT_URI,
+):
     query = f"""
         SELECT (COUNT(?violation) AS ?violationCount)
         FROM <{graph_uri}>
@@ -127,7 +145,11 @@ def get_number_of_violations_in_validation_report(graph_uri=config.VALIDATION_RE
     results = execute_sparql_query(query)
     return int(results["results"]["bindings"][0]["violationCount"]["value"])
 
-def map_property_shapes_to_node_shapes(validation_report_uri=config.VALIDATION_REPORT_URI, shapes_graph_uri=config.SHAPES_GRAPH_URI):
+
+def map_property_shapes_to_node_shapes(
+    validation_report_uri=config.VALIDATION_REPORT_URI,
+    shapes_graph_uri=config.SHAPES_GRAPH_URI,
+):
     query = f"""
         SELECT DISTINCT ?propertyShape ?nodeShape
         FROM <{validation_report_uri}>
@@ -142,6 +164,7 @@ def map_property_shapes_to_node_shapes(validation_report_uri=config.VALIDATION_R
         {result["propertyShape"]["value"]: result["nodeShape"]["value"]}
         for result in results["results"]["bindings"]
     ]
+
 
 def get_shape_from_shapes_graph(node_shape_names):
     node_shapes_values = " ".join([f"<{uri}>" for uri in node_shape_names])
@@ -162,17 +185,18 @@ def get_shape_from_shapes_graph(node_shape_names):
         object_value = result["object"]["value"]
 
         if subject not in shape_details:
-            shape_details[subject] = {
-                "triples": [],
-                "propertyShapes": {}
-            }
+            shape_details[subject] = {"triples": [], "propertyShapes": {}}
 
-        shape_details[subject]["triples"].append({
-            "predicate": predicate,
-            "object": object_value
-        })
+        shape_details[subject]["triples"].append(
+            {"predicate": predicate, "object": object_value}
+        )
 
-    property_shapes = {triple["object"] for shape in shape_details.values() for triple in shape["triples"] if triple["predicate"] == "http://www.w3.org/ns/shacl#property"}
+    property_shapes = {
+        triple["object"]
+        for shape in shape_details.values()
+        for triple in shape["triples"]
+        if triple["predicate"] == "http://www.w3.org/ns/shacl#property"
+    }
 
     for property_shape in property_shapes:
         query = f"""
@@ -192,12 +216,12 @@ def get_shape_from_shapes_graph(node_shape_names):
                 if property_shape not in details["propertyShapes"]:
                     details["propertyShapes"][property_shape] = []
 
-                details["propertyShapes"][property_shape].append({
-                    "predicate": predicate,
-                    "object": object_value
-                })
+                details["propertyShapes"][property_shape].append(
+                    {"predicate": predicate, "object": object_value}
+                )
 
     return shape_details
+
 
 def get_number_of_property_shapes_for_node_shape(shape_name):
     query = f"""
@@ -210,29 +234,36 @@ def get_number_of_property_shapes_for_node_shape(shape_name):
     results = execute_sparql_query(query)
     return int(results["results"]["bindings"][0]["propertyShapeCount"]["value"])
 
+
 def get_most_violated_constraint_for_node_shape(shape_name):
     sparql = SPARQLWrapper(config.ENDPOINT_URL)
     if config.AUTH_REQUIRED:
         sparql.setCredentials(config.USERNAME, config.PASSWORD)
     sparql.setHTTPAuth(DIGEST)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT DISTINCT ?propertyShape
         FROM <{config.SHAPES_GRAPH_URI}>
         WHERE {{
             <{shape_name}> <http://www.w3.org/ns/shacl#property> ?propertyShape .
         }}
-    """)
+    """
+    )
     sparql.setReturnFormat(JSON)
     shapes_results = sparql.query().convert()
 
-    property_shapes = [result["propertyShape"]["value"] for result in shapes_results["results"]["bindings"]]
+    property_shapes = [
+        result["propertyShape"]["value"]
+        for result in shapes_results["results"]["bindings"]
+    ]
 
     if not property_shapes:
         return ""
 
     property_shapes_values = " ".join([f"<{uri}>" for uri in property_shapes])
 
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT ?constraintComponent (COUNT(?violation) AS ?violationCount)
         FROM <{config.VALIDATION_REPORT_URI}>
         WHERE {{
@@ -243,27 +274,33 @@ def get_most_violated_constraint_for_node_shape(shape_name):
         GROUP BY ?constraintComponent
         ORDER BY DESC(?violationCount)
         LIMIT 1
-    """)
+    """
+    )
     validation_results = sparql.query().convert()
 
     if validation_results["results"]["bindings"]:
-        return validation_results["results"]["bindings"][0]["constraintComponent"]["value"]
+        return validation_results["results"]["bindings"][0]["constraintComponent"][
+            "value"
+        ]
 
     return ""
+
 
 def get_maximum_number_of_violations_in_validation_report_for_node_shape():
     sparql = SPARQLWrapper(config.ENDPOINT_URL)
     if config.AUTH_REQUIRED:
         sparql.setCredentials(config.USERNAME, config.PASSWORD)
     sparql.setHTTPAuth(DIGEST)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT DISTINCT ?nodeShape ?propertyShape
         FROM <{config.SHAPES_GRAPH_URI}>
         WHERE {{
             ?nodeShape a <http://www.w3.org/ns/shacl#NodeShape> ;
                        <http://www.w3.org/ns/shacl#property> ?propertyShape .
         }}
-    """)
+    """
+    )
     sparql.setReturnFormat(JSON)
     node_shapes_results = sparql.query().convert()
 
@@ -278,38 +315,48 @@ def get_maximum_number_of_violations_in_validation_report_for_node_shape():
     violation_counts = {}
     for node_shape, property_shapes in node_shapes_map.items():
         property_shapes_values = " ".join([f"<{uri}>" for uri in property_shapes])
-        sparql.setQuery(f"""
+        sparql.setQuery(
+            f"""
             SELECT (COUNT(?violation) AS ?violationCount)
             FROM <{config.VALIDATION_REPORT_URI}>
             WHERE {{
                 ?violation <http://www.w3.org/ns/shacl#sourceShape> ?propertyShape .
                 VALUES ?propertyShape {{ {property_shapes_values} }}
             }}
-        """)
+        """
+        )
         validation_results = sparql.query().convert()
 
-        violation_count = int(validation_results["results"]["bindings"][0]["violationCount"]["value"])
+        violation_count = int(
+            validation_results["results"]["bindings"][0]["violationCount"]["value"]
+        )
         violation_counts[node_shape] = violation_count
 
     if violation_counts:
         max_node_shape = max(violation_counts, key=violation_counts.get)
-        return {"nodeShape": max_node_shape, "violationCount": violation_counts[max_node_shape]}
+        return {
+            "nodeShape": max_node_shape,
+            "violationCount": violation_counts[max_node_shape],
+        }
 
     return {"nodeShape": "", "violationCount": 0}
+
 
 def get_average_number_of_violations_in_validation_report_for_node_shape():
     sparql = SPARQLWrapper(config.ENDPOINT_URL)
     if config.AUTH_REQUIRED:
         sparql.setCredentials(config.USERNAME, config.PASSWORD)
     sparql.setHTTPAuth(DIGEST)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT DISTINCT ?nodeShape ?propertyShape
         FROM <{config.SHAPES_GRAPH_URI}>
         WHERE {{
             ?nodeShape a <http://www.w3.org/ns/shacl#NodeShape> ;
                        <http://www.w3.org/ns/shacl#property> ?propertyShape .
         }}
-    """)
+    """
+    )
     sparql.setReturnFormat(JSON)
     node_shapes_results = sparql.query().convert()
 
@@ -326,17 +373,21 @@ def get_average_number_of_violations_in_validation_report_for_node_shape():
 
     for node_shape, property_shapes in node_shapes_map.items():
         property_shapes_values = " ".join([f"<{uri}>" for uri in property_shapes])
-        sparql.setQuery(f"""
+        sparql.setQuery(
+            f"""
             SELECT (COUNT(?violation) AS ?violationCount)
             FROM <{config.VALIDATION_REPORT_URI}>
             WHERE {{
                 ?violation <http://www.w3.org/ns/shacl#sourceShape> ?propertyShape .
                 VALUES ?propertyShape {{ {property_shapes_values} }}
             }}
-        """)
+        """
+        )
         validation_results = sparql.query().convert()
 
-        violation_count = int(validation_results["results"]["bindings"][0]["violationCount"]["value"])
+        violation_count = int(
+            validation_results["results"]["bindings"][0]["violationCount"]["value"]
+        )
         total_violations += violation_count
 
     if total_node_shapes == 0:
@@ -344,6 +395,7 @@ def get_average_number_of_violations_in_validation_report_for_node_shape():
 
     average_violations = total_violations / total_node_shapes
     return round(average_violations, 2)
+
 
 def get_violations_per_shape_histogram(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
@@ -356,7 +408,11 @@ def get_violations_per_shape_histogram(graph_uri=config.VALIDATION_REPORT_URI):
         GROUP BY ?shape
     """
     results = execute_sparql_query(query)
-    return [(result["shape"]["value"], int(result["violationCount"]["value"])) for result in results["results"]["bindings"]]
+    return [
+        (result["shape"]["value"], int(result["violationCount"]["value"]))
+        for result in results["results"]["bindings"]
+    ]
+
 
 def get_violations_per_path_histogram(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
@@ -369,7 +425,11 @@ def get_violations_per_path_histogram(graph_uri=config.VALIDATION_REPORT_URI):
         GROUP BY ?path
     """
     results = execute_sparql_query(query)
-    return [(result["path"]["value"], int(result["violationCount"]["value"])) for result in results["results"]["bindings"]]
+    return [
+        (result["path"]["value"], int(result["violationCount"]["value"]))
+        for result in results["results"]["bindings"]
+    ]
+
 
 def get_violations_per_focus_node_histogram(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
@@ -382,9 +442,15 @@ def get_violations_per_focus_node_histogram(graph_uri=config.VALIDATION_REPORT_U
         GROUP BY ?focusNode
     """
     results = execute_sparql_query(query)
-    return [(result["focusNode"]["value"], int(result["violationCount"]["value"])) for result in results["results"]["bindings"]]
+    return [
+        (result["focusNode"]["value"], int(result["violationCount"]["value"]))
+        for result in results["results"]["bindings"]
+    ]
 
-def get_violations_per_constraint_component_histogram(graph_uri=config.VALIDATION_REPORT_URI):
+
+def get_violations_per_constraint_component_histogram(
+    graph_uri=config.VALIDATION_REPORT_URI,
+):
     query = f"""
         SELECT ?constraint (COUNT(?violation) AS ?violationCount)
         FROM <{graph_uri}>
@@ -395,7 +461,11 @@ def get_violations_per_constraint_component_histogram(graph_uri=config.VALIDATIO
         GROUP BY ?constraint
     """
     results = execute_sparql_query(query)
-    return [(result["constraint"]["value"], int(result["violationCount"]["value"])) for result in results["results"]["bindings"]]
+    return [
+        (result["constraint"]["value"], int(result["violationCount"]["value"]))
+        for result in results["results"]["bindings"]
+    ]
+
 
 def get_most_violated_shape(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
@@ -414,6 +484,7 @@ def get_most_violated_shape(graph_uri=config.VALIDATION_REPORT_URI):
         return results["results"]["bindings"][0]["shape"]["value"]
     return ""
 
+
 def get_most_violated_path(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
         SELECT ?path (COUNT(?violation) AS ?violationCount)
@@ -430,6 +501,7 @@ def get_most_violated_path(graph_uri=config.VALIDATION_REPORT_URI):
     if results["results"]["bindings"]:
         return results["results"]["bindings"][0]["path"]["value"]
     return ""
+
 
 def get_most_violated_focus_node(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
@@ -448,6 +520,7 @@ def get_most_violated_focus_node(graph_uri=config.VALIDATION_REPORT_URI):
         return results["results"]["bindings"][0]["focusNode"]["value"]
     return ""
 
+
 def get_most_violated_constraint_component(graph_uri=config.VALIDATION_REPORT_URI):
     query = f"""
         SELECT ?constraint (COUNT(?violation) AS ?violationCount)
@@ -465,7 +538,10 @@ def get_most_violated_constraint_component(graph_uri=config.VALIDATION_REPORT_UR
         return results["results"]["bindings"][0]["constraint"]["value"]
     return ""
 
-def get_number_of_violations_for_node_shape(shape_name, graph_uri=config.VALIDATION_REPORT_URI):
+
+def get_number_of_violations_for_node_shape(
+    shape_name, graph_uri=config.VALIDATION_REPORT_URI
+):
     query = f"""
         SELECT (COUNT(?violation) AS ?violationCount)
         FROM <{graph_uri}>
@@ -478,6 +554,7 @@ def get_number_of_violations_for_node_shape(shape_name, graph_uri=config.VALIDAT
     if results["results"]["bindings"]:
         return int(results["results"]["bindings"][0]["violationCount"]["value"])
     return 0
+
 
 def get_number_of_property_shapes_for_node_shape(shape_name):
     query = f"""
@@ -492,7 +569,10 @@ def get_number_of_property_shapes_for_node_shape(shape_name):
         return int(results["results"]["bindings"][0]["propertyShapeCount"]["value"])
     return 0
 
-def get_number_of_affected_focus_nodes_for_node_shape(shape_name, graph_uri=config.VALIDATION_REPORT_URI):
+
+def get_number_of_affected_focus_nodes_for_node_shape(
+    shape_name, graph_uri=config.VALIDATION_REPORT_URI
+):
     query = f"""
         SELECT (COUNT(DISTINCT ?focusNode) AS ?focusNodeCount)
         FROM <{graph_uri}>
@@ -507,7 +587,10 @@ def get_number_of_affected_focus_nodes_for_node_shape(shape_name, graph_uri=conf
         return int(results["results"]["bindings"][0]["focusNodeCount"]["value"])
     return 0
 
-def get_number_of_property_paths_for_node_shape(shape_name, graph_uri=config.VALIDATION_REPORT_URI):
+
+def get_number_of_property_paths_for_node_shape(
+    shape_name, graph_uri=config.VALIDATION_REPORT_URI
+):
     query = f"""
         SELECT (COUNT(DISTINCT ?resultPath) AS ?resultPathCount)
         FROM <{graph_uri}>
@@ -522,7 +605,9 @@ def get_number_of_property_paths_for_node_shape(shape_name, graph_uri=config.VAL
         return int(results["results"]["bindings"][0]["resultPathCount"]["value"])
     return 0
 
+
 # Additional functions for test compatibility
+
 
 def check_connection():
     """Check database connection."""
@@ -532,6 +617,7 @@ def check_connection():
     except Exception:
         return False
 
+
 def get_graph_count():
     """Get count of graphs in the database."""
     query = """
@@ -540,7 +626,13 @@ def get_graph_count():
     }
     """
     result = execute_sparql_query(query)
-    return int(result.get('results', {}).get('bindings', [{}])[0].get('count', {}).get('value', 0))
+    return int(
+        result.get("results", {})
+        .get("bindings", [{}])[0]
+        .get("count", {})
+        .get("value", 0)
+    )
+
 
 def list_graphs():
     """List all graphs in the database."""
@@ -550,24 +642,31 @@ def list_graphs():
     }
     """
     result = execute_sparql_query(query)
-    return [binding.get('g', {}).get('value', '') for binding in result.get('results', {}).get('bindings', [])]
+    return [
+        binding.get("g", {}).get("value", "")
+        for binding in result.get("results", {}).get("bindings", [])
+    ]
+
 
 def clear_graph(graph_uri):
     """Clear all data from a specific graph."""
     query = f"CLEAR GRAPH <{graph_uri}>"
     execute_sparql_update(query)
 
+
 def load_ttl_file(file_path, graph_uri):
     """Load TTL file into a specific graph."""
     graph = Graph()
-    graph.parse(file_path, format='turtle')
+    graph.parse(file_path, format="turtle")
     load_graph(graph, graph_uri)
+
 
 def load_ttl_string(ttl_content, graph_uri):
     """Load TTL string into a specific graph."""
     graph = Graph()
-    graph.parse(data=ttl_content, format='turtle')
+    graph.parse(data=ttl_content, format="turtle")
     load_graph(graph, graph_uri)
+
 
 def get_validation_results(session_id):
     """Get validation results for a specific session."""
@@ -582,7 +681,8 @@ def get_validation_results(session_id):
     }}
     """
     result = execute_sparql_query(query)
-    return result.get('results', {}).get('bindings', [])
+    return result.get("results", {}).get("bindings", [])
+
 
 def get_shapes_info():
     """Get information about shapes in the shapes graph."""
@@ -595,7 +695,8 @@ def get_shapes_info():
     }}
     """
     result = execute_sparql_query(query)
-    return result.get('results', {}).get('bindings', [])
+    return result.get("results", {}).get("bindings", [])
+
 
 def get_constraint_info():
     """Get constraint component information."""
@@ -612,7 +713,8 @@ def get_constraint_info():
     }}
     """
     result = execute_sparql_query(query)
-    return result.get('results', {}).get('bindings', [])
+    return result.get("results", {}).get("bindings", [])
+
 
 def get_session_data(session_id):
     """Get data for a specific validation session."""
@@ -625,7 +727,8 @@ def get_session_data(session_id):
     LIMIT 1000
     """
     result = execute_sparql_query(query)
-    return result.get('results', {}).get('bindings', [])
+    return result.get("results", {}).get("bindings", [])
+
 
 def create_session_graph(session_id):
     """Create a new graph for a validation session."""
@@ -642,11 +745,13 @@ def create_session_graph(session_id):
     execute_sparql_update(query)
     return graph_uri
 
+
 def format_query_result(result):
     """Format SPARQL query result for consistent output."""
-    if isinstance(result, dict) and 'results' in result:
-        return result['results'].get('bindings', [])
+    if isinstance(result, dict) and "results" in result:
+        return result["results"].get("bindings", [])
     return result
+
 
 def build_sparql_query(graph_uri, conditions=None, projections=None):
     """Build a SPARQL query dynamically."""
@@ -663,29 +768,36 @@ def build_sparql_query(graph_uri, conditions=None, projections=None):
     base_query += " } }"
     return base_query
 
+
 def escape_sparql_string(value):
     """Escape string values for SPARQL queries."""
     if not isinstance(value, str):
         return str(value)
 
     # Basic escaping - in practice would need more comprehensive escaping
-    escaped = value.replace('\\', '\\\\')
+    escaped = value.replace("\\", "\\\\")
     escaped = escaped.replace('"', '\\"')
-    escaped = escaped.replace('\n', '\\n')
-    escaped = escaped.replace('\r', '\\r')
-    escaped = escaped.replace('\t', '\\t')
+    escaped = escaped.replace("\n", "\\n")
+    escaped = escaped.replace("\r", "\\r")
+    escaped = escaped.replace("\t", "\\t")
 
     return f'"{escaped}"'
+
 
 def _escape_sparql_string(value):
     """Private function for string escaping."""
     return escape_sparql_string(value)
 
+
 def transaction_handling(queries):
     """Handle multiple queries as a transaction."""
     try:
         for query in queries:
-            if query.strip().upper().startswith(('INSERT', 'DELETE', 'CLEAR', 'CREATE', 'DROP')):
+            if (
+                query.strip()
+                .upper()
+                .startswith(("INSERT", "DELETE", "CLEAR", "CREATE", "DROP"))
+            ):
                 execute_sparql_update(query)
             else:
                 execute_sparql_query(query)
@@ -693,20 +805,22 @@ def transaction_handling(queries):
     except Exception:
         return False
 
+
 def batch_operations(operations):
     """Execute multiple operations efficiently."""
     results = []
     for operation in operations:
         try:
-            if operation['type'] == 'query':
-                result = execute_sparql_query(operation['query'])
-            elif operation['type'] == 'update':
-                execute_sparql_update(operation['query'])
+            if operation["type"] == "query":
+                result = execute_sparql_query(operation["query"])
+            elif operation["type"] == "update":
+                execute_sparql_update(operation["query"])
                 result = {"status": "success"}
             results.append(result)
         except Exception as e:
             results.append({"status": "error", "message": str(e)})
     return results
+
 
 # Add connection object for compatibility
 class Connection:
@@ -722,37 +836,32 @@ class Connection:
         """Check if connection is active."""
         return check_connection()
 
+
 # Global connection instance
 connection = Connection()
 
 # Additional functions for test compatibility
 
+
 def _format_query_result(result):
     """Format query result in consistent format."""
-    if hasattr(result, '_metadata') and hasattr(result, '_rows'):
+    if hasattr(result, "_metadata") and hasattr(result, "_rows"):
         # SQLAlchemy result format
         bindings = []
         for row in result._rows:
             binding = {}
             for i, key in enumerate(result._metadata.keys):
-                binding[key] = {'value': row[i]}
+                binding[key] = {"value": row[i]}
             bindings.append(binding)
 
-        return {
-            'results': {
-                'bindings': bindings
-            }
-        }
+        return {"results": {"bindings": bindings}}
     elif isinstance(result, dict):
         # Already in correct format
         return result
     else:
         # Unknown format, try to convert
-        return {
-            'results': {
-                'bindings': []
-            }
-        }
+        return {"results": {"bindings": []}}
+
 
 def build_select_query(variables, conditions=None, from_graph=None, limit=None):
     """Build a SELECT SPARQL query."""
@@ -769,7 +878,7 @@ def build_select_query(variables, conditions=None, from_graph=None, limit=None):
         else:
             # Handle conditions as dict
             for key, value in conditions.items():
-                if key == 'graph':
+                if key == "graph":
                     query_parts.append(f"GRAPH <{value}> {{ ?s ?p ?o }}")
                 # Add other condition types as needed
     else:
@@ -782,12 +891,14 @@ def build_select_query(variables, conditions=None, from_graph=None, limit=None):
 
     return " ".join(query_parts)
 
+
 # Add mock engine for compatibility
 class MockEngine:
     """Mock SQLAlchemy engine for test compatibility."""
 
     def connect(self):
         return MockConnection()
+
 
 class MockConnection:
     """Mock database connection for test compatibility."""
@@ -800,10 +911,10 @@ class MockConnection:
 
     def execute(self, query):
         # Mock execute to return results in expected format
-        mock_result = type('MockResult', (), {})()
-        mock_result._metadata = type('MockMetadata', (), {})()
-        mock_result._metadata.keys = lambda: ['test']
-        mock_result._rows = [('test_value',)]
+        mock_result = type("MockResult", (), {})()
+        mock_result._metadata = type("MockMetadata", (), {})()
+        mock_result._metadata.keys = lambda: ["test"]
+        mock_result._rows = [("test_value",)]
         return mock_result
 
     def begin(self):
@@ -819,15 +930,19 @@ class MockConnection:
     def rowcount(self):
         return 1
 
+
 class MockTransaction:
     """Mock transaction for test compatibility."""
+
     pass
+
 
 # Add mock engine instance
 engine = MockEngine()
 
 # Transaction context manager
 from contextlib import contextmanager
+
 
 @contextmanager
 def transaction():
@@ -841,6 +956,7 @@ def transaction():
         conn.rollback()
         raise
 
+
 def execute_batch(queries):
     """Execute multiple queries in batch."""
     results = []
@@ -848,20 +964,22 @@ def execute_batch(queries):
 
     for query in queries:
         try:
-            if query.strip().upper().startswith(('INSERT', 'DELETE', 'CLEAR', 'CREATE', 'DROP')):
+            if (
+                query.strip()
+                .upper()
+                .startswith(("INSERT", "DELETE", "CLEAR", "CREATE", "DROP"))
+            ):
                 execute_sparql_update(query)
-                results.append({'affected_triples': 1})
+                results.append({"affected_triples": 1})
                 total_affected += 1
             else:
                 result = execute_sparql_query(query)
                 results.append(result)
         except Exception as e:
-            results.append({'error': str(e)})
+            results.append({"error": str(e)})
 
-    return {
-        'total_affected': total_affected,
-        'results': results
-    }
+    return {"total_affected": total_affected, "results": results}
+
 
 def get_graph_content(graph_uri):
     """Get all content from a specific graph."""
@@ -877,20 +995,21 @@ def get_graph_content(graph_uri):
 
     # Convert to TTL format
     ttl_content = ""
-    for binding in result.get('results', {}).get('bindings', []):
-        s = binding.get('s', {}).get('value', '')
-        p = binding.get('p', {}).get('value', '')
-        o = binding.get('o', {}).get('value', '')
+    for binding in result.get("results", {}).get("bindings", []):
+        s = binding.get("s", {}).get("value", "")
+        p = binding.get("p", {}).get("value", "")
+        o = binding.get("o", {}).get("value", "")
 
         # Simple TTL serialization (in practice would need proper RDF serialization)
         ttl_content += f"<{s}> <{p}> "
-        if o.startswith('http://'):
+        if o.startswith("http://"):
             ttl_content += f"<{o}>"
         else:
             ttl_content += f'"{o}"'
         ttl_content += " .\n"
 
     return ttl_content
+
 
 # Add missing imports for test compatibility
 try:

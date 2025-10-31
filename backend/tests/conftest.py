@@ -10,35 +10,36 @@ from unittest.mock import Mock, MagicMock, patch
 from flask import Flask
 
 # Add backend directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 
 @pytest.fixture(scope="session")
 def app():
     """Create test Flask application."""
     from app import create_app
-    app = create_app(config_name='testing')
+
+    app = create_app(config_name="testing")
     return app
+
 
 @pytest.fixture
 def client(app):
     """Create test client."""
     return app.test_client()
 
+
 @pytest.fixture
 def runner(app):
     """Create CLI test runner."""
     return app.test_cli_runner()
 
+
 @pytest.fixture
 def mock_virtuoso_service():
     """Mock virtuoso service for database operations."""
-    with patch('functions.virtuoso_service') as mock:
+    with patch("functions.virtuoso_service") as mock:
         # Mock execute_sparql_query
-        mock.execute_sparql_query.return_value = {
-            "results": {
-                "bindings": []
-            }
-        }
+        mock.execute_sparql_query.return_value = {"results": {"bindings": []}}
 
         # Mock execute_sparql_update
         mock.execute_sparql_update.return_value = {"affected_triples": 1}
@@ -49,10 +50,11 @@ def mock_virtuoso_service():
 
         yield mock
 
+
 @pytest.fixture
 def mock_phoenix_service():
     """Mock phoenix service for enhanced explanations."""
-    with patch('functions.phoenix_service') as mock:
+    with patch("functions.phoenix_service") as mock:
         # Mock explanation cache
         mock.explanation_cache = {}
 
@@ -61,6 +63,7 @@ def mock_phoenix_service():
         mock.create_violation_signature.return_value = "test_signature"
 
         yield mock
+
 
 @pytest.fixture
 def sample_violation():
@@ -73,11 +76,9 @@ def sample_violation():
         "sourceConstraintComponent": "http://www.w3.org/ns/shacl#PatternConstraintComponent",
         "sourceShape": "http://example.org/shapes/PersonShape",
         "severity": "http://www.w3.org/ns/shacl#Violation",
-        "context": {
-            "pattern": "^[A-Z][a-z]+$",
-            "exampleValue": "Example"
-        }
+        "context": {"pattern": "^[A-Z][a-z]+$", "exampleValue": "Example"},
     }
+
 
 @pytest.fixture
 def sample_session_data():
@@ -86,8 +87,9 @@ def sample_session_data():
         "session_id": "test_session_123",
         "validation_graph_uri": "http://ex.org/ValidationReport/Session_test_session_123",
         "shapes_graph_uri": "http://ex.org/ShapesGraph",
-        "data_graph_uri": "http://ex.org/DataGraph"
+        "data_graph_uri": "http://ex.org/DataGraph",
     }
+
 
 @pytest.fixture
 def sample_shapes_ttl():
@@ -121,6 +123,7 @@ ex:PersonShape a sh:NodeShape ;
     ] .
     """
 
+
 @pytest.fixture
 def sample_data_ttl():
     """Sample RDF data in TTL format."""
@@ -141,6 +144,7 @@ ex:person2 a ex:Person ;
     ex:status "Unknown" .
     """
 
+
 @pytest.fixture
 def mock_graph():
     """Mock RDF graph for testing."""
@@ -159,20 +163,25 @@ def mock_graph():
 
     return g
 
+
 @pytest.fixture
 def mock_constraint_violation():
     """Mock constraint violation object."""
+
     class MockConstraintViolation:
         def __init__(self):
             self.focus_node = "http://example.org/person1"
             self.shape_id = "http://example.org/shapes/PersonShape"
-            self.constraint_id = "http://www.w3.org/ns/shacl#MinCountConstraintComponent"
+            self.constraint_id = (
+                "http://www.w3.org/ns/shacl#MinCountConstraintComponent"
+            )
             self.violation_type = "CARDINALITY"
             self.property_path = "http://example.org/ns#name"
             self.value = None
             self.context = {}
 
     return MockConstraintViolation()
+
 
 @pytest.fixture(autouse=True)
 def mock_env_vars(monkeypatch):
@@ -181,19 +190,28 @@ def mock_env_vars(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "mock://localhost:1111")
     monkeypatch.setenv("SECRET_KEY", "test-secret-key")
 
+
 @pytest.fixture
 def temp_file(tmp_path):
     """Create a temporary file for testing."""
     file_path = tmp_path / "test_file.ttl"
-    file_path.write_text("@prefix ex: <http://example.org/> . ex:test ex:property 'value' .")
+    file_path.write_text(
+        "@prefix ex: <http://example.org/> . ex:test ex:property 'value' ."
+    )
     return str(file_path)
+
 
 @pytest.fixture
 def multipart_file_data():
     """Sample multipart file data for upload testing."""
     return {
-        'file': ('test.ttl', '@prefix ex: <http://example.org/> . ex:test ex:property "value" .', 'text/turtle')
+        "file": (
+            "test.ttl",
+            '@prefix ex: <http://example.org/> . ex:test ex:property "value" .',
+            "text/turtle",
+        )
     }
+
 
 # Helper functions for tests
 def create_mock_query_result(bindings=None):
@@ -201,17 +219,13 @@ def create_mock_query_result(bindings=None):
     if bindings is None:
         bindings = []
 
-    return {
-        "results": {
-            "bindings": bindings
-        }
-    }
+    return {"results": {"bindings": bindings}}
+
 
 def create_mock_binding(**kwargs):
     """Create mock SPARQL result binding."""
-    return {
-        key: {"value": value} for key, value in kwargs.items()
-    }
+    return {key: {"value": value} for key, value in kwargs.items()}
+
 
 # Coverage configuration
 def pytest_configure(config):
@@ -219,9 +233,5 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
     )
-    config.addinivalue_line(
-        "markers", "integration: marks tests as integration tests"
-    )
-    config.addinivalue_line(
-        "markers", "unit: marks tests as unit tests"
-    )
+    config.addinivalue_line("markers", "integration: marks tests as integration tests")
+    config.addinivalue_line("markers", "unit: marks tests as unit tests")

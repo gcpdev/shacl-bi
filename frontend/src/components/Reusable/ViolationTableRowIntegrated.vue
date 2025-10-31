@@ -28,8 +28,8 @@
 
   <!-- Details Section with SHACL Violation Cards -->
   <tr v-if="showDetails">
-    <td colspan="4" class="details-cell px-6 py-6 border-b border-gray-300">
-      <div class="violation-cards-container">
+    <td colspan="4" class="details-cell px-8 py-8 border-b border-gray-300">
+      <div class="violation-cards-container p-4">
   
         <!-- SHACL Violation Card -->
         <component
@@ -45,11 +45,12 @@
           :error-message="errorMessage"
           :can-apply-fix="canApplyFix"
           @reject-fix="handleRejectFix"
+          :session-id="sessionId"
           @apply-fix="handleApplyFix"
         />
 
-        <!-- Optional: Legacy explanation section for reference -->
-        <details v-if="explanationData" class="mt-4 border rounded-lg">
+        <!-- Optional: Legacy explanation section for reference (hidden when AI explanation is available) -->
+        <details v-if="explanationData && !explanationData.explanation_natural_language" class="mt-4 border rounded-lg">
           <summary class="p-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2 2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -96,7 +97,8 @@ const props = defineProps({
   targetObjectsOf: [String, Array],
   nodeShape: String,
   constraintComponent: String,
-  context: Object, // PHOENIX-style context with example values
+  context: Object,
+  sessionId: String,
 })
 
 const emit = defineEmits(['violation-fixed', 'violation-rejected'])
@@ -128,6 +130,27 @@ const enhancedContext = computed(() => {
   // Add SPARQL query if available
   if (explanationData.value?.proposed_repair?.query) {
     baseContext.sparqlQuery = explanationData.value.proposed_repair.query
+  }
+
+  // Add AI explanation for display in the centered panel
+  if (explanationData.value?.explanation_natural_language) {
+    baseContext.ai_explanation = explanationData.value.explanation_natural_language
+  }
+
+  // Add metadata for the info modal
+  if (explanationData.value?.metadata) {
+    baseContext.explanation_metadata = explanationData.value.metadata
+  }
+
+  // Add shape details if available
+  if (props.shapes) {
+    baseContext.shape = props.shapes.shape || props.sourceShape
+    baseContext.shapeType = props.shapes.type || 'NodeShape'
+    baseContext.shapeProperties = props.shapes.properties || []
+    baseContext.targetClass = props.targetClass || props.shapes.targetClass
+  } else if (props.sourceShape) {
+    baseContext.shape = props.sourceShape
+    baseContext.shapeType = 'NodeShape'
   }
 
   return baseContext

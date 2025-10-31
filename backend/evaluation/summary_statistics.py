@@ -8,12 +8,12 @@ from functions.homepage_service import (
     get_number_of_paths_with_violations,
     get_number_of_paths_in_shapes_graph,
     get_distinct_constraints_count_in_shapes,
-    get_distribution_of_violations_per_constraint_component
+    get_distribution_of_violations_per_constraint_component,
 )
 
 # Set graph names
-shapes_graph_name = "Shape30"  
-data_graph = "DB50"           
+shapes_graph_name = "Shape30"
+data_graph = "DB50"
 
 # Collect runtime evaluation metrics
 results = {
@@ -25,7 +25,9 @@ results = {
     "Paths with Violations": get_number_of_paths_with_violations(),
     "Total Paths in Shapes Graph": get_number_of_paths_in_shapes_graph(),
     "Distinct Constraints in Shapes Graph": get_distinct_constraints_count_in_shapes(),
-    "Distribution of Violations per Constraint": str(get_distribution_of_violations_per_constraint_component())
+    "Distribution of Violations per Constraint": str(
+        get_distribution_of_violations_per_constraint_component()
+    ),
 }
 
 # Construct dynamic file path

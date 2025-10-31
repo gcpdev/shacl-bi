@@ -15,6 +15,7 @@ from .context_retriever import _serialize_focus_node
 SH = "http://www.w3.org/ns/shacl#"
 logger = logging.getLogger(__name__)
 
+
 class ExtendedShaclValidator:
     """
     A wrapper for pyshacl that extracts detailed information about each
@@ -34,7 +35,7 @@ class ExtendedShaclValidator:
             "MinCountConstraintComponent": ViolationType.CARDINALITY,
             "MaxCountConstraintComponent": ViolationType.CARDINALITY,
         }
-        component_name = str(constraint_component).split('#')[-1]
+        component_name = str(constraint_component).split("#")[-1]
         # Return the specific type if mapped, otherwise default to OTHER
         return component_map.get(component_name, ViolationType.OTHER)
 
@@ -48,12 +49,15 @@ class ExtendedShaclValidator:
 
         # --- PERFORMANCE LOGGING ---
         start_time = time.perf_counter()
-        
+
         conforms, results_graph, _ = validate(
-            data_graph, shacl_graph=self.shapes_graph, inference="none", abort_on_first=False
+            data_graph,
+            shacl_graph=self.shapes_graph,
+            inference="none",
+            abort_on_first=False,
         )
         self.results_graph = results_graph
-        
+
         end_time = time.perf_counter()
         logger.debug(f"pyshacl validation took {end_time - start_time:.4f} seconds.")
         # --- END PERFORMANCE LOGGING ---
@@ -63,7 +67,9 @@ class ExtendedShaclValidator:
 
         return self._extract_violations_from_graph(results_graph, data_graph)
 
-    def _extract_violations_from_graph(self, results_graph: Graph, data_graph: Graph) -> List[ConstraintViolation]:
+    def _extract_violations_from_graph(
+        self, results_graph: Graph, data_graph: Graph
+    ) -> List[ConstraintViolation]:
         """Extracts ConstraintViolation objects from a validation report graph."""
         violations = []
         # Query the results graph to find all validation results
@@ -73,75 +79,112 @@ class ExtendedShaclValidator:
 
         for result_node in validation_results:
             # Using .value() can return None, so we handle that gracefully
-            focus_node_obj = results_graph.value(subject=result_node, predicate=URIRef(SH + "focusNode"))
-            source_shape_obj = results_graph.value(subject=result_node, predicate=URIRef(SH + "sourceShape"))
+            focus_node_obj = results_graph.value(
+                subject=result_node, predicate=URIRef(SH + "focusNode")
+            )
+            source_shape_obj = results_graph.value(
+                subject=result_node, predicate=URIRef(SH + "sourceShape")
+            )
             constraint_component_obj = results_graph.value(
-                    subject=result_node, predicate=URIRef(SH + "sourceConstraintComponent")
-                )
-            result_path_obj = results_graph.value(subject=result_node, predicate=URIRef(SH + "resultPath"))
-            value_obj = results_graph.value(subject=result_node, predicate=URIRef(SH + "value"))
+                subject=result_node, predicate=URIRef(SH + "sourceConstraintComponent")
+            )
+            result_path_obj = results_graph.value(
+                subject=result_node, predicate=URIRef(SH + "resultPath")
+            )
+            value_obj = results_graph.value(
+                subject=result_node, predicate=URIRef(SH + "value")
+            )
 
             violation = ConstraintViolation(
                 focus_node=str(focus_node_obj) if focus_node_obj else "",
                 shape_id=str(source_shape_obj) if source_shape_obj else "",
-                constraint_id=str(constraint_component_obj) if constraint_component_obj else "",
+                constraint_id=(
+                    str(constraint_component_obj) if constraint_component_obj else ""
+                ),
                 violation_type=self._get_violation_(constraint_component_obj),
                 property_path=str(result_path_obj) if result_path_obj else "",
-                value=str(value_obj) if value_obj else None
+                value=str(value_obj) if value_obj else None,
             )
 
             # --- PHOENIX CONTEXT ENRICHMENT ---
-            if "MaxCountConstraintComponent" in violation.constraint_id and violation.focus_node and violation.property_path:
+            if (
+                "MaxCountConstraintComponent" in violation.constraint_id
+                and violation.focus_node
+                and violation.property_path
+            ):
                 # Find the maxCount value from the shapes graph
-                max_count = self.shapes_graph.value(subject=source_shape_obj, predicate=URIRef(SH + "maxCount"))
+                max_count = self.shapes_graph.value(
+                    subject=source_shape_obj, predicate=URIRef(SH + "maxCount")
+                )
                 if max_count:
                     violation.context["maxCount"] = int(max_count)
 
                 # Find all actual values from the data graph
                 actual_values = [
-                    str(o) for o in data_graph.objects(
+                    str(o)
+                    for o in data_graph.objects(
                         subject=URIRef(violation.focus_node),
-                        predicate=URIRef(violation.property_path)
+                        predicate=URIRef(violation.property_path),
                     )
                 ]
                 violation.context["actualValues"] = actual_values
-            
+
             # --- PHOENIX CONTEXT ENRICHMENT FOR PATTERNS ---
             if "PatternConstraintComponent" in violation.constraint_id:
-                pattern = self.shapes_graph.value(subject=source_shape_obj, predicate=URIRef(SH + "pattern"))
+                pattern = self.shapes_graph.value(
+                    subject=source_shape_obj, predicate=URIRef(SH + "pattern")
+                )
                 if pattern:
                     violation.context["pattern"] = str(pattern)
                     try:
                         # Generate an example that matches the pattern (just like PHOENIX)
                         violation.context["exampleValue"] = exrex.getone(str(pattern))
                     except Exception as e:
-                        logger.warning(f"Could not generate example for pattern '{pattern}': {e}")
+                        logger.warning(
+                            f"Could not generate example for pattern '{pattern}': {e}"
+                        )
 
-                message = self.shapes_graph.value(subject=source_shape_obj, predicate=URIRef(SH + "message"))
+                message = self.shapes_graph.value(
+                    subject=source_shape_obj, predicate=URIRef(SH + "message")
+                )
                 if message:
                     violation.context["message"] = str(message)
 
             # --- END ENRICHMENT ---
 
-            logger.debug(f"Processing violation with constraint ID: {violation.constraint_id}")
+            logger.debug(
+                f"Processing violation with constraint ID: {violation.constraint_id}"
+            )
             # --- PHOENIX CONTEXT ENRICHMENT FOR SH:IN ---
             if "InConstraintComponent" in violation.constraint_id:
-                logger.debug(f"Found InConstraintComponent. Extracting values for shape {source_shape_obj}")
+                logger.debug(
+                    f"Found InConstraintComponent. Extracting values for shape {source_shape_obj}"
+                )
                 # The sh:in property points to an RDF list in the shapes graph
-                in_list_head = self.shapes_graph.value(subject=source_shape_obj, predicate=URIRef(SH + "in"))
+                in_list_head = self.shapes_graph.value(
+                    subject=source_shape_obj, predicate=URIRef(SH + "in")
+                )
                 if in_list_head:
                     allowed_values = []
                     # Traverse the RDF list (which is a linked list of nodes)
                     while in_list_head and in_list_head != RDF.nil:
                         # Get the first item in the current list node
-                        item = self.shapes_graph.value(subject=in_list_head, predicate=RDF.first)
+                        item = self.shapes_graph.value(
+                            subject=in_list_head, predicate=RDF.first
+                        )
                         if item:
                             allowed_values.append(str(item))
                         # Move to the rest of the list
-                        in_list_head = self.shapes_graph.value(subject=in_list_head, predicate=RDF.rest)
+                        in_list_head = self.shapes_graph.value(
+                            subject=in_list_head, predicate=RDF.rest
+                        )
                     violation.allowed_values = allowed_values
-                    violation.context["allowedValues"] = allowed_values  # Add to context for frontend
-                    logger.debug(f"Extracted allowed values: {violation.allowed_values}")
+                    violation.context["allowedValues"] = (
+                        allowed_values  # Add to context for frontend
+                    )
+                    logger.debug(
+                        f"Extracted allowed values: {violation.allowed_values}"
+                    )
 
             violations.append(violation)
 
@@ -152,7 +195,9 @@ class ExtendedShaclValidator:
                         URIRef(violation.focus_node), data_graph
                     )
                 except Exception as e:
-                    logger.warning(f"Could not serialize focus node {violation.focus_node}: {e}")
+                    logger.warning(
+                        f"Could not serialize focus node {violation.focus_node}: {e}"
+                    )
             # --- END ENRICHMENT ---
 
         return violations

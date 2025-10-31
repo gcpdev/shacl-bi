@@ -61,8 +61,7 @@ class JustificationTreeBuilder:
         return prefixes
 
     def build_justification_tree(
-        self,
-        violation: ConstraintViolation
+        self, violation: ConstraintViolation
     ) -> JustificationTree:
         """
         Build a justification tree for a constraint violation.
@@ -99,9 +98,7 @@ class JustificationTreeBuilder:
         return JustificationTree(root=root, violation=violation)
 
     def _build_cardinality_justification(
-        self,
-        violation: ConstraintViolation,
-        root: JustificationNode
+        self, violation: ConstraintViolation, root: JustificationNode
     ) -> None:
         """Build justification for a cardinality constraint violation"""
         property_path = violation.property_path
@@ -186,9 +183,7 @@ class JustificationTreeBuilder:
             root.add_child(JustificationNode(statement=reasoning, type="inference"))
 
     def _build_value_type_justification(
-        self,
-        violation: ConstraintViolation,
-        root: JustificationNode
+        self, violation: ConstraintViolation, root: JustificationNode
     ) -> None:
         """Build justification for a value type constraint violation"""
         property_path = violation.property_path
@@ -247,9 +242,7 @@ class JustificationTreeBuilder:
                 root.add_child(JustificationNode(statement=reasoning, type="inference"))
 
     def _build_value_range_justification(
-        self,
-        violation: ConstraintViolation,
-        root: JustificationNode
+        self, violation: ConstraintViolation, root: JustificationNode
     ) -> None:
         """Build justification for a value range constraint violation"""
         property_path = violation.property_path
@@ -330,9 +323,7 @@ class JustificationTreeBuilder:
                 root.add_child(JustificationNode(statement=reasoning, type="inference"))
 
     def _build_pattern_justification(
-        self,
-        violation: ConstraintViolation,
-        root: JustificationNode
+        self, violation: ConstraintViolation, root: JustificationNode
     ) -> None:
         """Build justification for a pattern constraint violation"""
         # Add shape requirement premise
@@ -385,9 +376,7 @@ class JustificationTreeBuilder:
                 root.add_child(JustificationNode(statement=reasoning, type="inference"))
 
     def _build_property_pair_justification(
-        self,
-        violation: ConstraintViolation,
-        root: JustificationNode
+        self, violation: ConstraintViolation, root: JustificationNode
     ) -> None:
         """Build justification for a property pair constraint violation"""
         # Add shape requirement premise
@@ -482,9 +471,7 @@ class JustificationTreeBuilder:
                 root.add_child(JustificationNode(statement=reasoning, type="inference"))
 
     def _build_property_pair_justification(
-        self,
-        violation: ConstraintViolation,
-        root: JustificationNode
+        self, violation: ConstraintViolation, root: JustificationNode
     ) -> None:
         """Build justification for a property pair constraint violation"""
         # Add shape requirement premise
@@ -556,9 +543,7 @@ class JustificationTreeBuilder:
                 root.add_child(JustificationNode(statement=reasoning, type="inference"))
 
     def _build_logical_justification(
-        self,
-        violation: ConstraintViolation,
-        root: JustificationNode
+        self, violation: ConstraintViolation, root: JustificationNode
     ) -> None:
         """Build justification for a logical constraint violation"""
         # Add shape requirement premise
@@ -613,9 +598,7 @@ class JustificationTreeBuilder:
             root.add_child(JustificationNode(statement=reasoning, type="inference"))
 
     def _build_generic_justification(
-        self,
-        violation: ConstraintViolation,
-        root: JustificationNode
+        self, violation: ConstraintViolation, root: JustificationNode
     ) -> None:
         """Build generic justification for an unknown violation type"""
         root.add_child(

@@ -15,7 +15,7 @@ def setup_logging(
     log_file=None,
     console_output=True,
     format_string=None,
-    include_timestamps=True
+    include_timestamps=True,
 ):
     """
     Setup logging configuration for the application.
@@ -38,9 +38,9 @@ def setup_logging(
     # Default format
     if format_string is None:
         if include_timestamps:
-            format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            format_string = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         else:
-            format_string = '%(name)s - %(levelname)s - %(message)s'
+            format_string = "%(name)s - %(levelname)s - %(message)s"
 
     formatter = logging.Formatter(format_string)
 
@@ -81,8 +81,8 @@ def setup_environment_logging():
     import config
 
     # Get configuration
-    log_level = getattr(config, 'LOG_LEVEL', 'INFO').upper()
-    log_file = getattr(config, 'LOG_FILE', None)
+    log_level = getattr(config, "LOG_LEVEL", "INFO").upper()
+    log_file = getattr(config, "LOG_FILE", None)
 
     # Convert string level to logging constant
     numeric_level = getattr(logging, log_level, logging.INFO)
@@ -92,7 +92,7 @@ def setup_environment_logging():
         level=numeric_level,
         log_file=log_file,
         console_output=True,
-        include_timestamps=True
+        include_timestamps=True,
     )
 
 
@@ -102,13 +102,16 @@ class LoggerMixin:
     @property
     def logger(self):
         """Get logger for this class."""
-        if not hasattr(self, '_logger'):
-            self._logger = get_logger(self.__class__.__module__ + '.' + self.__class__.__name__)
+        if not hasattr(self, "_logger"):
+            self._logger = get_logger(
+                self.__class__.__module__ + "." + self.__class__.__name__
+            )
         return self._logger
 
 
 def log_function_call(func):
     """Decorator to log function calls."""
+
     def wrapper(*args, **kwargs):
         logger = get_logger(func.__module__)
         logger.debug(f"Calling {func.__name__} with args={args}, kwargs={kwargs}")
@@ -166,9 +169,14 @@ class LogContext:
         duration = datetime.now() - self.start_time
 
         if exc_type is None:
-            self.logger.log(self.level, f"Completed {self.operation} in {duration.total_seconds():.4f}s")
+            self.logger.log(
+                self.level,
+                f"Completed {self.operation} in {duration.total_seconds():.4f}s",
+            )
         else:
-            self.logger.error(f"Failed {self.operation} after {duration.total_seconds():.4f}s: {exc_val}")
+            self.logger.error(
+                f"Failed {self.operation} after {duration.total_seconds():.4f}s: {exc_val}"
+            )
 
         return False  # Don't suppress exceptions
 
@@ -179,18 +187,17 @@ try:
 except Exception as e:
     # Fallback basic logging if configuration fails
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s"
     )
     logging.error(f"Failed to setup environment logging: {e}")
 
 
 # Export commonly used items
 __all__ = [
-    'setup_logging',
-    'get_logger',
-    'LoggerMixin',
-    'log_function_call',
-    'log_performance',
-    'LogContext'
+    "setup_logging",
+    "get_logger",
+    "LoggerMixin",
+    "log_function_call",
+    "log_performance",
+    "LogContext",
 ]

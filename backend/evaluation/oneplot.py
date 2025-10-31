@@ -23,11 +23,12 @@ custom_dataset_colors = {
 custom_order = ["SKG3", "MKG3", "LKG3", "DB50", "DB100", "DB1000", "InvDa"]
 
 # Simulated bold title using LaTeX mathtext
-legend_title_patch = Patch(facecolor='none', edgecolor='none', label=r'$\bf{Datasets:}$')
+legend_title_patch = Patch(
+    facecolor="none", edgecolor="none", label=r"$\bf{Datasets:}$"
+)
 
 legend_handles = [legend_title_patch] + [
-    Patch(facecolor=custom_dataset_colors[ds], label=ds)
-    for ds in custom_order
+    Patch(facecolor=custom_dataset_colors[ds], label=ds) for ds in custom_order
 ]
 
 # Dataset
@@ -49,7 +50,9 @@ data = {
 
 # Build DataFrame
 index = pd.MultiIndex.from_tuples(data.keys(), names=["Shapes Graph", "Dataset"])
-df = pd.DataFrame(list(data.values()), index=index, columns=["Use-Case 1", "Use-Case 2", "Use-Case 3"])
+df = pd.DataFrame(
+    list(data.values()), index=index, columns=["Use-Case 1", "Use-Case 2", "Use-Case 3"]
+)
 
 # Settings
 use_cases = ["Use-Case 1", "Use-Case 2", "Use-Case 3"]
@@ -64,7 +67,7 @@ for idx, use_case in enumerate(use_cases):
     ax = axes[idx]
     ax.set_yscale("log")
     ax.set_title(use_case, fontsize=20)
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+    ax.grid(True, which="both", linestyle="--", linewidth=0.5)
     ax.set_axisbelow(True)
 
     current_x = 0
@@ -87,14 +90,18 @@ for idx, use_case in enumerate(use_cases):
         centers.append(group_center)
 
         for j, (ds, val) in enumerate(zip(datasets, values)):
-            ax.bar(group_start_x + offsets[j], val, width=bar_width,
-                   color=custom_dataset_colors.get(ds, "#999999"))
+            ax.bar(
+                group_start_x + offsets[j],
+                val,
+                width=bar_width,
+                color=custom_dataset_colors.get(ds, "#999999"),
+            )
 
         current_x += group_width + group_spacing
 
     ax.set_xticks(centers)
-    ax.tick_params(axis='y', labelsize=17)
-    ax.set_xticklabels(group_order, rotation=45, ha='right', fontsize=18)
+    ax.tick_params(axis="y", labelsize=17)
+    ax.set_xticklabels(group_order, rotation=45, ha="right", fontsize=18)
 
 # Set axis labels
 fig.supxlabel("Shapes Graph", fontsize=20)
@@ -103,14 +110,14 @@ fig.supylabel("Mean Query Time [ms] (log scale)", fontsize=20)
 # Shared legend with bold inline "Dataset:"
 fig.legend(
     handles=legend_handles,
-    loc='lower center',
+    loc="lower center",
     ncol=8,
     bbox_to_anchor=(0.5, -0.12),
     frameon=True,
-    fontsize=18
+    fontsize=18,
 )
 
 plt.tight_layout()
 output_path = os.path.join(script_dir, "log_plot.pdf")
-plt.savefig(output_path, format='pdf', bbox_inches='tight')
+plt.savefig(output_path, format="pdf", bbox_inches="tight")
 output_path

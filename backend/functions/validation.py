@@ -15,6 +15,7 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
 def validate(data_graph: Graph, shapes_graph: Graph, validation_report: Graph = None):
     if validation_report:
         # SHACL Dashboard mode: load existing validation report
@@ -26,15 +27,20 @@ def validate(data_graph: Graph, shapes_graph: Graph, validation_report: Graph = 
         violations = validator.validate(data_graph)
         # The validation report is the results_graph from the validator
         validation_report_graph = validator.results_graph
-        virtuoso_service.load_graph(validation_report_graph, config.VALIDATION_REPORT_URI)
+        virtuoso_service.load_graph(
+            validation_report_graph, config.VALIDATION_REPORT_URI
+        )
         return validation_report_graph
 
-def validate_data_against_shapes(data_ttl: str, shapes_ttl: str, session_id: str) -> Dict[str, Any]:
+
+def validate_data_against_shapes(
+    data_ttl: str, shapes_ttl: str, session_id: str
+) -> Dict[str, Any]:
     """Validate data against shapes and return results."""
     try:
         # Parse TTL strings into graphs
-        data_graph = Graph().parse(data=data_ttl, format='turtle')
-        shapes_graph = Graph().parse(data=shapes_ttl, format='turtle')
+        data_graph = Graph().parse(data=data_ttl, format="turtle")
+        shapes_graph = Graph().parse(data=shapes_ttl, format="turtle")
 
         # Create validation session graph
         session_graph_uri = f"http://example.org/validation/session_{session_id}"
@@ -55,31 +61,34 @@ def validate_data_against_shapes(data_ttl: str, shapes_ttl: str, session_id: str
         results_graph_uri = f"{session_graph_uri}/results"
         if validator.results_graph:
             virtuoso_service.load_ttl_string(
-                validator.results_graph.serialize(format='turtle'),
-                results_graph_uri
+                validator.results_graph.serialize(format="turtle"), results_graph_uri
             )
 
         # Process violations for return
         violations_data = []
         for i, violation in enumerate(violations or []):
-            violations_data.append({
-                'id': i,
-                'focusNode': getattr(violation, 'focus_node', 'Unknown'),
-                'resultPath': getattr(violation, 'property_path', 'Unknown'),
-                'value': getattr(violation, 'value', 'Unknown'),
-                'message': getattr(violation, 'message', 'Constraint violation'),
-                'severity': getattr(violation, 'severity', 'Violation'),
-                'constraintComponent': getattr(violation, 'constraint_id', 'Unknown')
-            })
+            violations_data.append(
+                {
+                    "id": i,
+                    "focusNode": getattr(violation, "focus_node", "Unknown"),
+                    "resultPath": getattr(violation, "property_path", "Unknown"),
+                    "value": getattr(violation, "value", "Unknown"),
+                    "message": getattr(violation, "message", "Constraint violation"),
+                    "severity": getattr(violation, "severity", "Violation"),
+                    "constraintComponent": getattr(
+                        violation, "constraint_id", "Unknown"
+                    ),
+                }
+            )
 
         validation_report = {
-            'conforms': conforms,
-            'violations': violations_data,
-            'session_id': session_id,
-            'timestamp': datetime.now().isoformat(),
-            'data_graph_uri': data_graph_uri,
-            'shapes_graph_uri': shapes_graph_uri,
-            'results_graph_uri': results_graph_uri
+            "conforms": conforms,
+            "violations": violations_data,
+            "session_id": session_id,
+            "timestamp": datetime.now().isoformat(),
+            "data_graph_uri": data_graph_uri,
+            "shapes_graph_uri": shapes_graph_uri,
+            "results_graph_uri": results_graph_uri,
         }
 
         return validation_report
@@ -87,11 +96,12 @@ def validate_data_against_shapes(data_ttl: str, shapes_ttl: str, session_id: str
     except Exception as e:
         logger.error(f"Error in validate_data_against_shapes: {str(e)}")
         return {
-            'conforms': False,
-            'violations': [],
-            'error': str(e),
-            'session_id': session_id
+            "conforms": False,
+            "violations": [],
+            "error": str(e),
+            "session_id": session_id,
         }
+
 
 def get_validation_report(session_id: str) -> Dict[str, Any]:
     """Get validation report for a session."""
@@ -110,21 +120,24 @@ def get_validation_report(session_id: str) -> Dict[str, Any]:
         """
 
         result = virtuoso_service.execute_sparql_query(query)
-        bindings = result.get('results', {}).get('bindings', [])
+        bindings = result.get("results", {}).get("bindings", [])
 
         if bindings:
             binding = bindings[0]
             return {
-                'reportUri': binding.get('reportUri', {}).get('value', ''),
-                'conforms': binding.get('conforms', {}).get('value', '') == 'true',
-                'violationsCount': int(binding.get('violationsCount', {}).get('value', 0))
+                "reportUri": binding.get("reportUri", {}).get("value", ""),
+                "conforms": binding.get("conforms", {}).get("value", "") == "true",
+                "violationsCount": int(
+                    binding.get("violationsCount", {}).get("value", 0)
+                ),
             }
         else:
-            return {'error': 'Validation report not found'}
+            return {"error": "Validation report not found"}
 
     except Exception as e:
         logger.error(f"Error getting validation report: {str(e)}")
-        return {'error': str(e)}
+        return {"error": str(e)}
+
 
 def create_validation_session(shapes_graph: str, data_graph: str) -> Dict[str, Any]:
     """Create a new validation session."""
@@ -149,52 +162,53 @@ def create_validation_session(shapes_graph: str, data_graph: str) -> Dict[str, A
         virtuoso_service.execute_sparql_update(update_query)
 
         return {
-            'sessionId': session_id,
-            'graphUri': session_graph_uri,
-            'status': 'created',
-            'createdAt': datetime.now().isoformat()
+            "sessionId": session_id,
+            "graphUri": session_graph_uri,
+            "status": "created",
+            "createdAt": datetime.now().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error creating validation session: {str(e)}")
-        return {'error': str(e)}
+        return {"error": str(e)}
 
-def validate_with_config(data_graph: str, shapes_graph: str, config_dict: Dict[str, Any]) -> Dict[str, Any]:
+
+def validate_with_config(
+    data_graph: str, shapes_graph: str, config_dict: Dict[str, Any]
+) -> Dict[str, Any]:
     """Validate with custom configuration."""
     try:
         session_id = str(uuid.uuid4())
 
         # Apply configuration
-        severity_level = config_dict.get('severity_level', 'Violation')
-        include_rdfs = config_dict.get('include_rdfs', False)
-        enable_inference = config_dict.get('enable_inference', True)
-        abort_on_first = config_dict.get('abort_on_first', False)
+        severity_level = config_dict.get("severity_level", "Violation")
+        include_rdfs = config_dict.get("include_rdfs", False)
+        enable_inference = config_dict.get("enable_inference", True)
+        abort_on_first = config_dict.get("abort_on_first", False)
 
         # Perform validation with configuration
         validation_result = validate_data_against_shapes(
             virtuoso_service.get_graph_content(data_graph),
             virtuoso_service.get_graph_content(shapes_graph),
-            session_id
+            session_id,
         )
 
         # Filter violations by severity if specified
-        if severity_level != 'Violation':
-            validation_result['violations'] = [
-                v for v in validation_result['violations']
-                if v.get('severity') == severity_level
+        if severity_level != "Violation":
+            validation_result["violations"] = [
+                v
+                for v in validation_result["violations"]
+                if v.get("severity") == severity_level
             ]
 
-        validation_result['configuration'] = config_dict
+        validation_result["configuration"] = config_dict
 
         return validation_result
 
     except Exception as e:
         logger.error(f"Error in validate_with_config: {str(e)}")
-        return {
-            'violations': [],
-            'configuration': config_dict,
-            'error': str(e)
-        }
+        return {"violations": [], "configuration": config_dict, "error": str(e)}
+
 
 def get_validation_statistics() -> Dict[str, Any]:
     """Get validation statistics."""
@@ -218,38 +232,39 @@ def get_validation_statistics() -> Dict[str, Any]:
         """
 
         result = virtuoso_service.execute_sparql_query(query)
-        bindings = result.get('results', {}).get('bindings', [])
+        bindings = result.get("results", {}).get("bindings", [])
 
         if bindings:
             binding = bindings[0]
-            total = int(binding.get('totalValidations', {}).get('value', 0))
-            successful = int(binding.get('successfulValidations', {}).get('value', 0))
-            failed = int(binding.get('failedValidations', {}).get('value', 0))
+            total = int(binding.get("totalValidations", {}).get("value", 0))
+            successful = int(binding.get("successfulValidations", {}).get("value", 0))
+            failed = int(binding.get("failedValidations", {}).get("value", 0))
 
             success_rate = successful / total if total > 0 else 0.0
 
             return {
-                'totalValidations': total,
-                'successfulValidations': successful,
-                'failedValidations': failed,
-                'successRate': success_rate
+                "totalValidations": total,
+                "successfulValidations": successful,
+                "failedValidations": failed,
+                "successRate": success_rate,
             }
         else:
             return {
-                'totalValidations': 0,
-                'successfulValidations': 0,
-                'failedValidations': 0,
-                'successRate': 0.0
+                "totalValidations": 0,
+                "successfulValidations": 0,
+                "failedValidations": 0,
+                "successRate": 0.0,
             }
 
     except Exception as e:
         logger.error(f"Error getting validation statistics: {str(e)}")
         return {
-            'totalValidations': 0,
-            'successfulValidations': 0,
-            'failedValidations': 0,
-            'successRate': 0.0
+            "totalValidations": 0,
+            "successfulValidations": 0,
+            "failedValidations": 0,
+            "successRate": 0.0,
         }
+
 
 def batch_validate(datasets: List[Dict[str, str]]) -> List[Dict[str, Any]]:
     """Validate multiple datasets."""
@@ -257,32 +272,29 @@ def batch_validate(datasets: List[Dict[str, str]]) -> List[Dict[str, Any]]:
 
     for dataset in datasets:
         try:
-            data_graph = dataset.get('data_graph')
-            shapes_graph = dataset.get('shapes_graph')
+            data_graph = dataset.get("data_graph")
+            shapes_graph = dataset.get("shapes_graph")
 
             if not data_graph or not shapes_graph:
-                results.append({'error': 'Missing data_graph or shapes_graph'})
+                results.append({"error": "Missing data_graph or shapes_graph"})
                 continue
 
             session_id = str(uuid.uuid4())
             result = validate_data_against_shapes(
                 virtuoso_service.get_graph_content(data_graph),
                 virtuoso_service.get_graph_content(shapes_graph),
-                session_id
+                session_id,
             )
 
-            result['dataset'] = dataset
+            result["dataset"] = dataset
             results.append(result)
 
         except Exception as e:
             logger.error(f"Error in batch validation: {str(e)}")
-            results.append({
-                'dataset': dataset,
-                'error': str(e),
-                'violations': []
-            })
+            results.append({"dataset": dataset, "error": str(e), "violations": []})
 
     return results
+
 
 def get_validation_history(limit: int = 50) -> List[Dict[str, Any]]:
     """Get validation history."""
@@ -301,17 +313,21 @@ def get_validation_history(limit: int = 50) -> List[Dict[str, Any]]:
         """
 
         result = virtuoso_service.execute_sparql_query(query)
-        bindings = result.get('results', {}).get('bindings', [])
+        bindings = result.get("results", {}).get("bindings", [])
 
         history = []
         for binding in bindings:
-            history.append({
-                'validationId': binding.get('validationId', {}).get('value', ''),
-                'timestamp': binding.get('timestamp', {}).get('value', ''),
-                'dataGraph': binding.get('dataGraph', {}).get('value', ''),
-                'shapesGraph': binding.get('shapesGraph', {}).get('value', ''),
-                'violationsFound': int(binding.get('violationsFound', {}).get('value', 0))
-            })
+            history.append(
+                {
+                    "validationId": binding.get("validationId", {}).get("value", ""),
+                    "timestamp": binding.get("timestamp", {}).get("value", ""),
+                    "dataGraph": binding.get("dataGraph", {}).get("value", ""),
+                    "shapesGraph": binding.get("shapesGraph", {}).get("value", ""),
+                    "violationsFound": int(
+                        binding.get("violationsFound", {}).get("value", 0)
+                    ),
+                }
+            )
 
         return history
 
@@ -319,36 +335,48 @@ def get_validation_history(limit: int = 50) -> List[Dict[str, Any]]:
         logger.error(f"Error getting validation history: {str(e)}")
         return []
 
-def compare_validations(validation1: Dict[str, Any], validation2: Dict[str, Any]) -> Dict[str, Any]:
+
+def compare_validations(
+    validation1: Dict[str, Any], validation2: Dict[str, Any]
+) -> Dict[str, Any]:
     """Compare two validation results."""
     try:
-        violations1 = validation1.get('violations', 0) if isinstance(validation1.get('violations'), int) else len(validation1.get('violations', []))
-        violations2 = validation2.get('violations', 0) if isinstance(validation2.get('violations'), int) else len(validation2.get('violations', []))
+        violations1 = (
+            validation1.get("violations", 0)
+            if isinstance(validation1.get("violations"), int)
+            else len(validation1.get("violations", []))
+        )
+        violations2 = (
+            validation2.get("violations", 0)
+            if isinstance(validation2.get("violations"), int)
+            else len(validation2.get("violations", []))
+        )
 
         violation_difference = violations1 - violations2
         improvement = violation_difference < 0
 
-        conforms1 = validation1.get('conforms', False)
-        conforms2 = validation2.get('conforms', False)
+        conforms1 = validation1.get("conforms", False)
+        conforms2 = validation2.get("conforms", False)
 
         return {
-            'improvement': improvement,
-            'violation_difference': violation_difference,
-            'violations_before': violations1,
-            'violations_after': violations2,
-            'conforms_before': conforms1,
-            'conforms_after': conforms2,
-            'status_improvement': conforms2 and not conforms1
+            "improvement": improvement,
+            "violation_difference": violation_difference,
+            "violations_before": violations1,
+            "violations_after": violations2,
+            "conforms_before": conforms1,
+            "conforms_after": conforms2,
+            "status_improvement": conforms2 and not conforms1,
         }
 
     except Exception as e:
         logger.error(f"Error comparing validations: {str(e)}")
-        return {'error': str(e)}
+        return {"error": str(e)}
+
 
 def validate_shacl_syntax(shapes_ttl: str) -> Dict[str, Any]:
     """Validate SHACL shapes syntax."""
     try:
-        shapes_graph = Graph().parse(data=shapes_ttl, format='turtle')
+        shapes_graph = Graph().parse(data=shapes_ttl, format="turtle")
 
         # Check for SHACL shapes
         shapes_query = """
@@ -358,42 +386,44 @@ def validate_shacl_syntax(shapes_ttl: str) -> Dict[str, Any]:
         """
 
         result = virtuoso_service.execute_sparql_query(shapes_query)
-        shape_count = int(result.get('results', {}).get('bindings', [{}])[0].get('shapeCount', {}).get('value', 0))
+        shape_count = int(
+            result.get("results", {})
+            .get("bindings", [{}])[0]
+            .get("shapeCount", {})
+            .get("value", 0)
+        )
 
         return {
-            'valid': True,
-            'errors': [],
-            'shapeCount': shape_count,
-            'triplesCount': len(shapes_graph)
+            "valid": True,
+            "errors": [],
+            "shapeCount": shape_count,
+            "triplesCount": len(shapes_graph),
         }
 
     except Exception as e:
-        return {
-            'valid': False,
-            'errors': [str(e)],
-            'shapeCount': 0,
-            'triplesCount': 0
-        }
+        return {"valid": False, "errors": [str(e)], "shapeCount": 0, "triplesCount": 0}
+
 
 def validate_rdf_syntax(data_ttl: str) -> Dict[str, Any]:
     """Validate RDF data syntax."""
     try:
-        data_graph = Graph().parse(data=data_ttl, format='turtle')
+        data_graph = Graph().parse(data=data_ttl, format="turtle")
 
         return {
-            'valid': True,
-            'format': 'turtle',
-            'triples_count': len(data_graph),
-            'errors': []
+            "valid": True,
+            "format": "turtle",
+            "triples_count": len(data_graph),
+            "errors": [],
         }
 
     except Exception as e:
         return {
-            'valid': False,
-            'format': 'turtle',
-            'triples_count': 0,
-            'errors': [str(e)]
+            "valid": False,
+            "format": "turtle",
+            "triples_count": 0,
+            "errors": [str(e)],
         }
+
 
 def get_validation_progress(validation_id: str) -> Dict[str, Any]:
     """Get validation progress."""
@@ -409,27 +439,28 @@ def get_validation_progress(validation_id: str) -> Dict[str, Any]:
         """
 
         result = virtuoso_service.execute_sparql_query(query)
-        bindings = result.get('results', {}).get('bindings', [])
+        bindings = result.get("results", {}).get("bindings", [])
 
         if bindings:
             binding = bindings[0]
-            total = int(binding.get('totalTriples', {}).get('value', 1))
-            processed = int(binding.get('processedTriples', {}).get('value', 0))
+            total = int(binding.get("totalTriples", {}).get("value", 1))
+            processed = int(binding.get("processedTriples", {}).get("value", 0))
             percentage = (processed / total) * 100 if total > 0 else 0
 
             return {
-                'validationId': validation_id,
-                'totalTriples': total,
-                'processedTriples': processed,
-                'percentage': round(percentage, 2),
-                'status': binding.get('status', {}).get('value', 'unknown')
+                "validationId": validation_id,
+                "totalTriples": total,
+                "processedTriples": processed,
+                "percentage": round(percentage, 2),
+                "status": binding.get("status", {}).get("value", "unknown"),
             }
         else:
-            return {'error': 'Validation not found'}
+            return {"error": "Validation not found"}
 
     except Exception as e:
         logger.error(f"Error getting validation progress: {str(e)}")
-        return {'error': str(e)}
+        return {"error": str(e)}
+
 
 def cancel_validation(validation_id: str) -> Dict[str, Any]:
     """Cancel a validation."""
@@ -450,18 +481,15 @@ def cancel_validation(validation_id: str) -> Dict[str, Any]:
         virtuoso_service.execute_sparql_update(update_query)
 
         return {
-            'cancelled': True,
-            'validationId': validation_id,
-            'cancelledAt': datetime.now().isoformat()
+            "cancelled": True,
+            "validationId": validation_id,
+            "cancelledAt": datetime.now().isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error cancelling validation: {str(e)}")
-        return {
-            'cancelled': False,
-            'validationId': validation_id,
-            'error': str(e)
-        }
+        return {"cancelled": False, "validationId": validation_id, "error": str(e)}
+
 
 def retry_validation(validation_id: str) -> Dict[str, Any]:
     """Retry a failed validation."""
@@ -479,40 +507,41 @@ def retry_validation(validation_id: str) -> Dict[str, Any]:
         """
 
         result = virtuoso_service.execute_sparql_query(query)
-        bindings = result.get('results', {}).get('bindings', [])
+        bindings = result.get("results", {}).get("bindings", [])
 
         if bindings:
             binding = bindings[0]
-            data_graph = binding.get('dataGraph', {}).get('value', '')
-            shapes_graph = binding.get('shapesGraph', {}).get('value', '')
+            data_graph = binding.get("dataGraph", {}).get("value", "")
+            shapes_graph = binding.get("shapesGraph", {}).get("value", "")
 
             # Create new validation
             new_session = create_validation_session(shapes_graph, data_graph)
 
             return {
-                'newValidationId': new_validation_id,
-                'status': 'started',
-                'originalValidationId': validation_id,
-                'sessionId': new_session.get('sessionId', '')
+                "newValidationId": new_validation_id,
+                "status": "started",
+                "originalValidationId": validation_id,
+                "sessionId": new_session.get("sessionId", ""),
             }
         else:
-            return {'error': 'Original validation not found'}
+            return {"error": "Original validation not found"}
 
     except Exception as e:
         logger.error(f"Error retrying validation: {str(e)}")
-        return {'error': str(e)}
+        return {"error": str(e)}
+
 
 def parse_validation_results(raw_results: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Parse validation results from SPARQL."""
     try:
-        bindings = raw_results.get('results', {}).get('bindings', [])
+        bindings = raw_results.get("results", {}).get("bindings", [])
 
         parsed_results = []
         for binding in bindings:
             parsed_result = {}
             for key, value in binding.items():
-                if 'value' in value:
-                    parsed_result[key] = value['value']
+                if "value" in value:
+                    parsed_result[key] = value["value"]
 
             parsed_results.append(parsed_result)
 
@@ -521,6 +550,7 @@ def parse_validation_results(raw_results: Dict[str, Any]) -> List[Dict[str, Any]
     except Exception as e:
         logger.error(f"Error parsing validation results: {str(e)}")
         return []
+
 
 def export_validation_report(session_id: str, format: str = "json") -> Dict[str, Any]:
     """Export validation report."""
@@ -531,23 +561,24 @@ def export_validation_report(session_id: str, format: str = "json") -> Dict[str,
             history = get_validation_history(limit=1)
 
             export_data = {
-                'session_id': session_id,
-                'validation_report': report,
-                'exported_at': datetime.now().isoformat(),
-                'format': 'json'
+                "session_id": session_id,
+                "validation_report": report,
+                "exported_at": datetime.now().isoformat(),
+                "format": "json",
             }
 
             return {
-                'report': json.dumps(export_data, indent=2),
-                'format': 'json',
-                'session_id': session_id
+                "report": json.dumps(export_data, indent=2),
+                "format": "json",
+                "session_id": session_id,
             }
         else:
-            return {'error': f'Format {format} not supported'}
+            return {"error": f"Format {format} not supported"}
 
     except Exception as e:
         logger.error(f"Error exporting validation report: {str(e)}")
-        return {'error': str(e)}
+        return {"error": str(e)}
+
 
 def validate_configuration(config_dict: Dict[str, Any]) -> Dict[str, Any]:
     """Validate validation configuration."""
@@ -555,34 +586,32 @@ def validate_configuration(config_dict: Dict[str, Any]) -> Dict[str, Any]:
         errors = []
 
         # Check severity level
-        valid_severity_levels = ['Violation', 'Warning', 'Info']
-        severity = config_dict.get('severity_level')
+        valid_severity_levels = ["Violation", "Warning", "Info"]
+        severity = config_dict.get("severity_level")
         if severity and severity not in valid_severity_levels:
-            errors.append(f"Invalid severity_level: {severity}. Must be one of {valid_severity_levels}")
+            errors.append(
+                f"Invalid severity_level: {severity}. Must be one of {valid_severity_levels}"
+            )
 
         # Check boolean values
-        enable_inference = config_dict.get('enable_inference')
+        enable_inference = config_dict.get("enable_inference")
         if enable_inference is not None and not isinstance(enable_inference, bool):
             errors.append("enable_inference must be a boolean")
 
-        abort_on_first = config_dict.get('abort_on_first')
+        abort_on_first = config_dict.get("abort_on_first")
         if abort_on_first is not None and not isinstance(abort_on_first, bool):
             errors.append("abort_on_first must be a boolean")
 
-        include_rdfs = config_dict.get('include_rdfs')
+        include_rdfs = config_dict.get("include_rdfs")
         if include_rdfs is not None and not isinstance(include_rdfs, bool):
             errors.append("include_rdfs must be a boolean")
 
         return {
-            'valid': len(errors) == 0,
-            'errors': errors,
-            'configuration': config_dict
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "configuration": config_dict,
         }
 
     except Exception as e:
         logger.error(f"Error validating configuration: {str(e)}")
-        return {
-            'valid': False,
-            'errors': [str(e)],
-            'configuration': config_dict
-        }
+        return {"valid": False, "errors": [str(e)], "configuration": config_dict}

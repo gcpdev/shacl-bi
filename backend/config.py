@@ -4,18 +4,26 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class BaseConfig:
     """Base configuration."""
+
     DEBUG = False
     TESTING = False
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
     WTF_CSRF_ENABLED = True
 
     # Database configuration
-    VIRTUOSO_ENDPOINT = os.environ.get('VIRTUOSO_ENDPOINT', 'http://localhost:8890/sparql')
-    SHAPES_GRAPH = os.environ.get('SHAPES_GRAPH', 'http://ex.org/ShapesGraph')
-    VALIDATION_GRAPH = os.environ.get('VALIDATION_GRAPH', 'http://ex.org/ValidationReport')
-    VIOLATION_KG_GRAPH = os.environ.get('VIOLATION_KG_GRAPH', 'http://ex.org/ViolationKnowledgeGraph')
+    VIRTUOSO_ENDPOINT = os.environ.get(
+        "VIRTUOSO_ENDPOINT", "http://localhost:8890/sparql"
+    )
+    SHAPES_GRAPH = os.environ.get("SHAPES_GRAPH", "http://ex.org/ShapesGraph")
+    VALIDATION_GRAPH = os.environ.get(
+        "VALIDATION_GRAPH", "http://ex.org/ValidationReport"
+    )
+    VIOLATION_KG_GRAPH = os.environ.get(
+        "VIOLATION_KG_GRAPH", "http://ex.org/ViolationKnowledgeGraph"
+    )
     DATABASE_URL = VIRTUOSO_ENDPOINT
 
     # CORS settings
@@ -25,55 +33,64 @@ class BaseConfig:
 
     # File upload settings
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
-    UPLOAD_FOLDER = 'uploads'
+    UPLOAD_FOLDER = "uploads"
 
     # Logging
-    LOG_LEVEL = 'INFO'
-    LOG_FILE = 'app.log'
+    LOG_LEVEL = "INFO"
+    LOG_FILE = "app.log"
+
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration."""
+
     DEBUG = True
-    LOG_LEVEL = 'DEBUG'
+    LOG_LEVEL = "DEBUG"
+
 
 class ProductionConfig(BaseConfig):
     """Production configuration."""
+
     DEBUG = False
-    LOG_LEVEL = 'WARNING'
+    LOG_LEVEL = "WARNING"
+
 
 class TestingConfig(BaseConfig):
     """Testing configuration."""
+
     TESTING = True
     DEBUG = True
     WTF_CSRF_ENABLED = False
-    SECRET_KEY = 'test-secret-key'
+    SECRET_KEY = "test-secret-key"
 
     # Use test endpoints
-    VIRTUOSO_ENDPOINT = 'http://localhost:8890/sparql'
+    VIRTUOSO_ENDPOINT = "http://localhost:8890/sparql"
 
     # Disable logging during tests
-    LOG_LEVEL = 'ERROR'
+    LOG_LEVEL = "ERROR"
+
 
 # Configuration mapping
 config_by_name = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
-    'testing': TestingConfig,
-    'default': DevelopmentConfig
+    "development": DevelopmentConfig,
+    "production": ProductionConfig,
+    "testing": TestingConfig,
+    "default": DevelopmentConfig,
 }
 
 # Core Configuration
-VIRTUOSO_ENDPOINT = os.environ.get('VIRTUOSO_ENDPOINT', 'http://localhost:8890/sparql')
-SHAPES_GRAPH = os.environ.get('SHAPES_GRAPH', 'http://ex.org/ShapesGraph')
-VALIDATION_GRAPH = os.environ.get('VALIDATION_GRAPH', 'http://ex.org/ValidationReport')
-VIOLATION_KG_GRAPH = os.environ.get('VIOLATION_KG_GRAPH', 'http://ex.org/ViolationKnowledgeGraph')
+VIRTUOSO_ENDPOINT = os.environ.get("VIRTUOSO_ENDPOINT", "http://localhost:8890/sparql")
+SHAPES_GRAPH = os.environ.get("SHAPES_GRAPH", "http://ex.org/ShapesGraph")
+VALIDATION_GRAPH = os.environ.get("VALIDATION_GRAPH", "http://ex.org/ValidationReport")
+VIOLATION_KG_GRAPH = os.environ.get(
+    "VIOLATION_KG_GRAPH", "http://ex.org/ViolationKnowledgeGraph"
+)
 
 # SPARQL endpoint configuration
 ENDPOINT_URL = VIRTUOSO_ENDPOINT
 
 # Authentication settings (if needed)
-USERNAME = os.environ.get('VIRTUOSO_USER')
-PASSWORD = os.environ.get('VIRTUOSO_PASSWORD')
+USERNAME = os.environ.get("VIRTUOSO_USER")
+PASSWORD = os.environ.get("VIRTUOSO_PASSWORD")
 AUTH_REQUIRED = USERNAME is not None and PASSWORD is not None
 
 # Triple store type - used to handle store-specific operations
@@ -84,18 +101,22 @@ SHAPES_GRAPH_URI = SHAPES_GRAPH
 VALIDATION_REPORT_URI = VALIDATION_GRAPH
 
 # Application Settings
-DEFAULT_AI_MODEL = os.environ.get('DEFAULT_AI_MODEL', 'openai/gpt-4')
-FLASK_ENV = os.environ.get('FLASK_ENV', 'production')
-ENABLE_XPSHACL_FEATURES = os.environ.get('ENABLE_XPSHACL_FEATURES', 'true').lower() == 'true'
-ENABLE_DASHBOARD_FEATURES = os.environ.get('ENABLE_DASHBOARD_FEATURES', 'true').lower() == 'true'
+DEFAULT_AI_MODEL = os.environ.get("DEFAULT_AI_MODEL", "openai/gpt-4")
+FLASK_ENV = os.environ.get("FLASK_ENV", "production")
+ENABLE_XPSHACL_FEATURES = (
+    os.environ.get("ENABLE_XPSHACL_FEATURES", "true").lower() == "true"
+)
+ENABLE_DASHBOARD_FEATURES = (
+    os.environ.get("ENABLE_DASHBOARD_FEATURES", "true").lower() == "true"
+)
 
 # LLM Configuration
 SRG_MODEL = os.environ.get("SRG_MODEL", DEFAULT_AI_MODEL)
 
 # Providers Key - should be configured in a .env file only
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 # File paths for the Violation Knowledge Graph
 VIOLATION_KG_ONTOLOGY_PATH = "data/xpshacl_ontology.ttl"
@@ -130,7 +151,7 @@ SHACL_FEATURES = [
     "http://www.w3.org/ns/shacl#qualifiedMaxCount",
     "http://www.w3.org/ns/shacl#closed",
     "http://www.w3.org/ns/shacl#hasValue",
-    "http://www.w3.org/ns/shacl#in"
+    "http://www.w3.org/ns/shacl#in",
 ]
 
 # Docker-related settings (for Virtuoso)
@@ -152,7 +173,7 @@ STORE_CONFIG = {
         "admin_endpoint": "http://localhost:5820",  # Example for Stardog
         "database": "shacldb",
         "bulk_load_enabled": True,
-    }
+    },
 }
 
 

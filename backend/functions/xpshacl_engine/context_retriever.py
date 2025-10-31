@@ -17,7 +17,7 @@ from .xpshacl_architecture import (
 log_level = os.environ.get("FLASK_LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
     level=getattr(logging, log_level),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("phoenix")
 
@@ -41,7 +41,7 @@ def _serialize_focus_node(focus_node: URIRef, graph: Graph) -> str:
             sub_graph.add((s, p, o))
             if isinstance(o, BNode):
                 nodes_to_visit.add(o)
-        
+
         # Also add triples where the blank node is the object
         if isinstance(current_node, BNode):
             for s, p, o in graph.triples((None, None, current_node)):
@@ -50,7 +50,7 @@ def _serialize_focus_node(focus_node: URIRef, graph: Graph) -> str:
     # Bind prefixes from the main graph for a cleaner output
     for prefix, namespace in graph.namespace_manager.namespaces():
         sub_graph.bind(prefix, namespace)
-        
+
     return sub_graph.serialize(format="turtle").strip()
 
 
@@ -79,14 +79,16 @@ class ContextRetriever:
         for s, p, o in self.data_graph.triples((focus_uri, None, None)):
             # Format Literals correctly in N3
             if isinstance(o, Literal):
-                 # Handle Literals with specific arguments for n3()
-                 o_n3 = o.n3() if hasattr(o, 'n3') else f'"{str(o)}"'
-            elif hasattr(o, 'n3'): # Check if other types (URIRef, BNode) have n3()
-                 o_n3 = o.n3()
+                # Handle Literals with specific arguments for n3()
+                o_n3 = o.n3() if hasattr(o, "n3") else f'"{str(o)}"'
+            elif hasattr(o, "n3"):  # Check if other types (URIRef, BNode) have n3()
+                o_n3 = o.n3()
             else:
-                 # Handle unexpected types that cannot be serialized this way
-                 print(f"Warning: Cannot serialize unexpected RDF term type: {type(o)} with value {o}")
-                 o_n3 = f'"{str(o)}"'
+                # Handle unexpected types that cannot be serialized this way
+                print(
+                    f"Warning: Cannot serialize unexpected RDF term type: {type(o)} with value {o}"
+                )
+                o_n3 = f'"{str(o)}"'
             fragments.append(f"{s.n3()} {p.n3()} {o_n3} .")
         return fragments
 
@@ -97,7 +99,7 @@ class ContextRetriever:
         for comment in self.shapes_graph.objects(shape_uri, RDFS.comment):
             documentation.append(str(comment))
         for name in self.shapes_graph.objects(shape_uri, SH.name):
-             documentation.append(f"Shape Name: {str(name)}")
+            documentation.append(f"Shape Name: {str(name)}")
         return documentation
 
     def _get_similar_cases(self, violation: ConstraintViolation) -> List[Dict]:
@@ -114,25 +116,35 @@ class ContextRetriever:
         # 1. Identify the focus node and property path
         focus_node_uri = URIRef(violation.focus_node)
         if violation.property_path is None:
-             logger.debug("Cannot find similar cases without a property path in the violation.")
-             return []
+            logger.debug(
+                "Cannot find similar cases without a property path in the violation."
+            )
+            return []
         property_path_uri = URIRef(violation.property_path)
 
         # 2. Find types of the focus node
         try:
             query_focus_type = "SELECT ?type WHERE { ?focus_node a ?type . }"
-            results_type = self.data_graph.query(query_focus_type, initBindings={'focus_node': focus_node_uri})
-            focus_node_types = {row["type"] for row in results_type if isinstance(row["type"], URIRef)}
+            results_type = self.data_graph.query(
+                query_focus_type, initBindings={"focus_node": focus_node_uri}
+            )
+            focus_node_types = {
+                row["type"] for row in results_type if isinstance(row["type"], URIRef)
+            }
             if not focus_node_types:
-                 logger.warning(f"Could not determine RDF type for focus node {focus_node_uri}")
-                 return []
+                logger.warning(
+                    f"Could not determine RDF type for focus node {focus_node_uri}"
+                )
+                return []
         except Exception as e:
-             logger.error(f"Error querying focus node type for {focus_node_uri}: {e}")
-             return []
+            logger.error(f"Error querying focus node type for {focus_node_uri}: {e}")
+            return []
 
         # 3. For each type, query all nodes of that type and filter in Python
         for node_type_uri in focus_node_types:
-            logger.debug(f"Searching for similar cases of type {node_type_uri} (Python filtering)")
+            logger.debug(
+                f"Searching for similar cases of type {node_type_uri} (Python filtering)"
+            )
             try:
                 # Simpler query: Get all nodes of the specified type (excluding focus node)
                 query_nodes_of_type = """
@@ -142,8 +154,10 @@ class ContextRetriever:
                     FILTER(?node != ?focus_node)
                 }
                 """
-                bindings = {'node_type': node_type_uri, 'focus_node': focus_node_uri}
-                results_nodes = self.data_graph.query(query_nodes_of_type, initBindings=bindings)
+                bindings = {"node_type": node_type_uri, "focus_node": focus_node_uri}
+                results_nodes = self.data_graph.query(
+                    query_nodes_of_type, initBindings=bindings
+                )
 
                 # Iterate through potential nodes and check property existence in Python
                 for row in results_nodes:
@@ -154,21 +168,31 @@ class ContextRetriever:
                         if node_uri_str not in processed_nodes:
                             # Check if the property exists for this node
                             # Using next() is slightly more efficient than checking len(list(...))
-                            property_exists = next(self.data_graph.objects(node_uri, property_path_uri), None)
+                            property_exists = next(
+                                self.data_graph.objects(node_uri, property_path_uri),
+                                None,
+                            )
 
-                            if property_exists is None: # Property does NOT exist
-                                similar_nodes_data.append({
-                                    "node": node_uri_str,
-                                    "node_type": str(node_type_uri)
-                                })
-                            processed_nodes.add(node_uri_str) # Mark as processed even if property exists
+                            if property_exists is None:  # Property does NOT exist
+                                similar_nodes_data.append(
+                                    {
+                                        "node": node_uri_str,
+                                        "node_type": str(node_type_uri),
+                                    }
+                                )
+                            processed_nodes.add(
+                                node_uri_str
+                            )  # Mark as processed even if property exists
 
             except Exception as e:
-                logger.error(f"Error processing similar nodes (Python filter) for type {node_type_uri}: {e}")
+                logger.error(
+                    f"Error processing similar nodes (Python filter) for type {node_type_uri}: {e}"
+                )
 
-        logger.debug(f"Found {len(similar_nodes_data)} similar cases for violation at {focus_node_uri} (Python filtering)")
+        logger.debug(
+            f"Found {len(similar_nodes_data)} similar cases for violation at {focus_node_uri} (Python filtering)"
+        )
         return similar_nodes_data
-
 
     def _get_domain_rules(self, violation: ConstraintViolation) -> list[str]:
         """
@@ -178,11 +202,15 @@ class ContextRetriever:
         domain_rules = []
         # Ensure property_path exists
         if not violation.property_path:
-            logger.debug("Skipping domain rules lookup as no property path is available.")
+            logger.debug(
+                "Skipping domain rules lookup as no property path is available."
+            )
             return []
 
         property_uri = URIRef(violation.property_path)
-        XSH = Namespace("http://xpshacl.org/#") # Define namespace if not globally available
+        XSH = Namespace(
+            "http://xpshacl.org/#"
+        )  # Define namespace if not globally available
 
         try:
             query = """
@@ -196,7 +224,9 @@ class ContextRetriever:
                 OPTIONAL {{ ?rule rdfs:label ?label . }}
             }}
             """
-            results = self.shapes_graph.query(query, initBindings={'prop_uri': property_uri})
+            results = self.shapes_graph.query(
+                query, initBindings={"prop_uri": property_uri}
+            )
 
             for row in results:
                 rule_uri_str = str(row["rule"])
@@ -209,13 +239,17 @@ class ContextRetriever:
                     rule_text += f" ({label_str})"
                 if comment_str:
                     rule_text += f": {comment_str}"
-                elif not label_str: # Fallback if only URI is present
-                     rule_text += ": Applies to this property."
+                elif not label_str:  # Fallback if only URI is present
+                    rule_text += ": Applies to this property."
 
                 domain_rules.append(rule_text)
 
         except Exception as e:
-             logger.error(f"Error querying domain rules for property {property_uri}: {e}")
+            logger.error(
+                f"Error querying domain rules for property {property_uri}: {e}"
+            )
 
-        logger.debug(f"Found {len(domain_rules)} domain rules for property {property_uri}")
+        logger.debug(
+            f"Found {len(domain_rules)} domain rules for property {property_uri}"
+        )
         return domain_rules

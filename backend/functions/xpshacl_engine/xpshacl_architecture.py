@@ -51,7 +51,8 @@ class ConstraintViolation:
         """Convert ConstraintViolation to a dictionary."""
         # Handle both enum and string values for violation_type
         violation_type_value = (
-            self.violation_type.value if hasattr(self.violation_type, 'value')
+            self.violation_type.value
+            if hasattr(self.violation_type, "value")
             else self.violation_type
         )
         return {

@@ -1,7 +1,7 @@
 <template>
   <tr class="even:bg-gray-50 hover:bg-blue-50 transition-colors" @click="toggleDetails">
     <td class="text-left px-6 py-4 border-b border-gray-300">{{ rowNumber }}</td>
-    
+
     <td class="text-left px-6 py-4 border-b border-gray-300 violation-triple">
       <div class="triple-line">
         <span class="triple-subject">{{ formatNodeName(focusNode) }}</span>

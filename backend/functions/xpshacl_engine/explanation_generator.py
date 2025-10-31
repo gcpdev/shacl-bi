@@ -107,18 +107,21 @@ class ExplanationGenerator:
             return f"Error generating explanation in {language}: {e}"
 
     def _generate_correction_suggestions_text(
-        self, violation: ConstraintViolation, context: DomainContext, language: str = "en"
-    ) -> str: # Return a single string
+        self,
+        violation: ConstraintViolation,
+        context: DomainContext,
+        language: str = "en",
+    ) -> str:  # Return a single string
         """
         Internal helper that calls the LLM for suggestions and returns
         a single combined string.
         """
-        SUGGESTION_SEPARATOR = "\n\n" # Define separator consistently
+        SUGGESTION_SEPARATOR = "\n\n"  # Define separator consistently
 
         prompt = f"Consider the following SHACL violation (context language is {language}, ISO 639-1 code): {violation.message or 'Unknown violation'}.\n"
         prompt += f"Relevant context: {json.dumps(context.__dict__, indent=2, default=str)}.\n\n"
         prompt += f"Provide possible correction suggestions for this violation IN THE LANGUAGE '{language.upper()}' (ISO 639-1 code: {language}). Combine all suggestions into a single response, perhaps using numbered points or distinct paragraphs.\n\n"
-        prompt += suggestions_prompt # Append the original detailed instructions
+        prompt += suggestions_prompt  # Append the original detailed instructions
 
         try:
             response = openai.chat.completions.create(
@@ -131,9 +134,11 @@ class ExplanationGenerator:
             # Although we ask the LLM for a single block, if it happens to use
             # newlines strictly for separation, joining them ensures a single string.
             # If the response is already a single block, split/join won't hurt.
-            suggestions_lines = [s.strip() for s in response_content.split('\n') if s.strip()]
+            suggestions_lines = [
+                s.strip() for s in response_content.split("\n") if s.strip()
+            ]
             if not suggestions_lines:
-                 return "No suggestions generated." # Return empty or placeholder string
+                return "No suggestions generated."  # Return empty or placeholder string
 
             # Join lines using the chosen separator to form the single string
             combined_suggestions = SUGGESTION_SEPARATOR.join(suggestions_lines)
@@ -198,10 +203,8 @@ class ExplainableShaclSystem:
         for violation in violations:
             justification_tree = self.justification_builder.build_tree(violation)
             retrieved_context = self.context_retriever.retrieve_context(violation)
-            explanation_text = (
-                self.explanation_generator._generate_explanation_text(
-                    violation, justification_tree, retrieved_context
-                )
+            explanation_text = self.explanation_generator._generate_explanation_text(
+                violation, justification_tree, retrieved_context
             )
             correction_suggestions = (
                 self.explanation_generator._generate_correction_suggestions_text(
@@ -240,26 +243,24 @@ class LocalExplanationGenerator:
         for lang in languages:
             prompt_explanation = f"Explain the following SHACL violation in {lang}: {violation.message or 'Unknown violation'}. "
             prompt_explanation += f"Justification: {json.dumps(justification_tree.to_dict(), indent=2, default=str)}. "
-            prompt_explanation += (
-                f"Relevant context: {json.dumps(context.__dict__, indent=2, default=str)}. "
-            )
+            prompt_explanation += f"Relevant context: {json.dumps(context.__dict__, indent=2, default=str)}. "
             prompt_explanation += explanations_prompt
 
             response_explanation = ollama.chat(
-                model=self.model_name, messages=[{"role": "user", "content": prompt_explanation}]
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt_explanation}],
             )
             explanation_content = response_explanation["message"]["content"].strip()
             if self.model_name == "gemma:2b" and explanation_content.startswith(" "):
                 explanation_content = explanation_content[1:]
 
             prompt_suggestions = f"Given the following SHACL violation in {lang}: {violation.message or 'Unknown violation'}. "
-            prompt_suggestions += (
-                f"Relevant context: {json.dumps(context.__dict__, indent=2, default=str)}. "
-            )
+            prompt_suggestions += f"Relevant context: {json.dumps(context.__dict__, indent=2, default=str)}. "
             prompt_suggestions += suggestions_prompt
 
             response_suggestions = ollama.chat(
-                model=self.model_name, messages=[{"role": "user", "content": prompt_suggestions}]
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt_suggestions}],
             )
             suggestions_content = [response_suggestions["message"]["content"].strip()]
             if self.model_name == "gemma:2b" and suggestions_content[0].startswith(" "):
@@ -269,7 +270,10 @@ class LocalExplanationGenerator:
         return output
 
     def generate_correction_suggestions(
-        self, violation: ConstraintViolation, context: DomainContext, language: str = "en"
+        self,
+        violation: ConstraintViolation,
+        context: DomainContext,
+        language: str = "en",
     ) -> List[str]:
         """Generates correction suggestions for a violation using Ollama for a specific language"""
         prompt = f"Given the following SHACL violation in {language} (ISO 639-1 code): {violation.message or 'Unknown violation'}. "

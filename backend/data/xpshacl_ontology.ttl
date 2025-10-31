@@ -62,6 +62,12 @@ xsh:providedByModel a rdf:Property ;
     rdfs:domain xsh:Explanation ;
     rdfs:range rdfs:Literal .
 
+xsh:generatedAt a rdf:Property ;
+    rdfs:label "Generated At" ;
+    rdfs:comment "The timestamp when the explanation was generated" ;
+    rdfs:domain xsh:Explanation ;
+    rdfs:range xsd:dateTime .
+
 xsh:violation a rdf:Property ;
     rdfs:label "Violation" ;
     rdfs:comment "The violation details" ;

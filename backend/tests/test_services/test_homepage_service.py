@@ -7,10 +7,11 @@ from unittest.mock import Mock, patch, MagicMock
 import json
 from datetime import datetime, timedelta
 
+
 class TestHomepageService:
     """Test homepage service for main dashboard functionality."""
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_get_number_of_violations_in_validation_report(self, mock_sparql_wrapper):
         """Test getting the total number of violations in validation report."""
         from functions import homepage_service
@@ -19,11 +20,7 @@ class TestHomepageService:
         mock_sparql_instance = Mock()
         mock_sparql_wrapper.return_value = mock_sparql_instance
         mock_sparql_instance.query.return_value.convert.return_value = {
-            "results": {
-                "bindings": [
-                    {"violationCount": {"value": "150"}}
-                ]
-            }
+            "results": {"bindings": [{"violationCount": {"value": "150"}}]}
         }
 
         result = homepage_service.get_number_of_violations_in_validation_report()
@@ -34,7 +31,7 @@ class TestHomepageService:
 
         assert result == 150
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_get_number_of_node_shapes(self, mock_sparql_wrapper):
         """Test getting the number of node shapes in shapes graph."""
         from functions import homepage_service
@@ -43,11 +40,7 @@ class TestHomepageService:
         mock_sparql_instance = Mock()
         mock_sparql_wrapper.return_value = mock_sparql_instance
         mock_sparql_instance.query.return_value.convert.return_value = {
-            "results": {
-                "bindings": [
-                    {"nodeShapesCount": {"value": "25"}}
-                ]
-            }
+            "results": {"bindings": [{"nodeShapesCount": {"value": "25"}}]}
         }
 
         result = homepage_service.get_number_of_node_shapes()
@@ -57,7 +50,7 @@ class TestHomepageService:
 
         assert result == 25
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_get_number_of_node_shapes_with_violations(self, mock_sparql_wrapper):
         """Test getting the number of node shapes with violations - the fixed function."""
         from functions import homepage_service
@@ -66,11 +59,7 @@ class TestHomepageService:
         mock_sparql_instance = Mock()
         mock_sparql_wrapper.return_value = mock_sparql_instance
         mock_sparql_instance.query.return_value.convert.return_value = {
-            "results": {
-                "bindings": [
-                    {"violatedNodeShapesCount": {"value": "12"}}
-                ]
-            }
+            "results": {"bindings": [{"violatedNodeShapesCount": {"value": "12"}}]}
         }
 
         result = homepage_service.get_number_of_node_shapes_with_violations()
@@ -87,19 +76,17 @@ class TestHomepageService:
 
         assert result == 12
 
-    @patch('functions.homepage_service.SPARQLWrapper')
-    def test_get_number_of_node_shapes_with_violations_custom_uris(self, mock_sparql_wrapper):
+    @patch("functions.homepage_service.SPARQLWrapper")
+    def test_get_number_of_node_shapes_with_violations_custom_uris(
+        self, mock_sparql_wrapper
+    ):
         """Test getting node shapes with violations using custom graph URIs."""
         from functions import homepage_service
 
         mock_sparql_instance = Mock()
         mock_sparql_wrapper.return_value = mock_sparql_instance
         mock_sparql_instance.query.return_value.convert.return_value = {
-            "results": {
-                "bindings": [
-                    {"violatedNodeShapesCount": {"value": "8"}}
-                ]
-            }
+            "results": {"bindings": [{"violatedNodeShapesCount": {"value": "8"}}]}
         }
 
         custom_shapes_uri = "http://custom.example.org/shapes"
@@ -107,7 +94,7 @@ class TestHomepageService:
 
         result = homepage_service.get_number_of_node_shapes_with_violations(
             shapes_graph_uri=custom_shapes_uri,
-            validation_report_uri=custom_validation_uri
+            validation_report_uri=custom_validation_uri,
         )
 
         call_args = mock_sparql_instance.setQuery.call_args[0][0]
@@ -116,7 +103,7 @@ class TestHomepageService:
 
         assert result == 8
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_get_number_of_paths_in_shapes_graph(self, mock_sparql_wrapper):
         """Test getting the number of unique paths in shapes graph."""
         from functions import homepage_service
@@ -124,11 +111,7 @@ class TestHomepageService:
         mock_sparql_instance = Mock()
         mock_sparql_wrapper.return_value = mock_sparql_instance
         mock_sparql_instance.query.return_value.convert.return_value = {
-            "results": {
-                "bindings": [
-                    {"pathCount": {"value": "45"}}
-                ]
-            }
+            "results": {"bindings": [{"pathCount": {"value": "45"}}]}
         }
 
         result = homepage_service.get_number_of_paths_in_shapes_graph()
@@ -136,7 +119,7 @@ class TestHomepageService:
         mock_sparql_instance.setQuery.assert_called_once()
         assert result == 45
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_get_number_of_paths_with_violations(self, mock_sparql_wrapper):
         """Test getting the number of paths with violations."""
         from functions import homepage_service
@@ -144,11 +127,7 @@ class TestHomepageService:
         mock_sparql_instance = Mock()
         mock_sparql_wrapper.return_value = mock_sparql_instance
         mock_sparql_instance.query.return_value.convert.return_value = {
-            "results": {
-                "bindings": [
-                    {"pathCount": {"value": "32"}}
-                ]
-            }
+            "results": {"bindings": [{"pathCount": {"value": "32"}}]}
         }
 
         result = homepage_service.get_number_of_paths_with_violations()
@@ -156,7 +135,7 @@ class TestHomepageService:
         mock_sparql_instance.setQuery.assert_called_once()
         assert result == 32
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_get_number_of_focus_nodes_in_validation_report(self, mock_sparql_wrapper):
         """Test getting the number of unique focus nodes in validation report."""
         from functions import homepage_service
@@ -164,11 +143,7 @@ class TestHomepageService:
         mock_sparql_instance = Mock()
         mock_sparql_wrapper.return_value = mock_sparql_instance
         mock_sparql_instance.query.return_value.convert.return_value = {
-            "results": {
-                "bindings": [
-                    {"focusNodeCount": {"value": "67"}}
-                ]
-            }
+            "results": {"bindings": [{"focusNodeCount": {"value": "67"}}]}
         }
 
         result = homepage_service.get_number_of_focus_nodes_in_validation_report()
@@ -176,7 +151,7 @@ class TestHomepageService:
         mock_sparql_instance.setQuery.assert_called_once()
         assert result == 67
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_count_triples(self, mock_sparql_wrapper):
         """Test counting triples in validation report."""
         from functions import homepage_service
@@ -184,11 +159,7 @@ class TestHomepageService:
         mock_sparql_instance = Mock()
         mock_sparql_wrapper.return_value = mock_sparql_instance
         mock_sparql_instance.query.return_value.convert.return_value = {
-            "results": {
-                "bindings": [
-                    {"tripleCount": {"value": "1234"}}
-                ]
-            }
+            "results": {"bindings": [{"tripleCount": {"value": "1234"}}]}
         }
 
         result = homepage_service.count_triples()
@@ -196,7 +167,7 @@ class TestHomepageService:
         mock_sparql_instance.setQuery.assert_called_once()
         assert result == 1234
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_get_violations_per_node_shape(self, mock_sparql_wrapper):
         """Test getting violations per node shape."""
         from functions import homepage_service
@@ -210,33 +181,29 @@ class TestHomepageService:
                 "bindings": [
                     {
                         "nodeShape": {"value": "http://example.org/shape1"},
-                        "propertyShape": {"value": "http://example.org/prop1"}
+                        "propertyShape": {"value": "http://example.org/prop1"},
                     },
                     {
                         "nodeShape": {"value": "http://example.org/shape1"},
-                        "propertyShape": {"value": "http://example.org/prop2"}
+                        "propertyShape": {"value": "http://example.org/prop2"},
                     },
                     {
                         "nodeShape": {"value": "http://example.org/shape2"},
-                        "propertyShape": {"value": "http://example.org/prop3"}
-                    }
+                        "propertyShape": {"value": "http://example.org/prop3"},
+                    },
                 ]
             }
         }
 
         # Mock validation report queries
         validation_response = {
-            "results": {
-                "bindings": [
-                    {"violationCount": {"value": "10"}}
-                ]
-            }
+            "results": {"bindings": [{"violationCount": {"value": "10"}}]}
         }
 
         mock_sparql_instance.query.return_value.convert.side_effect = [
             shapes_response,  # First call for shapes
             validation_response,  # Second call for shape1 violations
-            validation_response   # Third call for shape2 violations
+            validation_response,  # Third call for shape2 violations
         ]
 
         result = homepage_service.get_violations_per_node_shape()
@@ -245,7 +212,7 @@ class TestHomepageService:
         assert result[0]["NodeShapeName"] == "http://example.org/shape1"
         assert result[0]["NumViolations"] == 10
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_get_violations_per_path(self, mock_sparql_wrapper):
         """Test getting violations per path."""
         from functions import homepage_service
@@ -255,9 +222,18 @@ class TestHomepageService:
         mock_sparql_instance.query.return_value.convert.return_value = {
             "results": {
                 "bindings": [
-                    {"path": {"value": "http://example.org/path1"}, "violationCount": {"value": "15"}},
-                    {"path": {"value": "http://example.org/path2"}, "violationCount": {"value": "8"}},
-                    {"path": {"value": "http://example.org/path3"}, "violationCount": {"value": "3"}}
+                    {
+                        "path": {"value": "http://example.org/path1"},
+                        "violationCount": {"value": "15"},
+                    },
+                    {
+                        "path": {"value": "http://example.org/path2"},
+                        "violationCount": {"value": "8"},
+                    },
+                    {
+                        "path": {"value": "http://example.org/path3"},
+                        "violationCount": {"value": "3"},
+                    },
                 ]
             }
         }
@@ -268,7 +244,7 @@ class TestHomepageService:
         assert result[0]["PathName"] == "http://example.org/path1"
         assert result[0]["NumViolations"] == 15
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_get_violations_per_focus_node(self, mock_sparql_wrapper):
         """Test getting violations per focus node."""
         from functions import homepage_service
@@ -278,8 +254,14 @@ class TestHomepageService:
         mock_sparql_instance.query.return_value.convert.return_value = {
             "results": {
                 "bindings": [
-                    {"focusNode": {"value": "http://example.org/node1"}, "violationCount": {"value": "12"}},
-                    {"focusNode": {"value": "http://example.org/node2"}, "violationCount": {"value": "6"}}
+                    {
+                        "focusNode": {"value": "http://example.org/node1"},
+                        "violationCount": {"value": "12"},
+                    },
+                    {
+                        "focusNode": {"value": "http://example.org/node2"},
+                        "violationCount": {"value": "6"},
+                    },
                 ]
             }
         }
@@ -290,7 +272,7 @@ class TestHomepageService:
         assert result[0]["FocusNodeName"] == "http://example.org/node1"
         assert result[0]["NumViolations"] == 12
 
-    @patch('functions.homepage_service.get_violations_per_node_shape')
+    @patch("functions.homepage_service.get_violations_per_node_shape")
     def test_distribution_of_violations_per_shape(self, mock_get_violations):
         """Test distribution of violations per shape for chart data."""
         from functions import homepage_service
@@ -312,7 +294,7 @@ class TestHomepageService:
         assert len(result["datasets"][0]["data"]) == 10
         assert result["datasets"][0]["label"] == "Frequency"
 
-    @patch('functions.homepage_service.requests.get')
+    @patch("functions.homepage_service.requests.get")
     def test_get_most_violated_node_shape(self, mock_requests_get):
         """Test finding the most violated node shape."""
         from functions import homepage_service
@@ -324,12 +306,12 @@ class TestHomepageService:
                 "bindings": [
                     {
                         "nodeShape": {"value": "http://example.org/shape1"},
-                        "propertyShape": {"value": "http://example.org/prop1"}
+                        "propertyShape": {"value": "http://example.org/prop1"},
                     },
                     {
                         "nodeShape": {"value": "http://example.org/shape2"},
-                        "propertyShape": {"value": "http://example.org/prop2"}
-                    }
+                        "propertyShape": {"value": "http://example.org/prop2"},
+                    },
                 ]
             }
         }
@@ -338,15 +320,15 @@ class TestHomepageService:
         # Mock violations query response
         violations_response = Mock()
         violations_response.json.return_value = {
-            "results": {
-                "bindings": [
-                    {"violationCount": {"value": "20"}}
-                ]
-            }
+            "results": {"bindings": [{"violationCount": {"value": "20"}}]}
         }
         violations_response.raise_for_status.return_value = None
 
-        mock_requests_get.side_effect = [shapes_response, violations_response, violations_response]
+        mock_requests_get.side_effect = [
+            shapes_response,
+            violations_response,
+            violations_response,
+        ]
 
         result = homepage_service.get_most_violated_node_shape()
 
@@ -354,7 +336,7 @@ class TestHomepageService:
         assert "violations" in result
         assert result["violations"] == 20
 
-    @patch('functions.homepage_service.requests.get')
+    @patch("functions.homepage_service.requests.get")
     def test_get_most_violated_path(self, mock_requests_get):
         """Test finding the most violated path."""
         from functions import homepage_service
@@ -363,7 +345,10 @@ class TestHomepageService:
         mock_response.json.return_value = {
             "results": {
                 "bindings": [
-                    {"path": {"value": "http://example.org/mostViolatedPath"}, "violationCount": {"value": "50"}}
+                    {
+                        "path": {"value": "http://example.org/mostViolatedPath"},
+                        "violationCount": {"value": "50"},
+                    }
                 ]
             }
         }
@@ -375,7 +360,7 @@ class TestHomepageService:
         assert result["path"] == "http://example.org/mostViolatedPath"
         assert result["violations"] == 50
 
-    @patch('functions.homepage_service.requests.get')
+    @patch("functions.homepage_service.requests.get")
     def test_get_most_violated_focus_node(self, mock_requests_get):
         """Test finding the most violated focus node."""
         from functions import homepage_service
@@ -384,7 +369,10 @@ class TestHomepageService:
         mock_response.json.return_value = {
             "results": {
                 "bindings": [
-                    {"focusNode": {"value": "http://example.org/mostViolatedNode"}, "violationCount": {"value": "30"}}
+                    {
+                        "focusNode": {"value": "http://example.org/mostViolatedNode"},
+                        "violationCount": {"value": "30"},
+                    }
                 ]
             }
         }
@@ -396,7 +384,7 @@ class TestHomepageService:
         assert result["focusNode"] == "http://example.org/mostViolatedNode"
         assert result["violations"] == 30
 
-    @patch('functions.homepage_service.requests.get')
+    @patch("functions.homepage_service.requests.get")
     def test_get_most_frequent_constraint_component(self, mock_requests_get):
         """Test finding the most frequent constraint component."""
         from functions import homepage_service
@@ -405,7 +393,12 @@ class TestHomepageService:
         mock_response.json.return_value = {
             "results": {
                 "bindings": [
-                    {"constraintComponent": {"value": "http://www.w3.org/ns/shacl#MinCountConstraintComponent"}, "occurrenceCount": {"value": "25"}}
+                    {
+                        "constraintComponent": {
+                            "value": "http://www.w3.org/ns/shacl#MinCountConstraintComponent"
+                        },
+                        "occurrenceCount": {"value": "25"},
+                    }
                 ]
             }
         }
@@ -414,21 +407,20 @@ class TestHomepageService:
 
         result = homepage_service.get_most_frequent_constraint_component()
 
-        assert result["constraintComponent"] == "http://www.w3.org/ns/shacl#MinCountConstraintComponent"
+        assert (
+            result["constraintComponent"]
+            == "http://www.w3.org/ns/shacl#MinCountConstraintComponent"
+        )
         assert result["occurrences"] == 25
 
-    @patch('functions.homepage_service.requests.get')
+    @patch("functions.homepage_service.requests.get")
     def test_get_distinct_constraint_components_count(self, mock_requests_get):
         """Test counting distinct constraint components."""
         from functions import homepage_service
 
         mock_response = Mock()
         mock_response.json.return_value = {
-            "results": {
-                "bindings": [
-                    {"distinctCount": {"value": "8"}}
-                ]
-            }
+            "results": {"bindings": [{"distinctCount": {"value": "8"}}]}
         }
         mock_response.raise_for_status.return_value = None
         mock_requests_get.return_value = mock_response
@@ -437,7 +429,7 @@ class TestHomepageService:
 
         assert result == 8
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_error_handling_query_failure(self, mock_sparql_wrapper):
         """Test error handling when SPARQL query fails."""
         from functions import homepage_service
@@ -449,7 +441,7 @@ class TestHomepageService:
         with pytest.raises(RuntimeError, match="Error querying validation report"):
             homepage_service.get_number_of_violations_in_validation_report()
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_empty_results_handling(self, mock_sparql_wrapper):
         """Test handling of empty query results."""
         from functions import homepage_service
@@ -464,18 +456,14 @@ class TestHomepageService:
         with pytest.raises(RuntimeError, match="Error querying validation report"):
             homepage_service.get_number_of_violations_in_validation_report()
 
-    @patch('functions.homepage_service.requests.get')
+    @patch("functions.homepage_service.requests.get")
     def test_get_distinct_constraints_count_in_shapes(self, mock_requests_get):
         """Test counting distinct constraints in shapes graph."""
         from functions import homepage_service
 
         mock_response = Mock()
         mock_response.json.return_value = {
-            "results": {
-                "bindings": [
-                    {"distinctCount": {"value": "12"}}
-                ]
-            }
+            "results": {"bindings": [{"distinctCount": {"value": "12"}}]}
         }
         mock_response.raise_for_status.return_value = None
         mock_requests_get.return_value = mock_response
@@ -484,7 +472,7 @@ class TestHomepageService:
 
         assert result == 12
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_benchmark_function_execution(self, mock_sparql_wrapper):
         """Test benchmark function execution timing."""
         from functions import homepage_service
@@ -504,9 +492,7 @@ class TestHomepageService:
 
         # Test the benchmark function
         result = homepage_service.benchmark_function_execution(
-            mock_function,
-            runs=3,
-            csv_filename="test_benchmark.csv"
+            mock_function, runs=3, csv_filename="test_benchmark.csv"
         )
 
         assert "times_ms" in result
@@ -517,5 +503,6 @@ class TestHomepageService:
 
         # Clean up test file
         import os
+
         if os.path.exists("test_benchmark.csv"):
             os.remove("test_benchmark.csv")

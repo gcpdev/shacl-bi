@@ -7,10 +7,11 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 import re
 
+
 class TestHomepageServiceIntegration:
     """Integration tests for homepage service SPARQL queries."""
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_node_shapes_with_violations_query_structure(self, mock_sparql_wrapper):
         """Test the SPARQL query structure for node shapes with violations."""
         from functions import homepage_service
@@ -53,8 +54,10 @@ class TestHomepageServiceIntegration:
         # Verify query structure for indirect violations through property shapes
         assert "?propertyShape" in query
 
-    @patch('functions.homepage_service.SPARQLWrapper')
-    def test_node_shapes_with_violations_query_with_custom_uris(self, mock_sparql_wrapper):
+    @patch("functions.homepage_service.SPARQLWrapper")
+    def test_node_shapes_with_violations_query_with_custom_uris(
+        self, mock_sparql_wrapper
+    ):
         """Test SPARQL query with custom graph URIs."""
         from functions import homepage_service
 
@@ -69,7 +72,7 @@ class TestHomepageServiceIntegration:
 
         homepage_service.get_number_of_node_shapes_with_violations(
             shapes_graph_uri=custom_shapes_uri,
-            validation_report_uri=custom_validation_uri
+            validation_report_uri=custom_validation_uri,
         )
 
         call_args = mock_sparql_instance.setQuery.call_args[0][0]
@@ -83,7 +86,7 @@ class TestHomepageServiceIntegration:
         assert f"GRAPH <{custom_shapes_uri}>" in query
         assert f"GRAPH <{custom_validation_uri}>" in query
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_violations_per_node_shape_complex_query(self, mock_sparql_wrapper):
         """Test the complex query structure for violations per node shape."""
         from functions import homepage_service
@@ -95,8 +98,14 @@ class TestHomepageServiceIntegration:
         shapes_response = {
             "results": {
                 "bindings": [
-                    {"nodeShape": {"value": "http://example.org/shape1"}, "propertyShape": {"value": "http://example.org/prop1"}},
-                    {"nodeShape": {"value": "http://example.org/shape1"}, "propertyShape": {"value": "http://example.org/prop2"}}
+                    {
+                        "nodeShape": {"value": "http://example.org/shape1"},
+                        "propertyShape": {"value": "http://example.org/prop1"},
+                    },
+                    {
+                        "nodeShape": {"value": "http://example.org/shape1"},
+                        "propertyShape": {"value": "http://example.org/prop2"},
+                    },
                 ]
             }
         }
@@ -107,7 +116,8 @@ class TestHomepageServiceIntegration:
         }
 
         mock_sparql_instance.query.return_value.convert.side_effect = [
-            shapes_response, violations_response
+            shapes_response,
+            violations_response,
         ]
 
         homepage_service.get_violations_per_node_shape()
@@ -131,7 +141,7 @@ class TestHomepageServiceIntegration:
         assert "sh:sourceShape" in violations_query
         assert "VALUES" in violations_query
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_distribution_chart_query_patterns(self, mock_sparql_wrapper):
         """Test SPARQL queries used for distribution chart data."""
         from functions import homepage_service
@@ -141,8 +151,14 @@ class TestHomepageServiceIntegration:
         mock_sparql_instance.query.return_value.convert.return_value = {
             "results": {
                 "bindings": [
-                    {"path": {"value": "http://example.org/path1"}, "violationCount": {"value": "10"}},
-                    {"path": {"value": "http://example.org/path2"}, "violationCount": {"value": "5"}}
+                    {
+                        "path": {"value": "http://example.org/path1"},
+                        "violationCount": {"value": "10"},
+                    },
+                    {
+                        "path": {"value": "http://example.org/path2"},
+                        "violationCount": {"value": "5"},
+                    },
                 ]
             }
         }
@@ -158,7 +174,7 @@ class TestHomepageServiceIntegration:
         assert "GROUP BY ?path" in query
         assert "ORDER BY DESC" in query
 
-    @patch('functions.homepage_service.requests.get')
+    @patch("functions.homepage_service.requests.get")
     def test_constraint_components_sparql_structure(self, mock_requests_get):
         """Test SPARQL queries for constraint component analysis."""
         from functions import homepage_service
@@ -174,14 +190,14 @@ class TestHomepageServiceIntegration:
         homepage_service.get_distinct_constraint_components_count()
 
         # Get the query that was sent
-        call_args = mock_requests_get.call_args[1]['params']['query']
+        call_args = mock_requests_get.call_args[1]["params"]["query"]
         query = call_args.strip()
 
         # Verify constraint component query structure
         assert "COUNT(DISTINCT ?constraintComponent)" in query
         assert "sh:sourceConstraintComponent" in query
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_validation_details_complex_query(self, mock_sparql_wrapper):
         """Test the complex query structure for validation details."""
         from functions import homepage_service
@@ -201,7 +217,9 @@ class TestHomepageServiceIntegration:
                         "message": {"value": "Test violation message"},
                         "sourceShape": {"value": "http://example.org/shape1"},
                         "severity": {"value": "http://www.w3.org/ns/shacl#Violation"},
-                        "constraintComponent": {"value": "http://www.w3.org/ns/shacl#MinCountConstraintComponent"}
+                        "constraintComponent": {
+                            "value": "http://www.w3.org/ns/shacl#MinCountConstraintComponent"
+                        },
                     }
                 ]
             }
@@ -212,7 +230,7 @@ class TestHomepageServiceIntegration:
                 "bindings": [
                     {
                         "nodeShape": {"value": "http://example.org/nodeShape1"},
-                        "targetClass": {"value": "http://example.org/Class1"}
+                        "targetClass": {"value": "http://example.org/Class1"},
                     }
                 ]
             }
@@ -221,13 +239,18 @@ class TestHomepageServiceIntegration:
         property_triples_response = {
             "results": {
                 "bindings": [
-                    {"predicate": {"value": "http://www.w3.org/ns/shacl#path"}, "object": {"value": "http://example.org/path1"}}
+                    {
+                        "predicate": {"value": "http://www.w3.org/ns/shacl#path"},
+                        "object": {"value": "http://example.org/path1"},
+                    }
                 ]
             }
         }
 
         mock_sparql_instance.query.return_value.convert.side_effect = [
-            violations_response, shape_details_response, property_triples_response
+            violations_response,
+            shape_details_response,
+            property_triples_response,
         ]
 
         homepage_service.generate_validation_details_report(limit=1)
@@ -264,7 +287,6 @@ class TestHomepageServiceIntegration:
                 ?violation a <http://www.w3.org/ns/shacl#ValidationResult> .
             }
             """,
-
             # Complex UNION query (similar to our fixed function)
             """
             SELECT (COUNT(DISTINCT ?nodeShape) AS ?violatedNodeShapesCount)
@@ -288,7 +310,6 @@ class TestHomepageServiceIntegration:
                 }
             }
             """,
-
             # Aggregation query
             """
             SELECT ?path (COUNT(?violation) AS ?violationCount)
@@ -298,7 +319,7 @@ class TestHomepageServiceIntegration:
             }
             GROUP BY ?path
             ORDER BY DESC(?violationCount)
-            """
+            """,
         ]
 
         for query in queries_to_test:
@@ -308,9 +329,12 @@ class TestHomepageServiceIntegration:
             assert query.count("{") == query.count("}")  # Balanced braces
 
             # Check for proper SPARQL keywords
-            assert any(keyword in query.upper() for keyword in ["SELECT", "ASK", "CONSTRUCT", "DESCRIBE"])
+            assert any(
+                keyword in query.upper()
+                for keyword in ["SELECT", "ASK", "CONSTRUCT", "DESCRIBE"]
+            )
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_query_parameter_injection_safety(self, mock_sparql_wrapper):
         """Test that query parameters are safely handled to prevent injection."""
         from functions import homepage_service
@@ -322,11 +346,13 @@ class TestHomepageServiceIntegration:
         }
 
         # Test with potentially malicious URI
-        malicious_uri = "http://example.org/graph'; DROP GRAPH <http://example.org/important>; --"
+        malicious_uri = (
+            "http://example.org/graph'; DROP GRAPH <http://example.org/important>; --"
+        )
 
         homepage_service.get_number_of_node_shapes_with_violations(
             shapes_graph_uri=malicious_uri,
-            validation_report_uri="http://example.org/validation"
+            validation_report_uri="http://example.org/validation",
         )
 
         call_args = mock_sparql_instance.setQuery.call_args[0][0]
@@ -339,7 +365,7 @@ class TestHomepageServiceIntegration:
         assert "DROP GRAPH" not in query.upper()
         assert "--" not in query  # SQL comment syntax
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_query_performance_considerations(self, mock_sparql_wrapper):
         """Test that queries include performance optimizations."""
         from functions import homepage_service
@@ -363,7 +389,7 @@ class TestHomepageServiceIntegration:
         graph_count = query.count("GRAPH")
         assert graph_count >= 2  # Should query both shapes and validation graphs
 
-    @patch('functions.homepage_service.SPARQLWrapper')
+    @patch("functions.homepage_service.SPARQLWrapper")
     def test_most_violated_node_shape_query_optimization(self, mock_sparql_wrapper):
         """Test query optimization for most violated node shape."""
         from functions import homepage_service
@@ -374,13 +400,18 @@ class TestHomepageServiceIntegration:
         mock_response.json.return_value = {
             "results": {
                 "bindings": [
-                    {"nodeShape": {"value": "http://example.org/shape1"}, "propertyShape": {"value": "http://example.org/prop1"}}
+                    {
+                        "nodeShape": {"value": "http://example.org/shape1"},
+                        "propertyShape": {"value": "http://example.org/prop1"},
+                    }
                 ]
             }
         }
         mock_response.raise_for_status.return_value = None
 
-        with patch('functions.homepage_service.requests.get', return_value=mock_response):
+        with patch(
+            "functions.homepage_service.requests.get", return_value=mock_response
+        ):
             # Mock the SPARQL wrapper for the second part
             mock_sparql_instance = Mock()
             mock_sparql_wrapper.return_value = mock_sparql_instance

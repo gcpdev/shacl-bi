@@ -13,16 +13,18 @@ from pathlib import Path
 # Setup basic logging for test runner
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger(__name__)
+
 
 def run_command(cmd, cwd=None):
     """Run a command and return the result."""
     logger.info(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
     return result
+
 
 def install_test_dependencies():
     """Install test dependencies."""
@@ -35,13 +37,14 @@ def install_test_dependencies():
     logger.info("Dependencies installed successfully.")
     return True
 
+
 def run_tests_basic():
     """Run basic tests without coverage."""
     cmd = [sys.executable, "-m", "pytest", "-v", "--tb=short"]
 
     # Add path to PYTHONPATH
     env = os.environ.copy()
-    env['PYTHONPATH'] = str(Path.cwd())
+    env["PYTHONPATH"] = str(Path.cwd())
 
     result = subprocess.run(cmd, env=env, capture_output=True, text=True)
 
@@ -51,6 +54,7 @@ def run_tests_basic():
         logger.error(f"STDERR:\n{result.stderr}")
 
     return result.returncode == 0
+
 
 def main():
     """Main test runner."""
@@ -81,6 +85,7 @@ def main():
     else:
         logger.error("Test execution failed!")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

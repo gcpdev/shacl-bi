@@ -5,11 +5,13 @@ Test script to verify the new example value functionality in violation details
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from rdflib import Graph
 from functions.xpshacl_engine.extended_shacl_validator import ExtendedShaclValidator
 import exrex
+
 
 def test_example_value_generation():
     """Test the example value generation for pattern constraints"""
@@ -47,8 +49,8 @@ def test_example_value_generation():
         # Check for pattern violations specifically
         if "PatternConstraintComponent" in violation.constraint_id:
             print("=== PATTERN VIOLATION ===")
-            if 'pattern' in violation.context:
-                pattern = violation.context['pattern']
+            if "pattern" in violation.context:
+                pattern = violation.context["pattern"]
                 print(f"Pattern: {pattern}")
 
                 # Test exrex directly
@@ -57,8 +59,10 @@ def test_example_value_generation():
                     print(f"Generated Example: {example}")
 
                     # Compare with our implementation
-                    if 'exampleValue' in violation.context:
-                        print(f"Our Implementation: {violation.context['exampleValue']}")
+                    if "exampleValue" in violation.context:
+                        print(
+                            f"Our Implementation: {violation.context['exampleValue']}"
+                        )
                         print("[SUCCESS] Example values generated successfully!")
                     else:
                         print("[ERROR] Example value not found in context")
@@ -69,6 +73,7 @@ def test_example_value_generation():
 
         print("-" * 50)
 
+
 def test_simple_routes_context():
     """Test the context generation in simple routes"""
     print("\n=== Testing Simple Routes Context Generation ===")
@@ -78,39 +83,40 @@ def test_simple_routes_context():
 
         # Test a pattern violation
         test_violation = {
-            'constraint_id': 'http://www.w3.org/ns/shacl#PatternConstraintComponent',
-            'property_path': 'http://example.org/ns#employeeId',
-            'focus_node': 'http://example.org/emp_manager'
+            "constraint_id": "http://www.w3.org/ns/shacl#PatternConstraintComponent",
+            "property_path": "http://example.org/ns#employeeId",
+            "focus_node": "http://example.org/emp_manager",
         }
 
-        context = _get_violation_context(test_violation, 'test_session')
+        context = _get_violation_context(test_violation, "test_session")
         print("Pattern Context Test:")
         print(f"Context: {context}")
 
-        if 'exampleValue' in context:
+        if "exampleValue" in context:
             print(f"[SUCCESS] Example value: {context['exampleValue']}")
         else:
             print("[ERROR] No example value generated")
 
         # Test an InConstraint violation (from PHOENIX data)
         in_violation = {
-            'constraint_id': 'http://www.w3.org/ns/shacl#InConstraintComponent',
-            'property_path': 'http://example.org/ns#status',
-            'focus_node': 'http://example.org/ns#proj_laureaus',
-            'value': 'Archived'
+            "constraint_id": "http://www.w3.org/ns/shacl#InConstraintComponent",
+            "property_path": "http://example.org/ns#status",
+            "focus_node": "http://example.org/ns#proj_laureaus",
+            "value": "Archived",
         }
 
-        in_context = _get_violation_context(in_violation, 'test_session')
+        in_context = _get_violation_context(in_violation, "test_session")
         print("\nInConstraint Context Test:")
         print(f"Context: {in_context}")
 
-        if 'allowedValues' in in_context:
+        if "allowedValues" in in_context:
             print(f"[SUCCESS] Allowed values: {in_context['allowedValues']}")
         else:
             print("[ERROR] No allowed values generated")
 
     except Exception as e:
         print(f"[ERROR] Error testing simple routes: {e}")
+
 
 def test_in_constraint_data():
     """Test InConstraint violations from comprehensive data"""
@@ -130,7 +136,9 @@ def test_in_constraint_data():
     validator = ExtendedShaclValidator(shapes_graph)
     violations = validator.validate(data_graph)
 
-    in_constraint_violations = [v for v in violations if "InConstraintComponent" in v.constraint_id]
+    in_constraint_violations = [
+        v for v in violations if "InConstraintComponent" in v.constraint_id
+    ]
 
     print(f"Found {len(in_constraint_violations)} InConstraint violations:")
 
@@ -146,6 +154,7 @@ def test_in_constraint_data():
                 print(f"  {key}: {value}")
 
         print("-" * 50)
+
 
 if __name__ == "__main__":
     test_example_value_generation()

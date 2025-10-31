@@ -1,11 +1,13 @@
 from SPARQLWrapper import SPARQLWrapper, JSON
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import ENDPOINT_URL, SHAPES_GRAPH_URI, VALIDATION_REPORT_URI, SHACL_FEATURES
 import requests
 import math
-#from bs4 import BeautifulSoup
+
+# from bs4 import BeautifulSoup
 import time
 import csv
 
@@ -36,10 +38,10 @@ Key functions:
 
 
 # Global variables
-#ENDPOINT_URL = "http://localhost:8890/sparql"
-#SHAPES_GRAPH_URI = "http://ex.org/ShapesGraph"
-#VALIDATION_REPORT_URI = "http://ex.org/ValidationReport"
-#SHACL_FEATURES = [
+# ENDPOINT_URL = "http://localhost:8890/sparql"
+# SHAPES_GRAPH_URI = "http://ex.org/ShapesGraph"
+# VALIDATION_REPORT_URI = "http://ex.org/ValidationReport"
+# SHACL_FEATURES = [
 #    "http://www.w3.org/ns/shacl#class",
 #    "http://www.w3.org/ns/shacl#datatype",
 #    "http://www.w3.org/ns/shacl#NodeKind",
@@ -68,10 +70,12 @@ Key functions:
 #    "http://www.w3.org/ns/shacl#closed",
 #    "http://www.w3.org/ns/shacl#hasValue",
 #    "http://www.w3.org/ns/shacl#in"
-#]
+# ]
 
 
-def get_number_of_violations_in_validation_report(graph_uri: str = VALIDATION_REPORT_URI) -> int:
+def get_number_of_violations_in_validation_report(
+    graph_uri: str = VALIDATION_REPORT_URI,
+) -> int:
     """
     Query the Virtuoso SPARQL endpoint to get the total number of violations
     in the specified validation report graph.
@@ -84,7 +88,8 @@ def get_number_of_violations_in_validation_report(graph_uri: str = VALIDATION_RE
     """
     # Configure SPARQL query to count the number of sh:ValidationResult instances
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
     SELECT (COUNT(?violation) AS ?violationCount)
     FROM <{graph_uri}>
     WHERE {{
@@ -92,7 +97,8 @@ def get_number_of_violations_in_validation_report(graph_uri: str = VALIDATION_RE
                 <http://www.w3.org/ns/shacl#result> ?violation .
         ?violation a <http://www.w3.org/ns/shacl#ValidationResult> .
         }}
-    """)
+    """
+    )
 
     # Set the return format to JSON
     sparql.setReturnFormat(JSON)
@@ -102,7 +108,9 @@ def get_number_of_violations_in_validation_report(graph_uri: str = VALIDATION_RE
         results = sparql.query().convert()
 
         # Extract the count from the results
-        violation_count = int(results["results"]["bindings"][0]["violationCount"]["value"])
+        violation_count = int(
+            results["results"]["bindings"][0]["violationCount"]["value"]
+        )
 
         return violation_count
 
@@ -123,13 +131,15 @@ def get_number_of_node_shapes(graph_uri: str = SHAPES_GRAPH_URI) -> int:
     """
     # Configure SPARQL query to count Node Shapes
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT (COUNT(DISTINCT ?nodeShape) AS ?nodeShapesCount)
         FROM <{graph_uri}>
         WHERE {{
             ?nodeShape a <http://www.w3.org/ns/shacl#NodeShape> .
         }}
-    """)
+    """
+    )
 
     # Set the return format to JSON
     sparql.setReturnFormat(JSON)
@@ -138,12 +148,17 @@ def get_number_of_node_shapes(graph_uri: str = SHAPES_GRAPH_URI) -> int:
     results = sparql.query().convert()
 
     # Extract the count from the results
-    node_shapes_count = int(results["results"]["bindings"][0]["nodeShapesCount"]["value"])
+    node_shapes_count = int(
+        results["results"]["bindings"][0]["nodeShapesCount"]["value"]
+    )
 
-    return node_shapes_count 
+    return node_shapes_count
 
 
-def get_number_of_node_shapes_with_violations(shapes_graph_uri: str = SHAPES_GRAPH_URI, validation_report_uri: str = VALIDATION_REPORT_URI) -> int:
+def get_number_of_node_shapes_with_violations(
+    shapes_graph_uri: str = SHAPES_GRAPH_URI,
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> int:
     """
     Query the Virtuoso SPARQL endpoint to calculate how many Node Shapes in the Shapes Graph
     have at least one violation in the Validation Report.
@@ -157,7 +172,8 @@ def get_number_of_node_shapes_with_violations(shapes_graph_uri: str = SHAPES_GRA
     """
     # Configure SPARQL query
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT (COUNT(DISTINCT ?nodeShape) AS ?violatedNodeShapesCount)
         WHERE {{
             # Get all node shapes from the shapes graph
@@ -183,7 +199,8 @@ def get_number_of_node_shapes_with_violations(shapes_graph_uri: str = SHAPES_GRA
                 }}
             }}
         }}
-    """)
+    """
+    )
 
     # Set the return format to JSON
     sparql.setReturnFormat(JSON)
@@ -192,7 +209,9 @@ def get_number_of_node_shapes_with_violations(shapes_graph_uri: str = SHAPES_GRA
     results = sparql.query().convert()
 
     # Extract the count from the results
-    violated_node_shapes_count = int(results["results"]["bindings"][0]["violatedNodeShapesCount"]["value"])
+    violated_node_shapes_count = int(
+        results["results"]["bindings"][0]["violatedNodeShapesCount"]["value"]
+    )
 
     return violated_node_shapes_count
 
@@ -210,13 +229,15 @@ def get_number_of_paths_in_shapes_graph(graph_uri: str = SHAPES_GRAPH_URI) -> in
     """
     # Configure SPARQL query
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT (COUNT(DISTINCT ?path) AS ?pathCount)
         FROM <{graph_uri}>
         WHERE {{
             ?propertyShape <http://www.w3.org/ns/shacl#path> ?path .
         }}
-    """)
+    """
+    )
 
     # Set the return format to JSON
     sparql.setReturnFormat(JSON)
@@ -229,7 +250,10 @@ def get_number_of_paths_in_shapes_graph(graph_uri: str = SHAPES_GRAPH_URI) -> in
 
     return path_count
 
-def get_number_of_paths_with_violations(validation_report_uri: str = VALIDATION_REPORT_URI) -> int:
+
+def get_number_of_paths_with_violations(
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> int:
     """
     Query the Virtuoso SPARQL endpoint to calculate the number of unique paths (sh:resultPath values)
     in the Validation Report that caused violations.
@@ -242,13 +266,15 @@ def get_number_of_paths_with_violations(validation_report_uri: str = VALIDATION_
     """
     # Configure SPARQL query
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT (COUNT(DISTINCT ?path) AS ?pathCount)
         FROM <{validation_report_uri}>
         WHERE {{
             ?violation <http://www.w3.org/ns/shacl#resultPath> ?path .
         }}
-    """)
+    """
+    )
 
     # Set the return format to JSON
     sparql.setReturnFormat(JSON)
@@ -262,7 +288,9 @@ def get_number_of_paths_with_violations(validation_report_uri: str = VALIDATION_
     return path_count
 
 
-def get_number_of_focus_nodes_in_validation_report(validation_report_uri: str = VALIDATION_REPORT_URI) -> int:
+def get_number_of_focus_nodes_in_validation_report(
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> int:
     """
     Query the Virtuoso SPARQL endpoint to calculate the number of unique sh:focusNode values
     in the Validation Report.
@@ -275,7 +303,8 @@ def get_number_of_focus_nodes_in_validation_report(validation_report_uri: str = 
     """
     # Configure SPARQL query
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
     SELECT (COUNT(DISTINCT ?focusNode) AS ?focusNodeCount)
     FROM <{validation_report_uri}>
     WHERE {{
@@ -287,7 +316,8 @@ def get_number_of_focus_nodes_in_validation_report(validation_report_uri: str = 
 
         FILTER(isBlank(?violation))
     }}
-""")
+"""
+    )
 
     # Set the return format to JSON
     sparql.setReturnFormat(JSON)
@@ -313,13 +343,15 @@ def count_triples(validation_report_uri: str = VALIDATION_REPORT_URI) -> int:
     """
     # Configure SPARQL query to count triples
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT (COUNT(*) AS ?tripleCount)
         FROM <{validation_report_uri}>
         WHERE {{
             ?s ?p ?o .
         }}
-    """)
+    """
+    )
 
     # Set the return format to JSON
     sparql.setReturnFormat(JSON)
@@ -333,7 +365,10 @@ def count_triples(validation_report_uri: str = VALIDATION_REPORT_URI) -> int:
     return triple_count
 
 
-def get_violations_per_node_shape(shapes_graph_uri: str = SHAPES_GRAPH_URI, validation_report_uri: str = VALIDATION_REPORT_URI) -> list:
+def get_violations_per_node_shape(
+    shapes_graph_uri: str = SHAPES_GRAPH_URI,
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> list:
     """
     Query the Virtuoso SPARQL endpoint to calculate the number of violations for each Node Shape
     in the Shapes Graph, based on the associated Property Shapes in the Validation Report.
@@ -347,14 +382,16 @@ def get_violations_per_node_shape(shapes_graph_uri: str = SHAPES_GRAPH_URI, vali
     """
     # Configure SPARQL query to get Node Shapes and their associated Property Shapes
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT DISTINCT ?nodeShape ?propertyShape
         FROM <{shapes_graph_uri}>
         WHERE {{
             ?nodeShape a <http://www.w3.org/ns/shacl#NodeShape> ;
                        <http://www.w3.org/ns/shacl#property> ?propertyShape .
         }}
-    """)
+    """
+    )
 
     # Set the return format to JSON
     sparql.setReturnFormat(JSON)
@@ -375,24 +412,27 @@ def get_violations_per_node_shape(shapes_graph_uri: str = SHAPES_GRAPH_URI, vali
     # For each Node Shape, calculate the number of violations
     for node_shape, property_shapes in node_shapes_map.items():
         property_shapes_values = " ".join([f"<{uri}>" for uri in property_shapes])
-        sparql.setQuery(f"""
+        sparql.setQuery(
+            f"""
             SELECT (COUNT(?violation) AS ?violationCount)
             FROM <{validation_report_uri}>
             WHERE {{
                 ?violation <http://www.w3.org/ns/shacl#sourceShape> ?propertyShape .
                 VALUES ?propertyShape {{ {property_shapes_values} }}
             }}
-        """)
+        """
+        )
         validation_results = sparql.query().convert()
 
         # Extract the violation count for the current Node Shape
-        violation_count = int(validation_results["results"]["bindings"][0]["violationCount"]["value"])
+        violation_count = int(
+            validation_results["results"]["bindings"][0]["violationCount"]["value"]
+        )
 
         # Append the result to the list
-        violations_per_node_shape.append({
-            "NodeShapeName": node_shape,
-            "NumViolations": violation_count
-        })
+        violations_per_node_shape.append(
+            {"NodeShapeName": node_shape, "NumViolations": violation_count}
+        )
 
     return violations_per_node_shape
 
@@ -410,7 +450,8 @@ def get_violations_per_path(validation_report_uri: str = VALIDATION_REPORT_URI) 
     """
     # Configure SPARQL query to count violations per result path
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT ?path (COUNT(?violation) AS ?violationCount)
         FROM <{validation_report_uri}>
         WHERE {{
@@ -418,7 +459,8 @@ def get_violations_per_path(validation_report_uri: str = VALIDATION_REPORT_URI) 
         }}
         GROUP BY ?path
         ORDER BY DESC(?violationCount)
-    """)
+    """
+    )
 
     # Set the return format to JSON
     sparql.setReturnFormat(JSON)
@@ -430,7 +472,7 @@ def get_violations_per_path(validation_report_uri: str = VALIDATION_REPORT_URI) 
     violations_per_path = [
         {
             "PathName": result["path"]["value"],
-            "NumViolations": int(result["violationCount"]["value"])
+            "NumViolations": int(result["violationCount"]["value"]),
         }
         for result in results["results"]["bindings"]
     ]
@@ -438,8 +480,9 @@ def get_violations_per_path(validation_report_uri: str = VALIDATION_REPORT_URI) 
     return violations_per_path
 
 
-
-def get_violations_per_focus_node(validation_report_uri: str = VALIDATION_REPORT_URI) -> list:
+def get_violations_per_focus_node(
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> list:
     """
     Query the Virtuoso SPARQL endpoint to calculate the number of violations for each unique sh:focusNode
     in the Validation Report.
@@ -452,7 +495,8 @@ def get_violations_per_focus_node(validation_report_uri: str = VALIDATION_REPORT
     """
     # Configure SPARQL query to count violations per focus node
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT ?focusNode (COUNT(?violation) AS ?violationCount)
         FROM <{validation_report_uri}>
         WHERE {{
@@ -460,7 +504,8 @@ def get_violations_per_focus_node(validation_report_uri: str = VALIDATION_REPORT
         }}
         GROUP BY ?focusNode
         ORDER BY DESC(?violationCount)
-    """)
+    """
+    )
 
     # Set the return format to JSON
     sparql.setReturnFormat(JSON)
@@ -472,16 +517,17 @@ def get_violations_per_focus_node(validation_report_uri: str = VALIDATION_REPORT
     violations_per_focus_node = [
         {
             "FocusNodeName": result["focusNode"]["value"],
-            "NumViolations": int(result["violationCount"]["value"])
+            "NumViolations": int(result["violationCount"]["value"]),
         }
         for result in results["results"]["bindings"]
     ]
 
     return violations_per_focus_node
 
+
 def distribution_of_violations_per_shape(
     shapes_graph_uri: str = SHAPES_GRAPH_URI,
-    validation_report_uri: str = VALIDATION_REPORT_URI
+    validation_report_uri: str = VALIDATION_REPORT_URI,
 ) -> dict:
     """
     Prepare data for a bar chart showing the frequency of Node Shapes in different violation ranges.
@@ -495,7 +541,9 @@ def distribution_of_violations_per_shape(
     """
     try:
         # Step 1: Get the violation data for each Node Shape
-        violations_data = get_violations_per_node_shape(shapes_graph_uri, validation_report_uri)
+        violations_data = get_violations_per_node_shape(
+            shapes_graph_uri, validation_report_uri
+        )
 
         # Step 2: Handle empty data case
         if not violations_data:
@@ -514,8 +562,12 @@ def distribution_of_violations_per_shape(
 
         # Step 4: Calculate the range size and labels
         num_bins = 10  # Number of bins (bars) for the chart
-        bin_size = max(1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0))  # Ensure at least size 1
-        labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
+        bin_size = max(
+            1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0)
+        )  # Ensure at least size 1
+        labels = [
+            f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)
+        ]
 
         # Step 5: Initialize frequency counts for each bin
         frequencies = [0] * num_bins
@@ -523,7 +575,9 @@ def distribution_of_violations_per_shape(
         # Step 6: Count the number of Node Shapes in each bin
         for item in violations_data:
             num_violations = item["NumViolations"]
-            bin_index = min(num_violations // bin_size, num_bins - 1)  # Ensure the last bin includes the max value
+            bin_index = min(
+                num_violations // bin_size, num_bins - 1
+            )  # Ensure the last bin includes the max value
             frequencies[bin_index] += 1
 
         # Step 7: Prepare the final data format for the bar chart
@@ -553,7 +607,9 @@ def distribution_of_violations_per_shape(
         }
 
 
-def distribution_of_violations_per_path(validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
+def distribution_of_violations_per_path(
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> dict:
     """
     Prepare data for a bar chart showing the distribution of violations per unique sh:resultPath
     in the Validation Report, grouped by violation count ranges.
@@ -585,8 +641,12 @@ def distribution_of_violations_per_path(validation_report_uri: str = VALIDATION_
 
         # Step 4: Calculate the range size and labels
         num_bins = 10  # Number of bins (bars) for the chart
-        bin_size = max(1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0))  # Ensure at least size 1
-        labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
+        bin_size = max(
+            1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0)
+        )  # Ensure at least size 1
+        labels = [
+            f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)
+        ]
 
         # Step 5: Initialize frequency counts for each bin
         frequencies = [0] * num_bins
@@ -594,7 +654,9 @@ def distribution_of_violations_per_path(validation_report_uri: str = VALIDATION_
         # Step 6: Count the number of paths in each bin
         for item in violations_data:
             num_violations = item["NumViolations"]
-            bin_index = min(num_violations // bin_size, num_bins - 1)  # Ensure the last bin includes the max value
+            bin_index = min(
+                num_violations // bin_size, num_bins - 1
+            )  # Ensure the last bin includes the max value
             frequencies[bin_index] += 1
 
         # Step 7: Prepare the final data format for the bar chart
@@ -624,7 +686,9 @@ def distribution_of_violations_per_path(validation_report_uri: str = VALIDATION_
         }
 
 
-def distribution_of_violations_per_focus_node(validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
+def distribution_of_violations_per_focus_node(
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> dict:
     """
     Prepare data for a bar chart showing the distribution of violations per unique sh:focusNode
     in the Validation Report, grouped by violation count ranges.
@@ -656,8 +720,12 @@ def distribution_of_violations_per_focus_node(validation_report_uri: str = VALID
 
         # Step 4: Calculate the range size and labels
         num_bins = 10  # Number of bins (bars) for the chart
-        bin_size = max(1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0))  # Ensure at least size 1
-        labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
+        bin_size = max(
+            1, (max_violations // num_bins) + (1 if max_violations % num_bins else 0)
+        )  # Ensure at least size 1
+        labels = [
+            f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)
+        ]
 
         # Step 5: Initialize frequency counts for each bin
         frequencies = [0] * num_bins
@@ -665,7 +733,9 @@ def distribution_of_violations_per_focus_node(validation_report_uri: str = VALID
         # Step 6: Count the number of focus nodes in each bin
         for item in violations_data:
             num_violations = item["NumViolations"]
-            bin_index = min(num_violations // bin_size, num_bins - 1)  # Ensure the last bin includes the max value
+            bin_index = min(
+                num_violations // bin_size, num_bins - 1
+            )  # Ensure the last bin includes the max value
             frequencies[bin_index] += 1
 
         # Step 7: Prepare the final data format for the bar chart
@@ -695,7 +765,6 @@ def distribution_of_violations_per_focus_node(validation_report_uri: str = VALID
         }
 
 
-
 def get_prefixes_from_endpoint(endpoint_url: str) -> dict:
     """
     Retrieve prefixes defined in the SPARQL endpoint using the `nsdecl` query.
@@ -709,13 +778,13 @@ def get_prefixes_from_endpoint(endpoint_url: str) -> dict:
     try:
         # Construct the nsdecl URL
         nsdecl_url = f"{endpoint_url}?help=nsdecl"
-        
+
         # Send an HTTP GET request
         response = requests.get(nsdecl_url)
         response.raise_for_status()  # Raise an error for HTTP issues
 
         # Parse the HTML response
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, "html.parser")
 
         # Extract prefixes and namespaces
         prefixes = {}
@@ -731,7 +800,9 @@ def get_prefixes_from_endpoint(endpoint_url: str) -> dict:
         else:
             # Handle plain text response
             for line in response.text.splitlines():
-                if line.strip() and "\t" in line:  # Assume tab-separated prefix-namespace pairs
+                if (
+                    line.strip() and "\t" in line
+                ):  # Assume tab-separated prefix-namespace pairs
                     prefix, namespace = line.split("\t", 1)
                     prefixes[prefix.strip()] = namespace.strip()
 
@@ -754,7 +825,8 @@ def parse_rdf_list(node_id: str, shapes_graph_uri: str) -> list:
         list: A list of items in the RDF list.
     """
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT ?item
         FROM <{shapes_graph_uri}>
         WHERE {{
@@ -762,7 +834,8 @@ def parse_rdf_list(node_id: str, shapes_graph_uri: str) -> list:
                         <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>* ?restNode .
             FILTER(?restNode != <http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>)
         }}
-    """)
+    """
+    )
     sparql.setReturnFormat(JSON)
     results = sparql.query().convert()
 
@@ -774,7 +847,7 @@ def generate_validation_details_report(
     validation_report_uri: str = VALIDATION_REPORT_URI,
     shapes_graph_uri: str = SHAPES_GRAPH_URI,
     limit: int = 10,
-    offset: int = 0
+    offset: int = 0,
 ) -> dict:
     """
     Generate a detailed validation report with prefixes, violations, and shape details.
@@ -793,7 +866,8 @@ def generate_validation_details_report(
 
     # Step 2: Query validation report for violations
     sparql = SPARQLWrapper(ENDPOINT_URL)
-    sparql.setQuery(f"""
+    sparql.setQuery(
+        f"""
         SELECT DISTINCT ?violation ?focusNode ?resultPath ?value ?message ?sourceShape ?severity ?constraintComponent
         FROM <{validation_report_uri}>
         WHERE {{
@@ -808,7 +882,8 @@ def generate_validation_details_report(
         }}
         LIMIT {limit}
         OFFSET {offset}
-    """)
+    """
+    )
     sparql.setReturnFormat(JSON)
     results = sparql.query().convert()
 
@@ -824,7 +899,8 @@ def generate_validation_details_report(
         constraint_component = result["constraintComponent"]["value"]
 
         # Query shapes graph for shape details
-        sparql.setQuery(f"""
+        sparql.setQuery(
+            f"""
             SELECT DISTINCT ?nodeShape ?targetClass ?targetNode ?targetSubjectsOf ?targetObjectsOf
             FROM <{shapes_graph_uri}>
             WHERE {{
@@ -834,26 +910,37 @@ def generate_validation_details_report(
                 OPTIONAL {{ ?nodeShape <http://www.w3.org/ns/shacl#targetSubjectsOf> ?targetSubjectsOf . }}
                 OPTIONAL {{ ?nodeShape <http://www.w3.org/ns/shacl#targetObjectsOf> ?targetObjectsOf . }}
             }}
-        """)
+        """
+        )
         shape_details_results = sparql.query().convert()
 
         shape_details_bindings = shape_details_results["results"]["bindings"]
 
         shape_details = {
-            "Shape": shape_details_bindings[0].get("nodeShape", {}).get("value", "") if shape_details_bindings else "",
+            "Shape": (
+                shape_details_bindings[0].get("nodeShape", {}).get("value", "")
+                if shape_details_bindings
+                else ""
+            ),
             "Type": "sh:NodeShape",
-            "TargetClass": shape_details_bindings[0].get("targetClass", {}).get("value", "") if shape_details_bindings else "",
-            "Properties": []
+            "TargetClass": (
+                shape_details_bindings[0].get("targetClass", {}).get("value", "")
+                if shape_details_bindings
+                else ""
+            ),
+            "Properties": [],
         }
 
         # Fetch all triples for the property shape
-        sparql.setQuery(f"""
+        sparql.setQuery(
+            f"""
             SELECT ?predicate ?object
             FROM <{shapes_graph_uri}>
             WHERE {{
                 <{source_shape}> ?predicate ?object .
             }}
-        """)
+        """
+        )
         property_shape_results = sparql.query().convert()
 
         for triple in property_shape_results["results"]["bindings"]:
@@ -861,13 +948,12 @@ def generate_validation_details_report(
             obj = triple["object"]["value"]
 
             # Handle sh:in RDF list
-            if predicate == "http://www.w3.org/ns/shacl#in" and (obj.startswith("nodeID://") or obj.startswith("_:")):
+            if predicate == "http://www.w3.org/ns/shacl#in" and (
+                obj.startswith("nodeID://") or obj.startswith("_:")
+            ):
                 obj = parse_rdf_list(obj, shapes_graph_uri)
 
-            shape_details["Properties"].append({
-                "Predicate": predicate,
-                "Object": obj
-            })
+            shape_details["Properties"].append({"Predicate": predicate, "Object": obj})
 
         # Construct violation entry
         violation_entry = {
@@ -880,27 +966,44 @@ def generate_validation_details_report(
                     "PropertyShape": source_shape,
                     "Severity": severity,
                     "TargetClass": shape_details["TargetClass"],
-                    "TargetNode": shape_details_bindings[0].get("targetNode", {}).get("value", "") if shape_details_bindings else "",
-                    "TargetSubjectsOf": shape_details_bindings[0].get("targetSubjectsOf", {}).get("value", "") if shape_details_bindings else "",
-                    "TargetObjectsOf": shape_details_bindings[0].get("targetObjectsOf", {}).get("value", "") if shape_details_bindings else "",
+                    "TargetNode": (
+                        shape_details_bindings[0].get("targetNode", {}).get("value", "")
+                        if shape_details_bindings
+                        else ""
+                    ),
+                    "TargetSubjectsOf": (
+                        shape_details_bindings[0]
+                        .get("targetSubjectsOf", {})
+                        .get("value", "")
+                        if shape_details_bindings
+                        else ""
+                    ),
+                    "TargetObjectsOf": (
+                        shape_details_bindings[0]
+                        .get("targetObjectsOf", {})
+                        .get("value", "")
+                        if shape_details_bindings
+                        else ""
+                    ),
                     "NodeShape": shape_details["Shape"],
                     "ConstraintComponent": constraint_component,
                 },
-                "shape_details": shape_details
+                "shape_details": shape_details,
             }
         }
 
         violations.append(violation_entry)
 
     # Final report
-    report = {
-        "@prefixes": prefixes,
-        "violations": violations
-    }
+    report = {"@prefixes": prefixes, "violations": violations}
 
     return report
 
-def get_most_violated_node_shape(shapes_graph_uri: str = SHAPES_GRAPH_URI, validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
+
+def get_most_violated_node_shape(
+    shapes_graph_uri: str = SHAPES_GRAPH_URI,
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> dict:
     """
     Find the Node Shape in the Shapes Graph with the highest number of violations.
 
@@ -923,7 +1026,9 @@ def get_most_violated_node_shape(shapes_graph_uri: str = SHAPES_GRAPH_URI, valid
                  sh:property ?propertyShape .
     }}
     """
-    response_shapes = requests.get(ENDPOINT_URL, params={"query": query_shapes, "format": "json"})
+    response_shapes = requests.get(
+        ENDPOINT_URL, params={"query": query_shapes, "format": "json"}
+    )
     response_shapes.raise_for_status()
     shapes_results = response_shapes.json()["results"]["bindings"]
 
@@ -954,7 +1059,9 @@ def get_most_violated_node_shape(shapes_graph_uri: str = SHAPES_GRAPH_URI, valid
           VALUES ?propertyShape {{ {property_shapes_values} }}
         }}
         """
-        response_violations = requests.get(ENDPOINT_URL, params={"query": query_violations, "format": "json"})
+        response_violations = requests.get(
+            ENDPOINT_URL, params={"query": query_violations, "format": "json"}
+        )
         response_violations.raise_for_status()
         violations_results = response_violations.json()["results"]["bindings"]
 
@@ -964,13 +1071,17 @@ def get_most_violated_node_shape(shapes_graph_uri: str = SHAPES_GRAPH_URI, valid
         node_shape_violations[node_shape] = total_violations
 
     # Step 3: Find the Node Shape with the highest number of violations
-    most_violated_node_shape = max(node_shape_violations, key=node_shape_violations.get, default=None)
-    max_violations = node_shape_violations[most_violated_node_shape] if most_violated_node_shape else 0
-    
-    return {
-        "nodeShape": most_violated_node_shape,
-        "violations": max_violations
-    }
+    most_violated_node_shape = max(
+        node_shape_violations, key=node_shape_violations.get, default=None
+    )
+    max_violations = (
+        node_shape_violations[most_violated_node_shape]
+        if most_violated_node_shape
+        else 0
+    )
+
+    return {"nodeShape": most_violated_node_shape, "violations": max_violations}
+
 
 def get_most_violated_path(validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
     """
@@ -1015,7 +1126,9 @@ def get_most_violated_path(validation_report_uri: str = VALIDATION_REPORT_URI) -
         return {"path": None, "violations": 0}
 
 
-def get_most_violated_focus_node(validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
+def get_most_violated_focus_node(
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> dict:
     """
     Find the focus node in the validation report that caused the most violations.
 
@@ -1058,7 +1171,9 @@ def get_most_violated_focus_node(validation_report_uri: str = VALIDATION_REPORT_
         return {"focusNode": None, "violations": 0}
 
 
-def get_most_frequent_constraint_component(validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
+def get_most_frequent_constraint_component(
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> dict:
     """
     Find the most frequent constraint component in the validation report.
 
@@ -1096,12 +1211,17 @@ def get_most_frequent_constraint_component(validation_report_uri: str = VALIDATI
     if results:
         most_frequent_component = results[0]["constraintComponent"]["value"]
         occurrence_count = int(results[0]["occurrenceCount"]["value"])
-        return {"constraintComponent": most_frequent_component, "occurrences": occurrence_count}
+        return {
+            "constraintComponent": most_frequent_component,
+            "occurrences": occurrence_count,
+        }
     else:
         return {"constraintComponent": None, "occurrences": 0}
 
 
-def get_distinct_constraint_components_count(validation_report_uri: str = VALIDATION_REPORT_URI) -> int:
+def get_distinct_constraint_components_count(
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> int:
     """
     Find the number of distinct constraint components in the validation report.
 
@@ -1137,9 +1257,11 @@ def get_distinct_constraint_components_count(validation_report_uri: str = VALIDA
         return distinct_count
     else:
         return 0
-    
 
-def get_distinct_constraints_count_in_shapes(shapes_graph_uri: str = SHAPES_GRAPH_URI) -> int:
+
+def get_distinct_constraints_count_in_shapes(
+    shapes_graph_uri: str = SHAPES_GRAPH_URI,
+) -> int:
     """
     Count the number of distinct constraint types (from SHACL_FEATURES) used in the shapes graph.
 
@@ -1182,7 +1304,10 @@ def get_distinct_constraints_count_in_shapes(shapes_graph_uri: str = SHAPES_GRAP
         return 0
 
 
-def get_number_of_constraint_components(shapes_graph_uri: str = SHAPES_GRAPH_URI, validation_report_uri: str = VALIDATION_REPORT_URI) -> int:
+def get_number_of_constraint_components(
+    shapes_graph_uri: str = SHAPES_GRAPH_URI,
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> int:
     """
     Count the total number of constraint components used in the shapes graph.
     Since SHACL constraint components are standard vocabulary, we infer them from property shapes.
@@ -1211,7 +1336,11 @@ def get_number_of_constraint_components(shapes_graph_uri: str = SHAPES_GRAPH_URI
         """
 
         shapes_check_results = virtuoso_service.execute_sparql_query(shapes_check_query)
-        shape_count = int(shapes_check_results["results"]["bindings"][0]["shapeCount"]["value"]) if shapes_check_results["results"]["bindings"] else 0
+        shape_count = (
+            int(shapes_check_results["results"]["bindings"][0]["shapeCount"]["value"])
+            if shapes_check_results["results"]["bindings"]
+            else 0
+        )
 
         if shape_count == 0:
             # If no shapes in graph, estimate total constraint components as a reasonable default
@@ -1254,7 +1383,9 @@ def get_number_of_constraint_components(shapes_graph_uri: str = SHAPES_GRAPH_URI
         results = virtuoso_service.execute_sparql_query(query)
 
         if results["results"]["bindings"]:
-            constraint_count = int(results["results"]["bindings"][0]["constraintCount"]["value"])
+            constraint_count = int(
+                results["results"]["bindings"][0]["constraintCount"]["value"]
+            )
             return constraint_count
         else:
             return 0
@@ -1264,7 +1395,10 @@ def get_number_of_constraint_components(shapes_graph_uri: str = SHAPES_GRAPH_URI
         return 0
 
 
-def get_number_of_constraint_components_with_violations(shapes_graph_uri: str = SHAPES_GRAPH_URI, validation_report_uri: str = VALIDATION_REPORT_URI) -> int:
+def get_number_of_constraint_components_with_violations(
+    shapes_graph_uri: str = SHAPES_GRAPH_URI,
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> int:
     """
     Count the number of constraint components that have violations in the validation report.
     SHACL constraint components are standard vocabulary, so we count distinct ones from violations.
@@ -1297,7 +1431,9 @@ def get_number_of_constraint_components_with_violations(shapes_graph_uri: str = 
         results = virtuoso_service.execute_sparql_query(query)
 
         if results["results"]["bindings"]:
-            violated_constraint_count = int(results["results"]["bindings"][0]["violatedConstraintCount"]["value"])
+            violated_constraint_count = int(
+                results["results"]["bindings"][0]["violatedConstraintCount"]["value"]
+            )
             return violated_constraint_count
         else:
             return 0
@@ -1307,7 +1443,10 @@ def get_number_of_constraint_components_with_violations(shapes_graph_uri: str = 
         return 0
 
 
-def get_most_violated_constraint_component(shapes_graph_uri: str = SHAPES_GRAPH_URI, validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
+def get_most_violated_constraint_component(
+    shapes_graph_uri: str = SHAPES_GRAPH_URI,
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> dict:
     """
     Find the constraint component that has the most violations and is defined in the shapes graph.
 
@@ -1348,11 +1487,15 @@ def get_most_violated_constraint_component(shapes_graph_uri: str = SHAPES_GRAPH_
         results = virtuoso_service.execute_sparql_query(query)
 
         if results["results"]["bindings"]:
-            most_violated_component = results["results"]["bindings"][0]["constraintComponent"]["value"]
-            violation_count = int(results["results"]["bindings"][0]["violationCount"]["value"])
+            most_violated_component = results["results"]["bindings"][0][
+                "constraintComponent"
+            ]["value"]
+            violation_count = int(
+                results["results"]["bindings"][0]["violationCount"]["value"]
+            )
             return {
                 "constraintComponent": most_violated_component,
-                "violations": violation_count
+                "violations": violation_count,
             }
         else:
             return {"constraintComponent": None, "violations": 0}
@@ -1420,7 +1563,9 @@ def get_distribution_of_violations_per_constraint_component(
         bin_size = max(1, math.ceil(max_value / num_bins))
 
         # Generate labels for bins
-        labels = [f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)]
+        labels = [
+            f"{i}-{i + bin_size - 1}" for i in range(0, bin_size * num_bins, bin_size)
+        ]
 
         # Calculate frequencies for each bin
         frequencies = [0] * num_bins
@@ -1450,7 +1595,9 @@ def get_distribution_of_violations_per_constraint_component(
         }
 
 
-def distribution_of_violations_per_path_with_adaptive_bins(validation_report_uri: str = VALIDATION_REPORT_URI) -> dict:
+def distribution_of_violations_per_path_with_adaptive_bins(
+    validation_report_uri: str = VALIDATION_REPORT_URI,
+) -> dict:
     """
     Prepare data for a bar chart showing the distribution of violations per unique sh:resultPath
     in the Validation Report, grouped by adaptive violation count ranges.
@@ -1465,7 +1612,11 @@ def distribution_of_violations_per_path_with_adaptive_bins(validation_report_uri
     violations_data = get_violations_per_path(validation_report_uri)
 
     # Step 2: Extract the violation counts
-    violation_counts = sorted([item["NumViolations"] for item in violations_data]) if violations_data else []
+    violation_counts = (
+        sorted([item["NumViolations"] for item in violations_data])
+        if violations_data
+        else []
+    )
 
     if not violation_counts:
         return {"labels": [], "datasets": [{"label": "Number of Paths", "data": []}]}
@@ -1497,7 +1648,10 @@ def distribution_of_violations_per_path_with_adaptive_bins(validation_report_uri
 
     return bar_chart_data
 
-def benchmark_function_execution(func, runs=10, csv_filename="execution_time_use_case_1_lkg3_schema2.csv"):
+
+def benchmark_function_execution(
+    func, runs=10, csv_filename="execution_time_use_case_1_lkg3_schema2.csv"
+):
     """
     Measures the execution time of a function over multiple runs in milliseconds,
     and saves results to a CSV.
@@ -1527,7 +1681,7 @@ def benchmark_function_execution(func, runs=10, csv_filename="execution_time_use
     print(f"\nAverage execution time: {average_ms:.2f} ms")
 
     # Save to CSV
-    with open(csv_filename, mode='w', newline='') as file:
+    with open(csv_filename, mode="w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["Run", "Execution Time (ms)"])
         for idx, t in enumerate(execution_times_ms, start=1):
@@ -1539,5 +1693,5 @@ def benchmark_function_execution(func, runs=10, csv_filename="execution_time_use
     return {
         "times_ms": execution_times_ms,
         "average_ms": average_ms,
-        "results": results
+        "results": results,
     }

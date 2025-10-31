@@ -15,16 +15,18 @@ from pathlib import Path
 # Setup basic logging for test runner
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger(__name__)
+
 
 def run_command(cmd, cwd=None):
     """Run a command and return the result."""
     logger.info(f"Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
     return result
+
 
 def install_test_dependencies():
     """Install test dependencies."""
@@ -37,10 +39,12 @@ def install_test_dependencies():
     logger.info("Dependencies installed successfully.")
     return True
 
+
 def run_tests_with_coverage(args):
     """Run tests with coverage measurement."""
     test_args = [
-        "-m", "pytest",
+        "-m",
+        "pytest",
         "--cov=functions",
         "--cov=routes",
         "--cov=app.py",
@@ -48,7 +52,7 @@ def run_tests_with_coverage(args):
         "--cov-report=html",
         "--cov-report=term-missing",
         "--cov-report=xml",
-        "--cov-fail-under=90"
+        "--cov-fail-under=90",
     ]
 
     if args.verbose:
@@ -75,11 +79,13 @@ def run_tests_with_coverage(args):
 
     return result.returncode == 0
 
+
 def run_unit_tests_only():
     """Run only unit tests (no integration tests)."""
     cmd = [sys.executable, "-m", "pytest", "-m", "unit", "-v"]
     result = run_command(cmd)
     return result.returncode == 0
+
 
 def run_integration_tests_only():
     """Run only integration tests."""
@@ -87,20 +93,25 @@ def run_integration_tests_only():
     result = run_command(cmd)
     return result.returncode == 0
 
+
 def generate_coverage_badge():
     """Generate coverage badge."""
     try:
         import coverage
+
         cov = coverage.Coverage()
         cov.load()
-        total = cov.report(file=open(os.devnull, 'w'))
+        total = cov.report(file=open(os.devnull, "w"))
 
         # Simple text badge
-        badge_color = "brightgreen" if total >= 90 else "yellow" if total >= 70 else "red"
+        badge_color = (
+            "brightgreen" if total >= 90 else "yellow" if total >= 70 else "red"
+        )
         logger.info(f"\nCoverage Badge: {total:.1f}%")
         logger.info(f"Color: {badge_color}")
     except ImportError:
         logger.info("Coverage module not available for badge generation")
+
 
 def check_test_quality():
     """Check test quality metrics."""
@@ -113,9 +124,9 @@ def check_test_quality():
     # Count test functions
     total_tests = 0
     for test_file in test_files:
-        with open(test_file, 'r') as f:
+        with open(test_file, "r") as f:
             content = f.read()
-            test_count = content.count('def test_')
+            test_count = content.count("def test_")
             total_tests += test_count
     logger.info(f"* Test functions: {total_tests}")
 
@@ -123,7 +134,7 @@ def check_test_quality():
     structure_files = [
         "tests/__init__.py",
         "tests/conftest.py",
-        "tests/requirements.txt"
+        "tests/requirements.txt",
     ]
     missing_files = [f for f in structure_files if not Path(f).exists()]
     if missing_files:
@@ -133,20 +144,33 @@ def check_test_quality():
 
     return len(test_files) > 0 and total_tests > 0
 
+
 def main():
     """Main test runner."""
     parser = argparse.ArgumentParser(description="SHACL-BI Backend Test Runner")
-    parser.add_argument("--install", action="store_true", help="Install test dependencies")
+    parser.add_argument(
+        "--install", action="store_true", help="Install test dependencies"
+    )
     parser.add_argument("--unit", action="store_true", help="Run only unit tests")
-    parser.add_argument("--integration", action="store_true", help="Run only integration tests")
-    parser.add_argument("--coverage", action="store_true", default=True, help="Run tests with coverage")
-    parser.add_argument("--no-coverage", action="store_true", help="Run tests without coverage")
+    parser.add_argument(
+        "--integration", action="store_true", help="Run only integration tests"
+    )
+    parser.add_argument(
+        "--coverage", action="store_true", default=True, help="Run tests with coverage"
+    )
+    parser.add_argument(
+        "--no-coverage", action="store_true", help="Run tests without coverage"
+    )
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--pattern", "-k", help="Run tests matching pattern")
     parser.add_argument("--markers", "-m", help="Run tests with specific markers")
     parser.add_argument("--path", help="Run tests in specific path")
-    parser.add_argument("--quality", action="store_true", help="Check test quality metrics")
-    parser.add_argument("--install-deps", action="store_true", help="Install dependencies first")
+    parser.add_argument(
+        "--quality", action="store_true", help="Check test quality metrics"
+    )
+    parser.add_argument(
+        "--install-deps", action="store_true", help="Install dependencies first"
+    )
 
     args = parser.parse_args()
 
@@ -209,6 +233,7 @@ def main():
     else:
         logger.info("* Test execution failed!")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

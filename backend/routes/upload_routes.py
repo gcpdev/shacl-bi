@@ -27,9 +27,6 @@ def upload_files():
     Uses backend configuration for AI settings
     Implements tenant isolation using session-specific graphs
     """
-    # Debug: Print database credentials being used
-    print(f"DEBUG: Using database credentials - User: {USERNAME}, Password: {PASSWORD}")
-
     try:
         # Check if files are present in the request
         if 'dataFile' not in request.files or 'shapesFile' not in request.files:
@@ -102,6 +99,38 @@ def upload_files():
             )
             print(f"Validation result: conforms={conforms}, has_results={results_graph is not None}")
 
+            # Extract violations from results graph for background processing
+            violations_for_background = []
+            if results_graph:
+                violations_query = """
+                SELECT ?focusNode ?resultMessage ?resultPath ?resultSeverity ?sourceConstraintComponent ?value ?sourceShape
+                WHERE {
+                    ?violation a <http://www.w3.org/ns/shacl#ValidationResult> ;
+                             <http://www.w3.org/ns/shacl#resultMessage> ?resultMessage ;
+                             <http://www.w3.org/ns/shacl#resultSeverity> ?resultSeverity ;
+                             <http://www.w3.org/ns/shacl#sourceConstraintComponent> ?sourceConstraintComponent .
+                    OPTIONAL { ?violation <http://www.w3.org/ns/shacl#focusNode> ?focusNode . }
+                    OPTIONAL { ?violation <http://www.w3.org/ns/shacl#resultPath> ?resultPath . }
+                    OPTIONAL { ?violation <http://www.w3.org/ns/shacl#value> ?value . }
+                    OPTIONAL { ?violation <http://www.w3.org/ns/shacl#sourceShape> ?sourceShape . }
+                }
+                """
+                try:
+                    violation_results = results_graph.query(violations_query)
+                    for result in violation_results:
+                        violation = {
+                            'focus_node': str(result['focusNode']) if result['focusNode'] else None,
+                            'result_path': str(result['resultPath']) if result['resultPath'] else None,
+                            'value': str(result['value']) if result['value'] else None,
+                            'message': str(result['resultMessage']),
+                            'constraint_component': str(result['sourceConstraintComponent']),
+                            'source_shape': str(result['sourceShape']) if result['sourceShape'] else None
+                        }
+                        violations_for_background.append(violation)
+                    print(f"Extracted {len(violations_for_background)} violations for background processing")
+                except Exception as e:
+                    print(f"Error extracting violations for background processing: {e}")
+
             # Load validation results and shapes graph into tenant-specific Virtuoso graphs
             if results_graph:
                 print(f"Storing validation results in Virtuoso graph: {validation_graph_uri}")
@@ -160,6 +189,15 @@ def upload_files():
                     traceback.print_exc()
                     # Continue without storing in Virtuoso - still return validation results
                     violation_count = 0
+
+                # Trigger background AI explanation processing if violations found
+                if violation_count > 0:
+                    try:
+                        from functions.background_processor import submit_explanation_job
+                        submit_explanation_job(session_id, violations_for_background)
+                        print(f"Submitted background AI explanation job for session {session_id} with {len(violations_for_background)} violations")
+                    except Exception as bg_error:
+                        print(f"Error starting background processing: {bg_error}")
 
                 return jsonify({
                     'message': 'Files validated successfully',

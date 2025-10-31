@@ -2,9 +2,13 @@ from typing import List, Dict, Any
 from functions.xpshacl_engine.xpshacl_architecture import ConstraintViolation
 from . import virtuoso_service
 
-def prioritize_violations(violations: List[ConstraintViolation]) -> List[ConstraintViolation]:
+
+def prioritize_violations(
+    violations: List[ConstraintViolation],
+) -> List[ConstraintViolation]:
     """Prioritize violations by severity."""
-    return sorted(violations, key=lambda v: v.severity or '', reverse=True)
+    return sorted(violations, key=lambda v: v.severity or "", reverse=True)
+
 
 def get_violation_statistics(session_id: str) -> List[Dict[str, Any]]:
     """Get violation statistics grouped by constraint type."""
@@ -20,7 +24,8 @@ def get_violation_statistics(session_id: str) -> List[Dict[str, Any]]:
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    return format_analytics_response(result.get('results', {}).get('bindings', []))
+    return format_analytics_response(result.get("results", {}).get("bindings", []))
+
 
 def get_property_distribution(session_id: str) -> List[Dict[str, Any]]:
     """Get property distribution analysis for violations."""
@@ -36,7 +41,8 @@ def get_property_distribution(session_id: str) -> List[Dict[str, Any]]:
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    return format_analytics_response(result.get('results', {}).get('bindings', []))
+    return format_analytics_response(result.get("results", {}).get("bindings", []))
+
 
 def get_severity_analysis(session_id: str) -> List[Dict[str, Any]]:
     """Get severity analysis of violations."""
@@ -52,7 +58,8 @@ def get_severity_analysis(session_id: str) -> List[Dict[str, Any]]:
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    return format_analytics_response(result.get('results', {}).get('bindings', []))
+    return format_analytics_response(result.get("results", {}).get("bindings", []))
+
 
 def get_temporal_trends(session_id: str, days: int = 7) -> List[Dict[str, Any]]:
     """Get temporal violation trends over specified days."""
@@ -69,7 +76,8 @@ def get_temporal_trends(session_id: str, days: int = 7) -> List[Dict[str, Any]]:
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    return format_analytics_response(result.get('results', {}).get('bindings', []))
+    return format_analytics_response(result.get("results", {}).get("bindings", []))
+
 
 def get_shape_complexity_metrics() -> List[Dict[str, Any]]:
     """Get shape complexity metrics."""
@@ -88,7 +96,8 @@ def get_shape_complexity_metrics() -> List[Dict[str, Any]]:
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    return format_analytics_response(result.get('results', {}).get('bindings', []))
+    return format_analytics_response(result.get("results", {}).get("bindings", []))
+
 
 def get_focus_node_analysis(session_id: str) -> List[Dict[str, Any]]:
     """Get focus node violation analysis."""
@@ -105,7 +114,8 @@ def get_focus_node_analysis(session_id: str) -> List[Dict[str, Any]]:
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    return format_analytics_response(result.get('results', {}).get('bindings', []))
+    return format_analytics_response(result.get("results", {}).get("bindings", []))
+
 
 def get_repair_success_rate(session_id: str) -> List[Dict[str, Any]]:
     """Get repair success rate analytics by constraint type."""
@@ -122,23 +132,26 @@ def get_repair_success_rate(session_id: str) -> List[Dict[str, Any]]:
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    bindings = result.get('results', {}).get('bindings', [])
+    bindings = result.get("results", {}).get("bindings", [])
 
     # Calculate success rate
     formatted = []
     for binding in bindings:
-        attempted = int(binding.get('attempted', {}).get('value', 0))
-        successful = int(binding.get('successful', {}).get('value', 0))
+        attempted = int(binding.get("attempted", {}).get("value", 0))
+        successful = int(binding.get("successful", {}).get("value", 0))
         success_rate = successful / attempted if attempted > 0 else 0
 
-        formatted.append({
-            'constraintType': binding.get('constraintType', {}).get('value', ''),
-            'attempted': attempted,
-            'successful': successful,
-            'successRate': success_rate
-        })
+        formatted.append(
+            {
+                "constraintType": binding.get("constraintType", {}).get("value", ""),
+                "attempted": attempted,
+                "successful": successful,
+                "successRate": success_rate,
+            }
+        )
 
     return formatted
+
 
 def get_data_quality_score(session_id: str) -> Dict[str, Any]:
     """Calculate overall data quality score."""
@@ -162,17 +175,28 @@ def get_data_quality_score(session_id: str) -> Dict[str, Any]:
     total_result = virtuoso_service.execute_sparql_query(total_query)
     violation_result = virtuoso_service.execute_sparql_query(violation_query)
 
-    total_triples = int(total_result.get('results', {}).get('bindings', [{}])[0].get('totalTriples', {}).get('value', 0))
-    violations = int(violation_result.get('results', {}).get('bindings', [{}])[0].get('violations', {}).get('value', 0))
+    total_triples = int(
+        total_result.get("results", {})
+        .get("bindings", [{}])[0]
+        .get("totalTriples", {})
+        .get("value", 0)
+    )
+    violations = int(
+        violation_result.get("results", {})
+        .get("bindings", [{}])[0]
+        .get("violations", {})
+        .get("value", 0)
+    )
 
     # Calculate quality score (0-100)
     quality_score = max(0, 100 - (violations / max(1, total_triples) * 100))
 
     return {
-        'totalTriples': total_triples,
-        'violations': violations,
-        'qualityScore': round(quality_score, 2)
+        "totalTriples": total_triples,
+        "violations": violations,
+        "qualityScore": round(quality_score, 2),
     }
+
 
 def get_constraint_correlation_matrix(session_id: str) -> List[Dict[str, Any]]:
     """Get constraint correlation matrix."""
@@ -190,33 +214,41 @@ def get_constraint_correlation_matrix(session_id: str) -> List[Dict[str, Any]]:
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    bindings = result.get('results', {}).get('bindings', [])
+    bindings = result.get("results", {}).get("bindings", [])
 
     # Calculate correlation (simplified)
     formatted = []
     for binding in bindings:
-        cooccurrence = int(binding.get('cooccurrence', {}).get('value', 0))
+        cooccurrence = int(binding.get("cooccurrence", {}).get("value", 0))
         # Simple correlation calculation - in practice would use proper statistical method
         correlation = min(1.0, cooccurrence / 10.0)
 
-        formatted.append({
-            'constraint1': binding.get('constraint1', {}).get('value', ''),
-            'constraint2': binding.get('constraint2', {}).get('value', ''),
-            'correlation': str(correlation)
-        })
+        formatted.append(
+            {
+                "constraint1": binding.get("constraint1", {}).get("value", ""),
+                "constraint2": binding.get("constraint2", {}).get("value", ""),
+                "correlation": str(correlation),
+            }
+        )
 
     return formatted
 
+
 def calculate_quality_metrics(data: Dict[str, Any]) -> Dict[str, float]:
     """Calculate quality metrics from raw data."""
-    total_items = data.get('total_items', 1)
+    total_items = data.get("total_items", 1)
 
     return {
-        'violation_rate': data.get('total_violations', 0) / total_items,
-        'warning_rate': data.get('total_warnings', 0) / total_items,
-        'repair_success_rate': data.get('repairs_successful', 0) / max(1, data.get('repairs_attempted', 1)),
-        'overall_score': 100 - (data.get('total_violations', 0) + data.get('total_warnings', 0)) / total_items * 100
+        "violation_rate": data.get("total_violations", 0) / total_items,
+        "warning_rate": data.get("total_warnings", 0) / total_items,
+        "repair_success_rate": data.get("repairs_successful", 0)
+        / max(1, data.get("repairs_attempted", 1)),
+        "overall_score": 100
+        - (data.get("total_violations", 0) + data.get("total_warnings", 0))
+        / total_items
+        * 100,
     }
+
 
 def get_session_comparison(session_ids: List[str]) -> List[Dict[str, Any]]:
     """Compare multiple validation sessions."""
@@ -224,10 +256,12 @@ def get_session_comparison(session_ids: List[str]) -> List[Dict[str, Any]]:
         return []
 
     # Build query for multiple sessions
-    session_filters = " UNION ".join([
-        f'{{ GRAPH <http://ex.org/ValidationReport/Session_{sid}> {{ ?violation a <http://www.w3.org/ns/shacl#ValidationResult> . BIND("{sid}" as ?sessionId) }} }}'
-        for sid in session_ids
-    ])
+    session_filters = " UNION ".join(
+        [
+            f'{{ GRAPH <http://ex.org/ValidationReport/Session_{sid}> {{ ?violation a <http://www.w3.org/ns/shacl#ValidationResult> . BIND("{sid}" as ?sessionId) }} }}'
+            for sid in session_ids
+        ]
+    )
 
     query = f"""
     SELECT ?sessionId (COUNT(?violation) as ?violationCount) WHERE {{
@@ -237,17 +271,20 @@ def get_session_comparison(session_ids: List[str]) -> List[Dict[str, Any]]:
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    formatted = format_analytics_response(result.get('results', {}).get('bindings', []))
+    formatted = format_analytics_response(result.get("results", {}).get("bindings", []))
 
     # Add quality scores
     for session in formatted:
-        session_id = session['sessionId']
+        session_id = session["sessionId"]
         quality_data = get_data_quality_score(session_id)
-        session['qualityScore'] = quality_data['qualityScore']
+        session["qualityScore"] = quality_data["qualityScore"]
 
     return formatted
 
-def get_top_violating_resources(session_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+
+def get_top_violating_resources(
+    session_id: str, limit: int = 10
+) -> List[Dict[str, Any]]:
     """Get top violating resources."""
     query = f"""
     SELECT ?focusNode (COUNT(?violation) as ?violationCount) WHERE {{
@@ -262,15 +299,15 @@ def get_top_violating_resources(session_id: str, limit: int = 10) -> List[Dict[s
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    raw_data = result.get('results', {}).get('bindings', [])
+    raw_data = result.get("results", {}).get("bindings", [])
 
     # Format and map focusNode to resource for compatibility
     formatted = []
     for item in raw_data:
         formatted_item = {}
         for key, value in item.items():
-            if isinstance(value, dict) and 'value' in value:
-                str_value = value['value']
+            if isinstance(value, dict) and "value" in value:
+                str_value = value["value"]
                 try:
                     if str_value.isdigit():
                         formatted_item[key] = int(str_value)
@@ -282,12 +319,13 @@ def get_top_violating_resources(session_id: str, limit: int = 10) -> List[Dict[s
                 formatted_item[key] = value
 
         # Map focusNode to resource for test compatibility
-        if 'focusNode' in formatted_item:
-            formatted_item['resource'] = formatted_item['focusNode']
+        if "focusNode" in formatted_item:
+            formatted_item["resource"] = formatted_item["focusNode"]
 
         formatted.append(formatted_item)
 
     return formatted
+
 
 def get_validation_performance_metrics() -> List[Dict[str, Any]]:
     """Get validation performance metrics."""
@@ -303,23 +341,28 @@ def get_validation_performance_metrics() -> List[Dict[str, Any]]:
     """
 
     result = virtuoso_service.execute_sparql_query(query)
-    bindings = result.get('results', {}).get('bindings', [])
+    bindings = result.get("results", {}).get("bindings", [])
 
     # Calculate throughput
     formatted = []
     for binding in bindings:
-        duration = float(binding.get('duration', {}).get('value', 0)) / 1000  # Convert ms to seconds
-        triples = int(binding.get('triplesValidated', {}).get('value', 0))
+        duration = (
+            float(binding.get("duration", {}).get("value", 0)) / 1000
+        )  # Convert ms to seconds
+        triples = int(binding.get("triplesValidated", {}).get("value", 0))
         throughput = triples / duration if duration > 0 else 0
 
-        formatted.append({
-            'validationId': binding.get('validationId', {}).get('value', ''),
-            'duration': int(binding.get('duration', {}).get('value', 0)),
-            'triplesValidated': triples,
-            'throughput': round(throughput, 2)
-        })
+        formatted.append(
+            {
+                "validationId": binding.get("validationId", {}).get("value", ""),
+                "duration": int(binding.get("duration", {}).get("value", 0)),
+                "triplesValidated": triples,
+                "throughput": round(throughput, 2),
+            }
+        )
 
     return formatted
+
 
 def format_analytics_response(raw_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Format raw SPARQL results into analytics response."""
@@ -327,9 +370,9 @@ def format_analytics_response(raw_data: List[Dict[str, Any]]) -> List[Dict[str, 
     for item in raw_data:
         formatted_item = {}
         for key, value in item.items():
-            if isinstance(value, dict) and 'value' in value:
+            if isinstance(value, dict) and "value" in value:
                 # Try to convert to appropriate type
-                str_value = value['value']
+                str_value = value["value"]
                 try:
                     if str_value.isdigit():
                         formatted_item[key] = int(str_value)
@@ -342,24 +385,26 @@ def format_analytics_response(raw_data: List[Dict[str, Any]]) -> List[Dict[str, 
         formatted.append(formatted_item)
     return formatted
 
+
 def calculate_trend_direction(data: List[float]) -> str:
     """Calculate trend direction from data series."""
     if len(data) < 3:
-        return 'insufficient_data'
+        return "insufficient_data"
 
     # Simple trend calculation
-    first_half = data[:len(data)//2]
-    second_half = data[len(data)//2:]
+    first_half = data[: len(data) // 2]
+    second_half = data[len(data) // 2 :]
 
     first_avg = sum(first_half) / len(first_half)
     second_avg = sum(second_half) / len(second_half)
 
     if second_avg > first_avg * 1.1:
-        return 'increasing'
+        return "increasing"
     elif second_avg < first_avg * 0.9:
-        return 'decreasing'
+        return "decreasing"
     else:
-        return 'stable'
+        return "stable"
+
 
 def get_improvement_recommendations(session_id: str) -> List[Dict[str, Any]]:
     """Get improvement recommendations based on violation patterns."""
@@ -368,35 +413,44 @@ def get_improvement_recommendations(session_id: str) -> List[Dict[str, Any]]:
 
     recommendations = []
     for violation in violations[:5]:  # Top 5 violation types
-        constraint_type = violation['constraintType']
+        constraint_type = violation["constraintType"]
 
         # Generate recommendations based on constraint type
-        if 'MinCount' in constraint_type:
-            recommendations.append({
-                'constraintType': constraint_type,
-                'frequency': violation['count'],
-                'recommendation': 'Consider making these properties optional or providing default values'
-            })
-        elif 'Pattern' in constraint_type:
-            recommendations.append({
-                'constraintType': constraint_type,
-                'frequency': violation['count'],
-                'recommendation': 'Improve data validation at input stage or provide clearer format guidelines'
-            })
-        elif 'MaxCount' in constraint_type:
-            recommendations.append({
-                'constraintType': constraint_type,
-                'frequency': violation['count'],
-                'recommendation': 'Review data entry processes to prevent duplicate values'
-            })
+        if "MinCount" in constraint_type:
+            recommendations.append(
+                {
+                    "constraintType": constraint_type,
+                    "frequency": violation["count"],
+                    "recommendation": "Consider making these properties optional or providing default values",
+                }
+            )
+        elif "Pattern" in constraint_type:
+            recommendations.append(
+                {
+                    "constraintType": constraint_type,
+                    "frequency": violation["count"],
+                    "recommendation": "Improve data validation at input stage or provide clearer format guidelines",
+                }
+            )
+        elif "MaxCount" in constraint_type:
+            recommendations.append(
+                {
+                    "constraintType": constraint_type,
+                    "frequency": violation["count"],
+                    "recommendation": "Review data entry processes to prevent duplicate values",
+                }
+            )
         else:
-            recommendations.append({
-                'constraintType': constraint_type,
-                'frequency': violation['count'],
-                'recommendation': 'Review constraint definition and data requirements'
-            })
+            recommendations.append(
+                {
+                    "constraintType": constraint_type,
+                    "frequency": violation["count"],
+                    "recommendation": "Review constraint definition and data requirements",
+                }
+            )
 
     return recommendations
+
 
 def get_recommendations(session_id: str) -> List[Dict[str, Any]]:
     """Alias for get_improvement_recommendations to maintain compatibility."""

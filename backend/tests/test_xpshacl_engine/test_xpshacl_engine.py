@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch, MagicMock
 from rdflib import Graph, URIRef, Literal, Namespace
 import rdflib
 
+
 class TestXPSHACLEngine:
     """Test main XPSHACL engine orchestrator."""
 
@@ -15,12 +16,12 @@ class TestXPSHACLEngine:
         from functions.xpshacl_engine.xpshacl_engine import XPSHACLEngine
 
         engine = XPSHACLEngine()
-        assert hasattr(engine, 'validator')
-        assert hasattr(engine, 'explanation_generator')
-        assert hasattr(engine, 'repair_engine')
-        assert hasattr(engine, 'knowledge_graph')
+        assert hasattr(engine, "validator")
+        assert hasattr(engine, "explanation_generator")
+        assert hasattr(engine, "repair_engine")
+        assert hasattr(engine, "knowledge_graph")
 
-    @patch('functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator')
+    @patch("functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator")
     def test_validate_dataset(self, mock_validator_class):
         """Test dataset validation."""
         from functions.xpshacl_engine.xpshacl_engine import XPSHACLEngine
@@ -34,7 +35,7 @@ class TestXPSHACLEngine:
             constraint_id="http://www.w3.org/ns/shacl#MinCountConstraintComponent",
             violation_type="CARDINALITY",
             property_path="http://example.org/ns#name",
-            value=None
+            value=None,
         )
         mock_validator.validate.return_value = [mock_violation]
         mock_validator_class.return_value = mock_validator
@@ -47,8 +48,8 @@ class TestXPSHACLEngine:
         assert len(violations) == 1
         assert violations[0].focus_node == "http://example.org/resource1"
 
-    @patch('functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator')
-    @patch('functions.xpshacl_engine.xpshacl_engine.ExplanationGenerator')
+    @patch("functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator")
+    @patch("functions.xpshacl_engine.xpshacl_engine.ExplanationGenerator")
     def test_generate_explanations(self, mock_explanation_class, mock_validator_class):
         """Test explanation generation."""
         from functions.xpshacl_engine.xpshacl_engine import XPSHACLEngine
@@ -62,7 +63,7 @@ class TestXPSHACLEngine:
             constraint_id="http://www.w3.org/ns/shacl#MinCountConstraintComponent",
             violation_type="CARDINALITY",
             property_path="http://example.org/ns#name",
-            value=None
+            value=None,
         )
         mock_validator.validate.return_value = [mock_violation]
         mock_validator_class.return_value = mock_validator
@@ -83,8 +84,8 @@ class TestXPSHACLEngine:
         assert len(explanations) == 1
         assert explanations[0].natural_language_explanation == "Test explanation"
 
-    @patch('functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator')
-    @patch('functions.xpshacl_engine.xpshacl_engine.RepairEngine')
+    @patch("functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator")
+    @patch("functions.xpshacl_engine.xpshacl_engine.RepairEngine")
     def test_generate_repairs(self, mock_repair_class, mock_validator_class):
         """Test repair generation."""
         from functions.xpshacl_engine.xpshacl_engine import XPSHACLEngine
@@ -98,7 +99,7 @@ class TestXPSHACLEngine:
             constraint_id="http://www.w3.org/ns/shacl#MinCountConstraintComponent",
             violation_type="CARDINALITY",
             property_path="http://example.org/ns#name",
-            value=None
+            value=None,
         )
         mock_validator.validate.return_value = [mock_violation]
         mock_validator_class.return_value = mock_validator
@@ -127,7 +128,7 @@ class TestXPSHACLEngine:
         engine = XPSHACLEngine()
         assert isinstance(engine.knowledge_graph, ViolationKnowledgeGraph)
 
-    @patch('functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator')
+    @patch("functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator")
     def test_batch_validation(self, mock_validator_class):
         """Test batch validation of multiple datasets."""
         from functions.xpshacl_engine.xpshacl_engine import XPSHACLEngine
@@ -141,7 +142,7 @@ class TestXPSHACLEngine:
             constraint_id="http://www.w3.org/ns/shacl#MinCountConstraintComponent",
             violation_type="CARDINALITY",
             property_path="http://example.org/ns#name",
-            value=None
+            value=None,
         )
         mock_violation2 = ConstraintViolation(
             focus_node="http://example.org/resource2",
@@ -149,11 +150,11 @@ class TestXPSHACLEngine:
             constraint_id="http://www.w3.org/ns/shacl#PatternConstraintComponent",
             violation_type="PATTERN",
             property_path="http://example.org/ns#email",
-            value="invalid"
+            value="invalid",
         )
         mock_validator.validate.side_effect = [
             [mock_violation1],  # First dataset
-            [mock_violation2]   # Second dataset
+            [mock_violation2],  # Second dataset
         ]
         mock_validator_class.return_value = mock_validator
 
@@ -174,13 +175,13 @@ class TestXPSHACLEngine:
             "enable_explanations": True,
             "enable_repairs": True,
             "knowledge_graph_path": "/tmp/test_vkg.ttl",
-            "performance_logging": True
+            "performance_logging": True,
         }
 
         engine = XPSHACLEngine(config)
         assert engine.config == config
 
-    @patch('functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator')
+    @patch("functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator")
     def test_validate_with_custom_config(self, mock_validator_class):
         """Test validation with custom configuration."""
         from functions.xpshacl_engine.xpshacl_engine import XPSHACLEngine
@@ -188,7 +189,7 @@ class TestXPSHACLEngine:
         config = {
             "abort_on_first_error": True,
             "enable_inference": False,
-            "severity_level": "Warning"
+            "severity_level": "Warning",
         }
 
         engine = XPSHACLEngine(config)
@@ -211,12 +212,12 @@ class TestXPSHACLEngine:
 
         # Initially should have no statistics
         stats = engine.get_statistics()
-        assert 'validations_performed' in stats
-        assert 'violations_detected' in stats
-        assert 'explanations_generated' in stats
-        assert stats['validations_performed'] == 0
+        assert "validations_performed" in stats
+        assert "violations_detected" in stats
+        assert "explanations_generated" in stats
+        assert stats["validations_performed"] == 0
 
-    @patch('functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator')
+    @patch("functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator")
     def test_engine_statistics_increment(self, mock_validator_class):
         """Test that engine statistics increment correctly."""
         from functions.xpshacl_engine.xpshacl_engine import XPSHACLEngine
@@ -232,7 +233,7 @@ class TestXPSHACLEngine:
             constraint_id="http://www.w3.org/ns/shacl#MinCountConstraintComponent",
             violation_type="CARDINALITY",
             property_path="http://example.org/ns#name",
-            value=None
+            value=None,
         )
         mock_validator.validate.return_value = [mock_violation]
         mock_validator_class.return_value = mock_validator
@@ -245,8 +246,8 @@ class TestXPSHACLEngine:
 
         # Check statistics
         stats = engine.get_statistics()
-        assert stats['validations_performed'] == 1
-        assert stats['violations_detected'] == 1
+        assert stats["validations_performed"] == 1
+        assert stats["violations_detected"] == 1
 
     def test_engine_error_handling(self):
         """Test engine error handling."""
@@ -261,7 +262,7 @@ class TestXPSHACLEngine:
         with pytest.raises(TypeError):
             engine.validate_dataset(Graph(), None)
 
-    @patch('functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator')
+    @patch("functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator")
     def test_engine_caching(self, mock_validator_class):
         """Test engine result caching."""
         from functions.xpshacl_engine.xpshacl_engine import XPSHACLEngine
@@ -285,7 +286,7 @@ class TestXPSHACLEngine:
         # Should have same results
         assert result1 == result2
 
-    @patch('functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator')
+    @patch("functions.xpshacl_engine.xpshacl_engine.ExtendedShaclValidator")
     def test_engine_performance_monitoring(self, mock_validator_class):
         """Test engine performance monitoring."""
         from functions.xpshacl_engine.xpshacl_engine import XPSHACLEngine
@@ -305,9 +306,9 @@ class TestXPSHACLEngine:
 
         # Check performance metrics
         metrics = engine.get_performance_metrics()
-        assert 'last_validation_time' in metrics
-        assert 'total_validation_time' in metrics
-        assert 'average_validation_time' in metrics
+        assert "last_validation_time" in metrics
+        assert "total_validation_time" in metrics
+        assert "average_validation_time" in metrics
 
     def test_engine_memory_management(self):
         """Test engine memory management."""
@@ -332,8 +333,8 @@ class TestXPSHACLEngine:
         # Test serializing engine state
         state = engine.serialize_state()
         assert isinstance(state, dict)
-        assert 'config' in state
-        assert 'statistics' in state
+        assert "config" in state
+        assert "statistics" in state
 
         # Test restoring engine state
         new_engine = XPSHACLEngine()

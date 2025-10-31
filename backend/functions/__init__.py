@@ -18,7 +18,7 @@ Modules:
 """
 
 from .virtuoso_service import (
-    #get_number_of_constraints_for_node_shape,
+    # get_number_of_constraints_for_node_shape,
     get_most_violated_constraint_for_node_shape,
     get_number_of_property_shapes_for_node_shape,
     get_all_shapes_names,
@@ -32,12 +32,9 @@ from .virtuoso_service import (
     get_shape_from_shapes_graph,
     get_maximum_number_of_violations_in_validation_report_for_node_shape,
     get_average_number_of_violations_in_validation_report_for_node_shape,
-    
 )
 
-from .landing_service import (
-    load_graphs
-)
+from .landing_service import load_graphs
 
 from .homepage_service import (
     get_number_of_node_shapes,

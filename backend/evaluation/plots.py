@@ -22,8 +22,7 @@ custom_dataset_colors = {
 }
 
 legend_handles = [
-    Patch(facecolor=color, label=ds)
-    for ds, color in custom_dataset_colors.items()
+    Patch(facecolor=color, label=ds) for ds, color in custom_dataset_colors.items()
 ]
 
 data = {
@@ -43,7 +42,9 @@ data = {
 }
 
 index = pd.MultiIndex.from_tuples(data.keys(), names=["Shapes Graph", "Dataset"])
-df = pd.DataFrame(list(data.values()), index=index, columns=["Use-Case 1", "Use-Case 2", "Use-Case 3"])
+df = pd.DataFrame(
+    list(data.values()), index=index, columns=["Use-Case 1", "Use-Case 2", "Use-Case 3"]
+)
 
 use_cases = ["Use-Case 1", "Use-Case 2", "Use-Case 3"]
 bar_width = 0.03
@@ -76,7 +77,7 @@ for use_case in use_cases:
                 group_start_x + offsets[i],
                 val,
                 width=bar_width,
-                color=custom_dataset_colors.get(ds, "#999999")
+                color=custom_dataset_colors.get(ds, "#999999"),
             )
 
         x_ticks.append(group_center)
@@ -85,12 +86,12 @@ for use_case in use_cases:
         current_x += group_width + inter_group_spacing  # move to next group
 
     ax.set_xticks(x_ticks)
-    ax.set_xticklabels(x_labels, rotation=45, ha='center', fontsize=21)
+    ax.set_xticklabels(x_labels, rotation=45, ha="center", fontsize=21)
     ax.set_ylabel("Mean Query Time [ms]", fontsize=22)
-    ax.tick_params(axis='y', labelsize=19)
+    ax.tick_params(axis="y", labelsize=19)
     ax.set_xlabel("Shapes Graph", fontsize=22)
     ax.set_yscale("log")
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+    ax.grid(True, which="both", linestyle="--", linewidth=0.5)
     ax.set_axisbelow(True)
 
     # Static full legend
@@ -102,10 +103,10 @@ for use_case in use_cases:
         borderaxespad=0,
         frameon=True,
         fontsize=15,
-        title_fontsize=16
+        title_fontsize=16,
     )
-    
+
     plt.tight_layout()
     filename = os.path.join(script_dir, f"{use_case.replace(' ', '_')}_log_plot.pdf")
-    plt.savefig(filename, format='pdf', bbox_inches='tight')
+    plt.savefig(filename, format="pdf", bbox_inches="tight")
     # plt.show()  # Uncomment for preview

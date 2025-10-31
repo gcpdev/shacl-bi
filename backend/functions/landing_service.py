@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import ENDPOINT_URL, SHAPES_GRAPH_URI, VALIDATION_REPORT_URI, SHACL_FEATURES
 from SPARQLWrapper import SPARQLWrapper, JSON
@@ -26,11 +27,19 @@ Configuration:
 """
 
 # Global variables for SPARQL
-#ENDPOINT_URL = "http://localhost:8890/sparql"
-#SHAPES_GRAPH_URI = "http://ex.org/ShapesGraph"
-#VALIDATION_REPORT_URI = "http://ex.org/ValidationReport"
+# ENDPOINT_URL = "http://localhost:8890/sparql"
+# SHAPES_GRAPH_URI = "http://ex.org/ShapesGraph"
+# VALIDATION_REPORT_URI = "http://ex.org/ValidationReport"
 
-def load_graphs(directory: str, shapes_file: str, report_file: str, isql_port: str = "1111", username: str = "dba", password: str = "dba"):
+
+def load_graphs(
+    directory: str,
+    shapes_file: str,
+    report_file: str,
+    isql_port: str = "1111",
+    username: str = "dba",
+    password: str = "dba",
+):
     """
     Load two RDF files (ShapesGraph and ValidationReport) into Virtuoso using ISQL.
 
@@ -47,12 +56,17 @@ def load_graphs(directory: str, shapes_file: str, report_file: str, isql_port: s
         ValueError: If any of the arguments are empty strings.
     """
     # Validate input types
-    if not all(isinstance(arg, str) for arg in [directory, shapes_file, report_file, isql_port, username, password]):
+    if not all(
+        isinstance(arg, str)
+        for arg in [directory, shapes_file, report_file, isql_port, username, password]
+    ):
         raise TypeError("All arguments must be strings.")
 
     # Validate input values
     if not all(arg.strip() for arg in [directory, shapes_file, report_file]):
-        raise ValueError("Directory, shapes_file, and report_file cannot be empty strings.")
+        raise ValueError(
+            "Directory, shapes_file, and report_file cannot be empty strings."
+        )
 
     # Construct ISQL command for loading RDF files
     isql_command = f"""
@@ -70,7 +84,7 @@ def load_graphs(directory: str, shapes_file: str, report_file: str, isql_port: s
             input=isql_command,
             text=True,
             capture_output=True,
-            check=True
+            check=True,
         )
 
         # Output success message

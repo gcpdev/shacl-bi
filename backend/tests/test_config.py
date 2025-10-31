@@ -6,6 +6,7 @@ import pytest
 import os
 from unittest.mock import patch, MagicMock
 
+
 class TestConfig:
     """Test configuration classes and settings."""
 
@@ -14,10 +15,10 @@ class TestConfig:
         from config import BaseConfig
 
         config = BaseConfig()
-        assert hasattr(config, 'SECRET_KEY')
-        assert hasattr(config, 'DATABASE_URL')
-        assert hasattr(config, 'UPLOAD_FOLDER')
-        assert hasattr(config, 'MAX_CONTENT_LENGTH')
+        assert hasattr(config, "SECRET_KEY")
+        assert hasattr(config, "DATABASE_URL")
+        assert hasattr(config, "UPLOAD_FOLDER")
+        assert hasattr(config, "MAX_CONTENT_LENGTH")
 
     def test_development_config(self):
         """Test development configuration."""
@@ -42,13 +43,16 @@ class TestConfig:
         config = TestingConfig()
         assert config.DEBUG is True
         assert config.TESTING is True
-        assert hasattr(config, 'WTF_CSRF_ENABLED')
+        assert hasattr(config, "WTF_CSRF_ENABLED")
 
-    @patch.dict(os.environ, {
-        'FLASK_ENV': 'production',
-        'DATABASE_URL': 'http://test:1234',
-        'SECRET_KEY': 'test-secret'
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "FLASK_ENV": "production",
+            "DATABASE_URL": "http://test:1234",
+            "SECRET_KEY": "test-secret",
+        },
+    )
     def test_environment_variables(self):
         """Test configuration respects environment variables."""
         from config import ProductionConfig
@@ -62,9 +66,9 @@ class TestConfig:
         from config import config_by_name
         from config import DevelopmentConfig, ProductionConfig, TestingConfig
 
-        assert config_by_name['development'] == DevelopmentConfig
-        assert config_by_name['production'] == ProductionConfig
-        assert config_by_name['testing'] == TestingConfig
+        assert config_by_name["development"] == DevelopmentConfig
+        assert config_by_name["production"] == ProductionConfig
+        assert config_by_name["testing"] == TestingConfig
 
     def test_config_defaults(self):
         """Test configuration has sensible defaults."""
@@ -78,7 +82,7 @@ class TestConfig:
         assert config.MAX_CONTENT_LENGTH > 0
 
         # Check upload folder exists in configuration
-        assert hasattr(config, 'UPLOAD_FOLDER')
+        assert hasattr(config, "UPLOAD_FOLDER")
         assert isinstance(config.UPLOAD_FOLDER, str)
         assert len(config.UPLOAD_FOLDER) > 0
 
@@ -90,8 +94,8 @@ class TestConfig:
         db_url = config.DATABASE_URL
 
         # Should be a valid HTTP URL format
-        assert db_url.startswith('http://')
-        assert 'localhost' in db_url or 'virtuoso' in db_url
+        assert db_url.startswith("http://")
+        assert "localhost" in db_url or "virtuoso" in db_url
 
     def test_cross_origin_settings(self):
         """Test CORS configuration settings."""
@@ -100,7 +104,7 @@ class TestConfig:
         config = BaseConfig()
 
         # Check CORS related settings exist
-        cors_attrs = ['CORS_ORIGINS', 'CORS_METHODS', 'CORS_ALLOW_HEADERS']
+        cors_attrs = ["CORS_ORIGINS", "CORS_METHODS", "CORS_ALLOW_HEADERS"]
         for attr in cors_attrs:
             assert hasattr(config, attr)
 
@@ -111,9 +115,9 @@ class TestConfig:
         config = BaseConfig()
 
         # Check logging related settings
-        assert hasattr(config, 'LOG_LEVEL')
-        assert hasattr(config, 'LOG_FILE')
+        assert hasattr(config, "LOG_LEVEL")
+        assert hasattr(config, "LOG_FILE")
 
         # Valid log levels
-        valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         assert config.LOG_LEVEL in valid_levels
